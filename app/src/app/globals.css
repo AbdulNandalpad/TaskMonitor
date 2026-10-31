@@ -271,7 +271,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .stepper div.cur{border-color:var(--accent);background:var(--accent-bg);color:var(--accent)} .stepper div.cur i{background:var(--accent);color:#fff}
 .filecard{display:grid;grid-template-columns:42px 1fr auto;gap:12px;align-items:center;padding:12px 14px}
 .filecard .xl{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#22c55e,#15803d);display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
-.filecard b{display:block;font-size:14px;font-weight:600;word-break:break-all}
+.filecard b{display:block;font-size:14px;font-weight:600;overflow-wrap:anywhere}
 .filecard span{font-size:12px;color:var(--muted)}
 .filecard label{position:relative}
 .filecard label input{position:absolute;inset:0;opacity:0;cursor:pointer}
@@ -429,13 +429,16 @@ html,body{min-height:100%}
 /* phones and tablets: comfortable tap targets, 16px inputs (no iOS zoom), extended hit areas on pill filters */
 @media (max-width:959px){
   .btn{min-height:44px}
-  .btn.sm{min-height:40px;padding:0 12px}
+  .btn.sm{min-height:44px;padding:0 12px}
   .iconbtn,.appbar .back{width:44px;height:44px}
   .appbar .back{margin-left:-10px}
   .field input,.field select,.field textarea,.extract .row select,.extract .row input:not([type=range]),.extract .row textarea,.maprow select,.transcript{font-size:16px}
   .field input,.field select{height:46px}
-  .extract .row select,.extract .row input:not([type=range]){height:42px}
-  .maprow select{height:40px}
+  .extract .row select,.extract .row input:not([type=range]){height:44px}
+  .maprow select{height:44px}
+  .frow .req{min-height:44px}
+  .frow{padding-top:6px;padding-bottom:6px}
+  .tog::before{content:"";position:absolute;inset:-10px}
   .filters button,.tmpl button,.types button,.demos button,.frow .req{position:relative}
   .filters button::before,.tmpl button::before,.types button::before,.demos button::before,.frow .req::before{content:"";position:absolute;left:0;right:0;top:-7px;bottom:-7px}
   .filters button{height:36px}
@@ -446,6 +449,7 @@ html,body{min-height:100%}
 }
 @media (max-width:359px){
   .tiles{gap:6px}
+  .tiles.four{grid-template-columns:1fr 1fr}
   .tile{padding:9px 8px 8px}.tile .v{font-size:19px}.tile .l{font-size:10.5px}
   .manage{gap:6px}.manage a,.manage button{padding:10px 4px 9px}.manage b{font-size:11.5px}
   .steps button{font-size:11px;padding:9px 2px 8px}
@@ -545,9 +549,25 @@ a.btn{text-decoration:none}
 .hrow .raw{color:var(--hint)}
 
 /* ---------- report page (print styled) ---------- */
-.reportwrap{background:var(--canvas);min-height:100vh}
-.reportwrap .ovbar{position:sticky;top:0;z-index:5}
-.reportwrap .ovbody{overflow:visible}
+.reportwrap{background:var(--canvas);min-height:100vh;min-height:100dvh}
+.reportwrap .ovbar{position:sticky;top:0;z-index:5;flex-wrap:nowrap;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+.reportwrap .ovbar .ttl b,.reportwrap .ovbar .ttl span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.reportwrap .ovbody{overflow:visible;grid-template-columns:minmax(0,1fr)}
+.reportwrap .page{min-width:0}
+.page .sum > div,.page .pgrid figure,.page .sig div{min-width:0}
+@media screen and (max-width:959px){
+  .reportwrap .ovbar .btn{padding:0 12px}
+  .reportwrap .ovbody{padding-block:16px 40px}
+  .page{padding:26px 20px;gap:16px}
+  .page .ph-hd .org{text-align:left}
+  .page .sum{grid-template-columns:1fr 1fr}
+  .page .pgrid{grid-template-columns:1fr 1fr}
+  .page .sig{grid-template-columns:1fr;gap:14px}
+}
+@media screen and (max-width:599px){
+  .page{padding:20px 14px}
+  .page .ph-hd h1{font-size:17px}
+}
 @media print{
   @page{size:A4;margin:0}
   html,body{background:#fff}
