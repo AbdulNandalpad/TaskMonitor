@@ -8,7 +8,7 @@ import { Chk } from "./Icons";
 import { Sheet } from "./Sheet";
 import { useToast } from "./Toast";
 
-const av = (name: string) => <span className="avatar sm" style={{ background: HUES[name.length % HUES.length], color: "#fff" }}>{initials(name)}</span>;
+const av = (name: string) => <span className="avatar sm" style={{ background: HUES[name.length % HUES.length] }}>{initials(name)}</span>;
 
 export function AssignClient({ tasks, persons, sections }: { tasks: Task[]; persons: Person[]; sections: { id: string; name: string }[] }) {
   const router = useRouter();

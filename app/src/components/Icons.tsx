@@ -23,4 +23,5 @@ export const Arrow = () => (<Svg><path d="M5 12h14M13 6l6 6-6 6" /></Svg>);
 export const WarnIcon = () => (<Svg><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /></Svg>);
 export const AlertCircle = () => (<Svg><path d="M12 9v4M12 17h.01" /><circle cx="12" cy="12" r="10" /></Svg>);
 export const UnitIcon = () => (<Svg><path d="M3 21V8l6 4V8l6 4V4l6 3v14z" /><path d="M8 17h2M13 17h2" /></Svg>);
+export const List = () => (<Svg><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></Svg>);
 export const Home = () => (<Svg><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></Svg>);

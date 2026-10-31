@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { requireCtx } from "@/lib/auth";
 import { loadBoard } from "@/lib/data";
-import { HUES, initials, stats } from "@/lib/format";
+import { initials, stats } from "@/lib/format";
 import { navOf } from "@/lib/nav";
 import { ROLE_LABEL } from "@/lib/roles";
 import { Bar, Screen } from "@/components/Screen";
-import { Assign, Chev, FormIcon, Pdf, Plus, SignOut, Xl, People } from "@/components/Icons";
+import { Assign, Chev, FormIcon, List, Pdf, Plus, SignOut, Xl, People } from "@/components/Icons";
 import { MicButton } from "@/components/VoiceSheet";
 import { BellButton } from "@/components/BellButton";
 
@@ -18,18 +18,28 @@ export default async function Dashboard() {
   const me = persons.find((p) => p.user_id === ctx.userId);
   const mine = stats(tasks.filter((t) => me && t.responsible_person_id === me.id));
   const hours = tasks.reduce((a, t) => a + (Number(t.values.planned_hours) || 0), 0);
+  const secStats = sections.map((s) => ({ s, st: stats(tasks.filter((t) => t.section_id === s.id)) }));
+  const behind = secStats.filter((x) => x.st.pct < 50);
   const menu = [
-    { href: "/tasks/new", icon: <Plus />, label: "Create task", hue: 1 },
-    { href: "/import/tasks", icon: <Xl />, label: "Upload tasks (Excel)", hue: 3 },
-    { href: "/workforce", icon: <People />, label: "Workforce", hue: 2 },
-    { href: "/assign", icon: <Assign />, label: `Assign tasks${all.un ? ` · ${all.un}` : ""}`, hue: 5 },
-    ...(list ? [{ href: `/report/${list.id}`, icon: <Pdf />, label: "PDF report", hue: 0 }] : []),
-    { href: "/form", icon: <FormIcon />, label: "Form settings", hue: 6 },
+    { href: "/tasks/new", icon: <Plus />, label: "Create task" },
+    { href: "/tasks", icon: <List />, label: "All tasks" },
+    { href: "/import/tasks", icon: <Xl />, label: "Upload tasks (Excel)" },
+    { href: "/workforce", icon: <People />, label: "Workforce" },
+    { href: "/assign", icon: <Assign />, label: `Assign tasks${all.un ? ` · ${all.un}` : ""}` },
+    ...(list ? [{ href: `/report/${list.id}`, icon: <Pdf />, label: "PDF report" }] : []),
+    { href: "/form", icon: <FormIcon />, label: "Form settings" },
+  ];
+  const kpis: { href: string; label: string; n: number; cls?: string }[] = [
+    { href: "/tasks", label: "All tasks", n: all.n },
+    { href: "/tasks?status=completed", label: "Completed", n: all.done, cls: "good" },
+    { href: "/tasks?status=in_progress", label: "In progress", n: all.prog, cls: "warn" },
+    { href: "/tasks?status=not_started", label: "Not started", n: all.open, cls: "bad" },
   ];
   return (
     <Screen
       title={ctx.area.name}
       sub={`${ctx.profile.display_name} · ${ROLE_LABEL[ctx.role]}`}
+      subPhoneOnly
       wide
       nav={navOf(ctx, list?.id)}
       actions={
@@ -44,53 +54,67 @@ export default async function Dashboard() {
       ) : (
         <div className="dash">
           <div className="dash-main">
-            <div className="card hero o1">
-              <div className="top">
+            <div className="card summary o1">
+              <div className="sum-hd">
                 <div><h3>Shutdown task list</h3><div className="when">{list.name} · {hours} h planned · {sections.length} sections</div></div>
                 <div className="bigpct num">{all.pct}%<small>{all.done} of {all.n} tasks complete</small></div>
               </div>
-              <div style={{ marginTop: 12 }}><Bar {...all} /></div>
-              <div className="legend"><span className="g">Completed</span><span className="p">In progress</span><span className="o">Not started</span></div>
+              <Bar {...all} />
             </div>
-            <div className="tiles o2">
-              <div className="tile good"><div className="v num">{all.done}</div><div className="l">Completed</div></div>
-              <div className="tile warn"><div className="v num">{all.prog}</div><div className="l">In progress</div></div>
-              <div className="tile bad"><div className="v num">{all.open}</div><div className="l">Not started</div></div>
+            <div className="kpis o2">
+              {kpis.map((k) => (
+                <Link key={k.href} className={`tile${k.cls ? ` ${k.cls}` : ""}`} href={k.href}>
+                  <span className="l">{k.label}</span><span className="v num">{k.n}</span>
+                </Link>
+              ))}
             </div>
+            {ctx.isManager && (
+              <div className="m-only">
+                <div className="sec o3">Menu</div>
+                <div className="manage o3">
+                  {menu.map((m) => (
+                    <Link key={m.href} href={m.href}><span className="ic">{m.icon}</span><b>{m.label}</b></Link>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="sec o4">Sections</div>
-            <div className="card arealist o4">
-              {sections.map((s, i) => {
-                const st = stats(tasks.filter((t) => t.section_id === s.id));
-                return (
-                  <Link key={s.id} className="area" href={`/sections/${s.id}`}>
-                    <span className="ai" style={{ background: HUES[i % HUES.length] }}>{initials(s.name)}</span>
-                    <span className="nm">{s.name}</span>
-                    <span className="pct num">{st.pct}%</span>
-                    <span className="cnt">{st.n} tasks · {st.done} done · {st.open} not started</span>
-                    {st.pct < 50 ? <span className="flag">Behind</span> : null}
-                    <Bar {...st} />
-                    <Chev />
-                  </Link>
-                );
-              })}
+            <div className="card sectable o4">
+              <div className="srow head d-only" aria-hidden="true">
+                <span /><span>Section</span><span className="n">Tasks</span><span className="n">Done</span><span className="n">Not started</span><span>Progress</span><span className="n">%</span><span />
+              </div>
+              {secStats.map(({ s, st }) => (
+                <Link key={s.id} className="srow" href={`/sections/${s.id}`}>
+                  <span className="ai">{initials(s.name)}</span>
+                  <span className="nm">{s.name}<small className="m-only">{st.n} tasks · {st.done} done · {st.open} not started</small></span>
+                  <span className="n num d-only">{st.n}</span>
+                  <span className="n num d-only">{st.done}</span>
+                  <span className="n num d-only">{st.open}</span>
+                  <span className="pb"><Bar {...st} /></span>
+                  <span className="pct n num">{st.pct}%{st.pct < 50 ? <span className="flag">Behind</span> : null}</span>
+                  <Chev />
+                </Link>
+              ))}
             </div>
           </div>
           <aside className="dash-side">
             {ctx.isManager ? (
-              <>
-                <div className="sec o3">Menu</div>
-                <div className="manage o3">
-                  {menu.map((m) => (
-                    <Link key={m.href} href={m.href}><span className="ic" style={{ background: HUES[m.hue] }}>{m.icon}</span><b>{m.label}</b></Link>
-                  ))}
-                </div>
-              </>
+              <div className="card pad attention d-only o3">
+                <h3>Needs attention</h3>
+                {all.un ? (
+                  <Link className="att" href="/assign"><b className="num">{all.un}</b><span>unassigned task{all.un === 1 ? "" : "s"}</span><Chev /></Link>
+                ) : null}
+                {behind.map(({ s, st }) => (
+                  <Link key={s.id} className="att" href={`/sections/${s.id}`}><b className="num">{st.pct}%</b><span>{s.name} · Behind</span><Chev /></Link>
+                ))}
+                {!all.un && !behind.length ? <div className="note">Every task is assigned and no section is behind.</div> : null}
+              </div>
             ) : (
-              <div className="card mytasks o3">
+              <Link className="card mytasks o3" href={me ? `/tasks?assignee=${me.id}` : "/tasks"}>
                 <b>My tasks</b>
                 <span>{mine.done} done · {mine.prog} in progress · {mine.open} not started</span>
                 <div className="big num">{mine.n}</div>
-              </div>
+              </Link>
             )}
           </aside>
         </div>

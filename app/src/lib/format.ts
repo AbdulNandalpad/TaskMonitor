@@ -1,12 +1,7 @@
 import type { Status, Task } from "./types";
 
-export const HUES = [
-  "linear-gradient(135deg,#f97316,#ef4444)", "linear-gradient(135deg,#8b5cf6,#6366f1)",
-  "linear-gradient(135deg,#06b6d4,#2563eb)", "linear-gradient(135deg,#10b981,#059669)",
-  "linear-gradient(135deg,#ec4899,#be185d)", "linear-gradient(135deg,#f59e0b,#d97706)",
-  "linear-gradient(135deg,#3b82f6,#1d4ed8)", "linear-gradient(135deg,#14b8a6,#0f766e)",
-  "linear-gradient(135deg,#ef4444,#9f1239)", "linear-gradient(135deg,#84cc16,#4d7c0f)",
-];
+/** Avatar / tile backgrounds. One neutral tint: colour is reserved for status and the primary action. */
+export const HUES = ["var(--neutral-bg)"];
 
 export const initials = (n: string) => {
   const w = n.replace(/[&,·]/g, " ").split(/\s+/).filter(Boolean);

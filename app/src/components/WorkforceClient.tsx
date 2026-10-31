@@ -9,7 +9,7 @@ import { Arrow, Assign, Plus, Xl } from "./Icons";
 import { Sheet } from "./Sheet";
 import { useToast } from "./Toast";
 
-const av = (name: string) => <span className="avatar" style={{ background: HUES[name.length % HUES.length], color: "#fff" }}>{initials(name)}</span>;
+const av = (name: string) => <span className="avatar" style={{ background: HUES[name.length % HUES.length] }}>{initials(name)}</span>;
 
 export function WorkforceClient({ persons, load, unassigned, sections }: { persons: Person[]; load: Record<string, number>; unassigned: number; sections: string[] }) {
   const router = useRouter();
@@ -41,7 +41,7 @@ export function WorkforceClient({ persons, load, unassigned, sections }: { perso
       <div className="ctl-row">
         <button className="btn primary" type="button" onClick={() => setSheet("upload")}><Xl />Upload from Excel</button>
         <button className="btn" type="button" onClick={() => setSheet("add")}><Plus />Add person</button>
-        <Link className="btn" href="/assign"><Assign />Assign tasks</Link>
+        <Link className="btn m-only" href="/assign"><Assign />Assign tasks</Link>
       </div>
       <div className="sec">People in this area</div>
       <div className="card">
