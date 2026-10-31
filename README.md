@@ -11,6 +11,7 @@ Built area by area. One area (for example Blast Furnace 1) goes live first with 
 | `docs/architecture.md` | Finalised system design: tenancy, access control, services, voice pipeline, photos, reports, deployment, security |
 | `docs/data-model.md` | Database schema with task field history and form versioning |
 | `docs/build-plan.md` | Phased build plan to the first live shutdown, with scope per release, team, estimates, acceptance criteria and risks |
+| `docs/client-questions.md` | One-page checklist of open questions for the client, with the assumption we work to until each is answered |
 | `prototype/shutdown-tracker.html` | Clickable prototype of every screen. Open it in a browser, or publish it as a page. No build step. |
 | `prototype/screenshots/` | 22 screens captured from the prototype in scene order, for decks and videos |
 | `prototype/demo-video-script.md` | Scene-by-scene script with voice-over for a demo video |
