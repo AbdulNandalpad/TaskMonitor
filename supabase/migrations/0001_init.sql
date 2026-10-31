@@ -364,3 +364,19 @@ drop policy if exists attachments_insert on storage.objects;
 create policy attachments_insert on storage.objects for insert to authenticated
   with check (bucket_id = 'attachments' and public.has_role(public.storage_area(name), '{area_admin,manager,field_user}'));
 -- no update or delete policies: attachments are kept (retention_days = 90 minimum, nothing is deleted automatically)
+
+-- ---------------------------------------------------------------- audit + public helpers
+create or replace function public.log_audit(p_action text, p_area_code text, p_detail jsonb default null, p_target_type text default null, p_target_id uuid default null)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null then raise exception 'not authenticated' using errcode = '42501'; end if;
+  insert into audit_log(area_id, user_id, action, target_type, target_id, detail)
+    values ((select id from area where code = p_area_code), auth.uid(), p_action, p_target_type, p_target_id, p_detail);
+end $$;
+revoke execute on function public.log_audit(text, text, jsonb, text, uuid) from public, anon;
+grant execute on function public.log_audit(text, text, jsonb, text, uuid) to authenticated, service_role;
+
+-- the sign-in screen shows the area name before anyone is signed in
+create or replace function public.public_area_name(p_code text) returns text
+language sql stable security definer set search_path = public as $$ select name from area where code = p_code and active $$;
+grant execute on function public.public_area_name(text) to anon, authenticated;
