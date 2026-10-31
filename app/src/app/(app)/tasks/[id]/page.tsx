@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireCtx } from "@/lib/auth";
 import { loadBoard } from "@/lib/data";
 import { fieldLabel, fmtValue, fmtWhen } from "@/lib/format";
+import { navOf } from "@/lib/nav";
 import { STATUS, type Task } from "@/lib/types";
 import { Screen } from "@/components/Screen";
 import { Cam, Chk, Mic, Pen } from "@/components/Icons";
@@ -31,7 +32,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   if (!row) notFound();
   const task = row as Task;
 
-  const [{ sections, persons, tasks }, updatesRes, attRes, versRes, chRes] = await Promise.all([
+  const [{ list, sections, persons, tasks }, updatesRes, attRes, versRes, chRes] = await Promise.all([
     loadBoard(ctx),
     supabase.from("task_update").select("id, type, by_user, at, status_after, text, extracted, confirmed").eq("task_id", id).order("at", { ascending: false }),
     supabase.from("attachment").select("id, task_update_id, kind, object_key").in("task_update_id",
@@ -65,8 +66,12 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       title={section?.name ?? "Task"}
       sub={`Task ${task.seq}${monitor ? ` · Monitor: ${monitor.name}` : ""}`}
       back={section ? `/sections/${section.id}` : "/"}
+      wide
+      nav={navOf(ctx, list?.id)}
       actions={ctx.isManager ? <EditTask task={task} sections={sections} persons={persons} /> : null}
     >
+      <div className="task">
+      <div className="task-main">
       <div className="card pad jd">
         <div className="desc">{v.work_description}</div>
         <div className="meta">
@@ -86,6 +91,8 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       </div>
 
       <TaskActions task={{ id: task.id, seq: task.seq, status: task.status, progress: task.progress }} areaId={ctx.area.id} canUpdate={ctx.role !== "viewer"} />
+      </div>
+      <div className="task-side">
 
       <div className="sec">Updates · {updates.length}</div>
       <div className="card timeline">
@@ -144,6 +151,8 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
             </div>
           );
         })}
+      </div>
+      </div>
       </div>
       <MicButton taskId={task.id} tasks={tasks.map((t) => ({ id: t.id, seq: t.seq, title: String(t.values.work_description ?? "") }))}
         current={{ id: task.id, seq: task.seq, title: String(v.work_description ?? ""), status: task.status, progress: task.progress, manpower: v.manpower ?? null }}

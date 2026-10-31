@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AREA_CODE, AREA_COOKIE, requireCtx } from "@/lib/auth";
 import { HUES } from "@/lib/format";
+import { navOf } from "@/lib/nav";
 import { ROLE_LABEL } from "@/lib/roles";
 import { Screen } from "@/components/Screen";
 import { SignOut, UnitIcon } from "@/components/Icons";
@@ -27,8 +28,9 @@ export default async function AreasPage() {
     <Screen
       title="Choose an area"
       sub={`${ctx.profile.display_name} · ${ROLE_LABEL[ctx.role]}`}
-      actions={<form action="/api/auth/logout" method="post"><button className="iconbtn" type="submit" aria-label="Sign out"><SignOut /></button></form>}
+      actions={<form className="m-only" action="/api/auth/logout" method="post"><button className="iconbtn" type="submit" aria-label="Sign out"><SignOut /></button></form>}
       short
+      nav={{ ...navOf(ctx), isManager: false }}
     >
       <div className="note">Your account is scoped to more than one area. Single‑area accounts skip this screen.</div>
       <div className="unitlist">

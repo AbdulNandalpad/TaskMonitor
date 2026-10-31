@@ -5,6 +5,7 @@ import { loadBoard } from "@/lib/data";
 import { fmtStamp, fmtWhen, stats } from "@/lib/format";
 import { PrintButton } from "@/components/PrintButton";
 import { Back } from "@/components/Icons";
+import { LogoMark } from "@/components/Logo";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +51,7 @@ export default async function ReportPage({ params }: { params: Promise<{ listId:
   const Head = ({ n }: { n: number }) => (
     <div className="ph-hd">
       <div><h1>{area.name} Shutdown · Task List Report</h1><div className="sub">{list.name} · Generated {stamp}</div></div>
-      <div className="org"><b>Area · {area.name}</b>Task Monitor · Page {n} of 3</div>
+      <div className="org"><b>Area · {area.name}</b><span className="org-brand"><LogoMark size={16} />Task Monitor · Page {n} of 3</span></div>
     </div>
   );
   const open = tasks.filter((t) => t.status === "not_started");
@@ -59,7 +60,7 @@ export default async function ReportPage({ params }: { params: Promise<{ listId:
   return (
     <div className="reportwrap">
       <div className="ovbar no-print">
-        <Link className="btn" href="/"><Back />Back to app</Link>
+        <Link className="btn" href="/"><Back /><span className="d-only">Back to app</span></Link>
         <div className="ttl"><b>{file}.pdf</b><span>3 pages · generated {stamp}</span></div>
         <PrintButton />
       </div>

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AlertCircle } from "@/components/Icons";
+import { AuthShell } from "@/components/AuthShell";
 
 /** First login: the seeded password must be replaced (min 8 characters). */
 export default function PasswordPage() {
@@ -27,18 +28,14 @@ export default function PasswordPage() {
   }
 
   return (
-    <div className="login-wrap">
-      <div className="signin">
-        <div className="brand">
-          <div><h1>Choose a new password</h1><span>Your first sign-in uses a temporary password. Set your own to continue.</span></div>
-        </div>
-        <form className="login-card" onSubmit={submit}>
-          <div className="field"><label htmlFor="pw">New password</label><input id="pw" name="pw" type="password" autoComplete="new-password" minLength={8} required /></div>
-          <div className="field"><label htmlFor="again">Repeat new password</label><input id="again" name="again" type="password" autoComplete="new-password" required /></div>
-          {error && <div className="errbox" role="alert"><AlertCircle /><span>{error}</span></div>}
-          <button className="btn primary block" type="submit" disabled={busy}>{busy ? "Saving…" : "Save and continue"}</button>
-        </form>
-      </div>
-    </div>
+    <AuthShell>
+      <form className="login-card" onSubmit={submit}>
+        <div className="card-hd"><h2>Choose a new password</h2><p>Your first sign-in uses a temporary password. Set your own to continue.</p></div>
+        <div className="field"><label htmlFor="pw">New password</label><input id="pw" name="pw" type="password" autoComplete="new-password" minLength={8} required /></div>
+        <div className="field"><label htmlFor="again">Repeat new password</label><input id="again" name="again" type="password" autoComplete="new-password" required /></div>
+        {error && <div className="errbox" role="alert"><AlertCircle /><span>{error}</span></div>}
+        <button className="btn primary block" type="submit" disabled={busy}>{busy ? "Saving…" : "Save and continue"}</button>
+      </form>
+    </AuthShell>
   );
 }
