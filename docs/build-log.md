@@ -60,3 +60,7 @@ npm run build
 ```
 
 Database: apply `supabase/migrations/0001_init.sql` then `supabase/seed/seed.sql` in the Supabase SQL editor (or `npx supabase link` + `npx supabase db push`, then `npm run seed` with the service key). Seed users `sunita.m` (manager), `ravi.k` (field user), `anil.v` (manager, `bf1` + `sp1`), `meena.r` (`sp1` only); password `ChangeMe-2026!`, changed on first sign-in.
+
+## Hosting
+
+The single source repository is `iammuniraa-wq/task-monitor` (GitHub). Vercel project `task-monitor` (team veveycrm) deploys `main` from it: Framework Preset Next.js, Root Directory `app`, env vars `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_AREA_CODE=bf1`. Earlier the preset was "Other", which built nothing and returned 404 on Visit.
