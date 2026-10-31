@@ -1,0 +1,1373 @@
+{
+ "sections": [
+  {
+   "name": "Tuyere Platform & Furnace",
+   "head": "A. Sharma"
+  },
+  {
+   "name": "BLT & Furnace Top",
+   "head": "P. Nayak"
+  },
+  {
+   "name": "Hydraulics",
+   "head": "M. Iqbal"
+  },
+  {
+   "name": "Cyclone",
+   "head": "M. Iqbal"
+  },
+  {
+   "name": "CH De-dusting",
+   "head": "S. Behera"
+  },
+  {
+   "name": "SGP",
+   "head": "D. Patil"
+  },
+  {
+   "name": "Stock House",
+   "head": "Ravi Kumar"
+  },
+  {
+   "name": "Blower & TRT",
+   "head": "V. Rao"
+  },
+  {
+   "name": "MPH & GCP",
+   "head": "K. Das"
+  },
+  {
+   "name": "PCI, Stove & SH De-dusting",
+   "head": "N. Gowda"
+  }
+ ],
+ "people": [
+  {
+   "name": "Ravi Kumar",
+   "role_title": "Area head · Stock House",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "A. Sharma",
+   "role_title": "Area head · Tuyere platform",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "P. Nayak",
+   "role_title": "Area head · BLT & top",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "M. Iqbal",
+   "role_title": "Hydraulics engineer",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "S. Behera",
+   "role_title": "De‑dusting engineer",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "D. Patil",
+   "role_title": "Area head · SGP",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "V. Rao",
+   "role_title": "Blower & TRT engineer",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "K. Das",
+   "role_title": "MPH & GCP engineer",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "N. Gowda",
+   "role_title": "PCI & stoves engineer",
+   "kind": "employee",
+   "team_size": null
+  },
+  {
+   "name": "R. Singh",
+   "role_title": "Mechanical fitter team · 8 people",
+   "kind": "employee",
+   "team_size": 8
+  },
+  {
+   "name": "Vendor team A",
+   "role_title": "Belt vulcanising · 6 people",
+   "kind": "vendor_team",
+   "team_size": 6
+  },
+  {
+   "name": "Vendor team B",
+   "role_title": "Refractory · 12 people",
+   "kind": "vendor_team",
+   "team_size": 12
+  }
+ ],
+ "tasks": [
+  {
+   "seq": 1,
+   "section": 0,
+   "work_description": "Downleg replacement TSA no 10, 17",
+   "planned_hours": 12,
+   "manpower": 4,
+   "vendor": "",
+   "responsible": "A. Sharma",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 2,
+   "section": 0,
+   "work_description": "Blowpipe changing 05, 10, 14 and syngas blowpipes 34, 25, 24, 12",
+   "planned_hours": 12,
+   "manpower": 6,
+   "vendor": "Vendor team A",
+   "responsible": "A. Sharma",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 3,
+   "section": 0,
+   "work_description": "Tuyere changing 30, 31, 12 (life)",
+   "planned_hours": 10,
+   "manpower": 8,
+   "vendor": "",
+   "responsible": "A. Sharma",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 4,
+   "section": 0,
+   "work_description": "TC no. 28 leakage putty fixing",
+   "planned_hours": 3,
+   "manpower": 10,
+   "vendor": "Vendor team B",
+   "responsible": "A. Sharma",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 5,
+   "section": 0,
+   "work_description": "Stave hose changing",
+   "planned_hours": 12,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 6,
+   "section": 0,
+   "work_description": "Stack probe cleaning",
+   "planned_hours": 4,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "A. Sharma",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 7,
+   "section": 0,
+   "work_description": "Blowpipe tie rod checking and replacement",
+   "planned_hours": 6,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "A. Sharma",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 8,
+   "section": 1,
+   "work_description": "Distribution chute inspection",
+   "planned_hours": 1,
+   "manpower": 6,
+   "vendor": "Vendor team A",
+   "responsible": "P. Nayak",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 9,
+   "section": 1,
+   "work_description": "Feeder spout inspection and rotation",
+   "planned_hours": 8,
+   "manpower": 8,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 10,
+   "section": 1,
+   "work_description": "LMG bellow protection and seat changing 2",
+   "planned_hours": 16,
+   "manpower": 10,
+   "vendor": "Vendor team B",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 11,
+   "section": 1,
+   "work_description": "Camera installation work",
+   "planned_hours": 8,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 12,
+   "section": 1,
+   "work_description": "Lower seal valve 1 and 2 seal changing",
+   "planned_hours": 4,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "P. Nayak",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 13,
+   "section": 1,
+   "work_description": "Upper seal valve 1 and 2 seal changing",
+   "planned_hours": 6,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 14,
+   "section": 1,
+   "work_description": "Gland changing in DDV 1 and 2",
+   "planned_hours": 4,
+   "manpower": 8,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 15,
+   "section": 1,
+   "work_description": "SLI inspection",
+   "planned_hours": 6,
+   "manpower": 10,
+   "vendor": "Vendor team A",
+   "responsible": "P. Nayak",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 16,
+   "section": 1,
+   "work_description": "Spherical valve seat changing",
+   "planned_hours": 2,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 17,
+   "section": 1,
+   "work_description": "Transmission gearbox swivel joint changing",
+   "planned_hours": 2,
+   "manpower": 4,
+   "vendor": "Vendor team B",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 18,
+   "section": 1,
+   "work_description": "Transmission gearbox grease cleaning",
+   "planned_hours": 4,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 19,
+   "section": 1,
+   "work_description": "PRV valves 150 NB changing (globe valve N2 line)",
+   "planned_hours": 2,
+   "manpower": 8,
+   "vendor": "Vendor team A",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 20,
+   "section": 1,
+   "work_description": "Receiving hopper repairing",
+   "planned_hours": 8,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 21,
+   "section": 1,
+   "work_description": "Planetary gearbox oil changing and encoders",
+   "planned_hours": 4,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 22,
+   "section": 1,
+   "work_description": "Equalization valve no. 2 seat flap changing",
+   "planned_hours": 6,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "P. Nayak",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 23,
+   "section": 1,
+   "work_description": "100 NB valves changing in water system",
+   "planned_hours": 6,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 24,
+   "section": 1,
+   "work_description": "Above burden 1 changing",
+   "planned_hours": 8,
+   "manpower": 8,
+   "vendor": "Vendor team B",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 25,
+   "section": 1,
+   "work_description": "LSV 1 seat changing",
+   "planned_hours": 6,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "P. Nayak",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 26,
+   "section": 2,
+   "work_description": "AG cone cylinder changing no. 2",
+   "planned_hours": 6,
+   "manpower": 8,
+   "vendor": "",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 27,
+   "section": 2,
+   "work_description": "BLT fast cycle grease spool changing",
+   "planned_hours": 3,
+   "manpower": 10,
+   "vendor": "Vendor team B",
+   "responsible": "M. Iqbal",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 28,
+   "section": 2,
+   "work_description": "BLT spherical valve cylinder changing",
+   "planned_hours": 4,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "M. Iqbal",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 29,
+   "section": 2,
+   "work_description": "BLT CGLS pipeline connection",
+   "planned_hours": 1,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "M. Iqbal",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 30,
+   "section": 3,
+   "work_description": "Inclined manhole and lock hopper manhole opening",
+   "planned_hours": 4,
+   "manpower": 10,
+   "vendor": "Vendor team B",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 31,
+   "section": 4,
+   "work_description": "Damper inspection and rectification, 6 nos",
+   "planned_hours": 12,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "S. Behera",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 32,
+   "section": 4,
+   "work_description": "Hopper inspection east and west",
+   "planned_hours": 12,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "S. Behera",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 33,
+   "section": 4,
+   "work_description": "CHDDS west silo suction line valve fixing and silo top cover welding",
+   "planned_hours": 12,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "S. Behera",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 34,
+   "section": 5,
+   "work_description": "SGP west hot well line 900 NB changing near dry pit 1",
+   "planned_hours": 12,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 35,
+   "section": 5,
+   "work_description": "PM of slag transporting system",
+   "planned_hours": 12,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 36,
+   "section": 5,
+   "work_description": "SGP east/west screw conveyor mother plate and liner plate fixing",
+   "planned_hours": 12,
+   "manpower": 8,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 37,
+   "section": 5,
+   "work_description": "Alignment of GB 05A drive side",
+   "planned_hours": 8,
+   "manpower": 10,
+   "vendor": "Vendor team A",
+   "responsible": "D. Patil",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 38,
+   "section": 5,
+   "work_description": "GB 05A conveyor belt changing (hot joint)",
+   "planned_hours": 12,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 39,
+   "section": 5,
+   "work_description": "SGP west KWP 1 discharge valve patching",
+   "planned_hours": 2,
+   "manpower": 4,
+   "vendor": "Vendor team B",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 40,
+   "section": 5,
+   "work_description": "SGP east/west liner plate fixing in slag tube",
+   "planned_hours": 12,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 41,
+   "section": 5,
+   "work_description": "Diverter gate repairing work",
+   "planned_hours": 3,
+   "manpower": 8,
+   "vendor": "Vendor team A",
+   "responsible": "D. Patil",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 42,
+   "section": 5,
+   "work_description": "SGP west blowing box U line pipe replacement",
+   "planned_hours": 10,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 43,
+   "section": 5,
+   "work_description": "GB 01A pressure pulley and snub pulley lagging",
+   "planned_hours": 2,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 44,
+   "section": 5,
+   "work_description": "GB 01B tail end pulley lagging",
+   "planned_hours": 3,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 45,
+   "section": 5,
+   "work_description": "SGP east/west screw conveyor NDE side gland inspection and changing",
+   "planned_hours": 5,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 46,
+   "section": 5,
+   "work_description": "Actuator gate replacement in bin building as per condition",
+   "planned_hours": 4,
+   "manpower": 8,
+   "vendor": "Vendor team B",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 47,
+   "section": 5,
+   "work_description": "GB 07 pressure pulley lagging",
+   "planned_hours": 3.5,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 48,
+   "section": 5,
+   "work_description": "GB 08 pressure pulley lagging",
+   "planned_hours": 3.5,
+   "manpower": 12,
+   "vendor": "Vendor team A",
+   "responsible": "D. Patil",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 49,
+   "section": 5,
+   "work_description": "SGP west KWP 1 suction reducer changing",
+   "planned_hours": 5,
+   "manpower": 4,
+   "vendor": "",
+   "responsible": "D. Patil",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 50,
+   "section": 6,
+   "work_description": "MCC discharge pulley bearing sleeve rectification",
+   "planned_hours": 16,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 51,
+   "section": 6,
+   "work_description": "MCC-01, OGC-01 and CGC-01 gear coupling and bend pulley greasing",
+   "planned_hours": 6,
+   "manpower": 8,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 52,
+   "section": 6,
+   "work_description": "MCC-01, OGC-01 scoop coupling and CGC-01 fluid coupling oil top up",
+   "planned_hours": 6,
+   "manpower": 10,
+   "vendor": "Vendor team A",
+   "responsible": "Ravi Kumar",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 53,
+   "section": 6,
+   "work_description": "MCC-01, OGC-01 scoop coupling heat exchanger flushing",
+   "planned_hours": 4,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 54,
+   "section": 6,
+   "work_description": "MCC drive changeover from drive 1 to drive 3",
+   "planned_hours": 6,
+   "manpower": 4,
+   "vendor": "Vendor team B",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 55,
+   "section": 6,
+   "work_description": "OGC/CGC carrying and return idler replacement",
+   "planned_hours": 6,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 56,
+   "section": 6,
+   "work_description": "CGC tail pulley lagging",
+   "planned_hours": 10,
+   "manpower": 8,
+   "vendor": "Vendor team A",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 57,
+   "section": 6,
+   "work_description": "CGC tail deflector pulley lagging",
+   "planned_hours": 4,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 58,
+   "section": 6,
+   "work_description": "OGC drive changeover from 2 to 1",
+   "planned_hours": 6,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 59,
+   "section": 6,
+   "work_description": "OTC belt replacement",
+   "planned_hours": 16,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 60,
+   "section": 6,
+   "work_description": "CTC snub pulley, deflector 1, 2, bend pulley 2 and tripper bend pulley lagging",
+   "planned_hours": 10,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 61,
+   "section": 6,
+   "work_description": "STC 1 drive changeover from 1 to 2",
+   "planned_hours": 5,
+   "manpower": 8,
+   "vendor": "Vendor team B",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 62,
+   "section": 6,
+   "work_description": "CTC/STC tripper discharge chute liner repairing",
+   "planned_hours": 8,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 63,
+   "section": 6,
+   "work_description": "NCC receiving chute liner repairing",
+   "planned_hours": 6,
+   "manpower": 12,
+   "vendor": "Vendor team A",
+   "responsible": "Ravi Kumar",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 64,
+   "section": 6,
+   "work_description": "SFC2 belt joint",
+   "planned_hours": 6,
+   "manpower": 4,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 65,
+   "section": 6,
+   "work_description": "SFC2 deflector pulley lagging",
+   "planned_hours": 3,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 66,
+   "section": 6,
+   "work_description": "CFC1, CFC2 belt joint patching and repairing",
+   "planned_hours": 7,
+   "manpower": 8,
+   "vendor": "Vendor team A",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 67,
+   "section": 6,
+   "work_description": "CFC3 belt joint",
+   "planned_hours": 7,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 68,
+   "section": 6,
+   "work_description": "SFC1 drive changeover from drive 1 to drive 2",
+   "planned_hours": 4,
+   "manpower": 12,
+   "vendor": "Vendor team B",
+   "responsible": "Ravi Kumar",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 69,
+   "section": 6,
+   "work_description": "All fines gear coupling greasing",
+   "planned_hours": 7,
+   "manpower": 4,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 70,
+   "section": 6,
+   "work_description": "Coke discharge radial gate PM",
+   "planned_hours": 4,
+   "manpower": 6,
+   "vendor": "Vendor team A",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 71,
+   "section": 6,
+   "work_description": "NCS-01 PM job",
+   "planned_hours": 4,
+   "manpower": 8,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 72,
+   "section": 6,
+   "work_description": "Additive 2 conveyor snub pulley bearing inspection",
+   "planned_hours": 4,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 73,
+   "section": 6,
+   "work_description": "Sinter fines feeder liner repairing",
+   "planned_hours": 6,
+   "manpower": 12,
+   "vendor": "Vendor team A",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 74,
+   "section": 6,
+   "work_description": "MCC chute repairing and liner fixing",
+   "planned_hours": 8,
+   "manpower": 4,
+   "vendor": "",
+   "responsible": "Ravi Kumar",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 75,
+   "section": 7,
+   "work_description": "Blower 3 new balance suction filter elements fixing (approx. 40+40 nos)",
+   "planned_hours": 5,
+   "manpower": 8,
+   "vendor": "",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 76,
+   "section": 7,
+   "work_description": "Blower 2 suction filter elements removing, cleaning, fixing and light‑pass checking (240 nos)",
+   "planned_hours": 12,
+   "manpower": 10,
+   "vendor": "Vendor team A",
+   "responsible": "V. Rao",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 77,
+   "section": 7,
+   "work_description": "TRT bypass valve 401, 402, 403 filter replacement with 3 micron filters",
+   "planned_hours": 1,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "V. Rao",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 78,
+   "section": 7,
+   "work_description": "Blower 1, 2, 3 control oil supply line filter replacement, 10 micron",
+   "planned_hours": 1,
+   "manpower": 4,
+   "vendor": "Vendor team B",
+   "responsible": "V. Rao",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 79,
+   "section": 7,
+   "work_description": "Blower 1, 2, 3 control oil return line filter replacement",
+   "planned_hours": 1,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "V. Rao",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 80,
+   "section": 7,
+   "work_description": "TRT bypass valve 401 stand filter housing replacement",
+   "planned_hours": 1,
+   "manpower": 8,
+   "vendor": "Vendor team A",
+   "responsible": "V. Rao",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 81,
+   "section": 8,
+   "work_description": "Hearth pipeline leakage arresting near tap hole 3",
+   "planned_hours": 5,
+   "manpower": 10,
+   "vendor": "Vendor team A",
+   "responsible": "K. Das",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 82,
+   "section": 8,
+   "work_description": "Hearth pipeline strengthening",
+   "planned_hours": 6,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "K. Das",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 83,
+   "section": 8,
+   "work_description": "Steam line (top) main manual valve changing",
+   "planned_hours": 5,
+   "manpower": 4,
+   "vendor": "Vendor team B",
+   "responsible": "K. Das",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 84,
+   "section": 8,
+   "work_description": "NRV changing, industrial water pump 1",
+   "planned_hours": 6,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "K. Das",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 85,
+   "section": 8,
+   "work_description": "Closed circuit DG set maintenance",
+   "planned_hours": 4,
+   "manpower": 8,
+   "vendor": "Vendor team A",
+   "responsible": "K. Das",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 86,
+   "section": 8,
+   "work_description": "NRV changing, clarified water pump 1",
+   "planned_hours": 6,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "K. Das",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 87,
+   "section": 8,
+   "work_description": "Discharge valve changing, clarified water pump 1",
+   "planned_hours": 6,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "K. Das",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 88,
+   "section": 8,
+   "work_description": "50 NB equalizing line opening, cleaning and fixing",
+   "planned_hours": 3,
+   "manpower": 4,
+   "vendor": "Vendor team A",
+   "responsible": "K. Das",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 89,
+   "section": 8,
+   "work_description": "New line tapping for scrubber pump 1 (new pump installation)",
+   "planned_hours": 8,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "K. Das",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 90,
+   "section": 8,
+   "work_description": "Floor concreting at GCP cooling tower area",
+   "planned_hours": 12,
+   "manpower": 8,
+   "vendor": "Vendor team B",
+   "responsible": "K. Das",
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 91,
+   "section": 8,
+   "work_description": "Civil concreting for GCP cooling tower near sluice gate of cell 1",
+   "planned_hours": 12,
+   "manpower": 10,
+   "vendor": "",
+   "responsible": "K. Das",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 92,
+   "section": 8,
+   "work_description": "GCP cooling tower cold well cleaning",
+   "planned_hours": 8,
+   "manpower": 12,
+   "vendor": "Vendor team A",
+   "responsible": "K. Das",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 93,
+   "section": 8,
+   "work_description": "SBT tank cleaning",
+   "planned_hours": 8,
+   "manpower": 4,
+   "vendor": "",
+   "responsible": "K. Das",
+   "status": "in_progress",
+   "progress": 35
+  },
+  {
+   "seq": 94,
+   "section": 8,
+   "work_description": "SBT tank main line auto knife edge valve changing",
+   "planned_hours": 4,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "K. Das",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 95,
+   "section": 8,
+   "work_description": "Steam line leakage arresting",
+   "planned_hours": 4,
+   "manpower": 8,
+   "vendor": "Vendor team A",
+   "responsible": null,
+   "status": "not_started",
+   "progress": 0
+  },
+  {
+   "seq": 96,
+   "section": 9,
+   "work_description": "Mill 2 bag filter inspection",
+   "planned_hours": 4,
+   "manpower": 12,
+   "vendor": "",
+   "responsible": "N. Gowda",
+   "status": "completed",
+   "progress": 100
+  },
+  {
+   "seq": 97,
+   "section": 9,
+   "work_description": "Mill 2 PRV replacement in N2 bypass line",
+   "planned_hours": 3,
+   "manpower": 4,
+   "vendor": "Vendor team B",
+   "responsible": "N. Gowda",
+   "status": "in_progress",
+   "progress": 60
+  },
+  {
+   "seq": 98,
+   "section": 9,
+   "work_description": "Stove 3 combustion air flow control valve inspection",
+   "planned_hours": 4,
+   "manpower": 6,
+   "vendor": "",
+   "responsible": "N. Gowda",
+   "status": "in_progress",
+   "progress": 80
+  },
+  {
+   "seq": 99,
+   "section": 9,
+   "work_description": "WG, cold blast, CA shutoff and gas shutoff valve gland replacement",
+   "planned_hours": 6,
+   "manpower": 8,
+   "vendor": "Vendor team A",
+   "responsible": "N. Gowda",
+   "status": "completed",
+   "progress": 100
+  }
+ ],
+ "form": {
+  "name": "Shutdown jobs",
+  "templates": {
+   "Shutdown jobs": [
+    [
+     "Section",
+     "Dropdown",
+     true
+    ],
+    [
+     "Work description",
+     "Text",
+     true
+    ],
+    [
+     "Planned hours",
+     "Number",
+     false
+    ],
+    [
+     "Manpower",
+     "Number",
+     false
+    ],
+    [
+     "Vendor",
+     "Text",
+     false
+    ],
+    [
+     "Responsible",
+     "Person",
+     true
+    ],
+    [
+     "Photo on completion",
+     "Photo",
+     true
+    ]
+   ],
+   "Inspection round": [
+    [
+     "Location",
+     "Dropdown",
+     true
+    ],
+    [
+     "Check point",
+     "Text",
+     true
+    ],
+    [
+     "Reading",
+     "Number",
+     false
+    ],
+    [
+     "Within limit",
+     "Yes/No",
+     true
+    ],
+    [
+     "Inspector",
+     "Person",
+     true
+    ],
+    [
+     "Photo if abnormal",
+     "Photo",
+     false
+    ]
+   ],
+   "Safety audit": [
+    [
+     "Section",
+     "Dropdown",
+     true
+    ],
+    [
+     "Observation",
+     "Text",
+     true
+    ],
+    [
+     "Severity",
+     "Dropdown",
+     true
+    ],
+    [
+     "Owner",
+     "Person",
+     true
+    ],
+    [
+     "Due date",
+     "Date",
+     true
+    ],
+    [
+     "Evidence photo",
+     "Photo",
+     true
+    ]
+   ],
+   "Blank": [
+    [
+     "Title",
+     "Text",
+     true
+    ],
+    [
+     "Responsible",
+     "Person",
+     true
+    ]
+   ]
+  }
+ },
+ "importColumns": [
+  [
+   "S.NO",
+   "skip"
+  ],
+  [
+   "Area",
+   "Section"
+  ],
+  [
+   "Work Description",
+   "Work description"
+  ],
+  [
+   "Shutdown Duration (Hrs.)",
+   "Planned hours"
+  ],
+  [
+   "Manpower Required",
+   "Manpower"
+  ],
+  [
+   "Vendor",
+   "Vendor"
+  ],
+  [
+   "Responsible Person",
+   "Responsible"
+  ],
+  [
+   "Compliance Description",
+   "Remarks"
+  ],
+  [
+   "Status",
+   "Status"
+  ],
+  [
+   "Remarks",
+   "Remarks"
+  ],
+  [
+   "Compliance %",
+   "Progress"
+  ]
+ ]
+}
