@@ -67,7 +67,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       sub={`Task ${task.seq}${monitor ? ` · Monitor: ${monitor.name}` : ""}`}
       back={section ? `/sections/${section.id}` : "/"}
       wide
-      nav={navOf(ctx, list?.id)}
+      nav={navOf(ctx, list?.id, tasks.filter((t) => !t.responsible_person_id).length)}
       actions={ctx.isManager ? <EditTask task={task} sections={sections} persons={persons} /> : null}
     >
       <div className="task">

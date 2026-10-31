@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { NavInfo } from "@/lib/nav";
 import { Back } from "./Icons";
 import { AppNav } from "./AppNav";
+import { MobileMenu } from "./MobileMenu";
 import { LogoMark } from "./Logo";
 
 /**
@@ -29,6 +30,7 @@ export function Screen({
             {sub && <span className={subPhoneOnly ? "m-only" : undefined}>{sub}</span>}
           </div>
           {actions}
+          {nav && <MobileMenu {...nav} />}
         </div>
         <div className={`body${short ? " short" : ""}`}>{children}</div>
       </div>

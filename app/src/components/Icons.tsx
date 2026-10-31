@@ -24,4 +24,5 @@ export const WarnIcon = () => (<Svg><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2
 export const AlertCircle = () => (<Svg><path d="M12 9v4M12 17h.01" /><circle cx="12" cy="12" r="10" /></Svg>);
 export const UnitIcon = () => (<Svg><path d="M3 21V8l6 4V8l6 4V4l6 3v14z" /><path d="M8 17h2M13 17h2" /></Svg>);
 export const List = () => (<Svg><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></Svg>);
+export const Burger = () => (<Svg><path d="M4 7h16M4 12h16M4 17h16" /></Svg>);
 export const Home = () => (<Svg><path d="M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" /></Svg>);

@@ -22,7 +22,7 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     }))
     .sort((a, b) => (secIndex.get(a.section_id ?? "") ?? 99) - (secIndex.get(b.section_id ?? "") ?? 99) || a.seq - b.seq);
   return (
-    <Screen title="All tasks" sub={list ? `${list.name} · ${tasks.length} tasks` : undefined} back="/" wide short nav={navOf(ctx, list?.id)}>
+    <Screen title="All tasks" sub={list ? `${list.name} · ${tasks.length} tasks` : undefined} back="/" wide short nav={navOf(ctx, list?.id, tasks.filter((t) => !t.responsible_person_id).length)}>
       <TaskListClient
         rows={rows}
         sections={sections.map((s) => ({ id: s.id, name: s.name }))}

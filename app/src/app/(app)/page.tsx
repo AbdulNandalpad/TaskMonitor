@@ -5,7 +5,7 @@ import { initials, stats } from "@/lib/format";
 import { navOf } from "@/lib/nav";
 import { ROLE_LABEL } from "@/lib/roles";
 import { Bar, Screen } from "@/components/Screen";
-import { Assign, Chev, FormIcon, List, Pdf, Plus, SignOut, Xl, People } from "@/components/Icons";
+import { Chev } from "@/components/Icons";
 import { MicButton } from "@/components/VoiceSheet";
 import { BellButton } from "@/components/BellButton";
 
@@ -20,15 +20,6 @@ export default async function Dashboard() {
   const hours = tasks.reduce((a, t) => a + (Number(t.values.planned_hours) || 0), 0);
   const secStats = sections.map((s) => ({ s, st: stats(tasks.filter((t) => t.section_id === s.id)) }));
   const behind = secStats.filter((x) => x.st.pct < 50);
-  const menu = [
-    { href: "/tasks/new", icon: <Plus />, label: "Create task" },
-    { href: "/tasks", icon: <List />, label: "All tasks" },
-    { href: "/import/tasks", icon: <Xl />, label: "Upload tasks (Excel)" },
-    { href: "/workforce", icon: <People />, label: "Workforce" },
-    { href: "/assign", icon: <Assign />, label: `Assign tasks${all.un ? ` · ${all.un}` : ""}` },
-    ...(list ? [{ href: `/report/${list.id}`, icon: <Pdf />, label: "PDF report" }] : []),
-    { href: "/form", icon: <FormIcon />, label: "Form settings" },
-  ];
   const kpis: { href: string; label: string; n: number; cls?: string }[] = [
     { href: "/tasks", label: "All tasks", n: all.n },
     { href: "/tasks?status=completed", label: "Completed", n: all.done, cls: "good" },
@@ -41,13 +32,8 @@ export default async function Dashboard() {
       sub={`${ctx.profile.display_name} · ${ROLE_LABEL[ctx.role]}`}
       subPhoneOnly
       wide
-      nav={navOf(ctx, list?.id)}
-      actions={
-        <span className="m-only appbar-acts">
-          <BellButton open={all.open} unassigned={all.un} />
-          <form action="/api/auth/logout" method="post"><button className="iconbtn" type="submit" aria-label="Sign out"><SignOut /></button></form>
-        </span>
-      }
+      nav={navOf(ctx, list?.id, all.un)}
+      actions={<span className="m-only appbar-acts"><BellButton open={all.open} unassigned={all.un} /></span>}
     >
       {!list ? (
         <div className="card empty"><b>No task list yet</b><span>{ctx.isManager ? "Upload tasks from Excel or create the first task." : "A manager has not set up this area yet."}</span></div>
@@ -68,16 +54,6 @@ export default async function Dashboard() {
                 </Link>
               ))}
             </div>
-            {ctx.isManager && (
-              <div className="m-only">
-                <div className="sec o3">Menu</div>
-                <div className="manage o3">
-                  {menu.map((m) => (
-                    <Link key={m.href} href={m.href}><span className="ic">{m.icon}</span><b>{m.label}</b></Link>
-                  ))}
-                </div>
-              </div>
-            )}
             <div className="sec o4">Sections</div>
             <div className="card sectable o4">
               <div className="srow head d-only" aria-hidden="true">

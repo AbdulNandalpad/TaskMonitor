@@ -715,3 +715,22 @@ a.mytasks:hover{border-color:var(--accent)}
   .toolbar .search,.toolbar select{height:36px;font-size:13px}
   .filters button{height:32px;font-size:12.5px}
 }
+
+/* ---------- phone menu (burger + slide-in panel) ---------- */
+.burger{margin-right:-6px}
+.mnav-back{position:fixed;inset:0;z-index:75;background:rgba(17,24,39,.42);display:flex;justify-content:flex-end}
+.mnav{width:min(320px,86vw);height:100%;height:100dvh;background:var(--panel);display:flex;flex-direction:column;overflow-y:auto;overscroll-behavior:contain;box-shadow:-8px 0 30px rgba(17,24,39,.16);
+  padding:calc(6px + env(safe-area-inset-top,0px)) max(8px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) 8px;animation:mnav-in .18s ease-out}
+@keyframes mnav-in{from{transform:translateX(24px);opacity:0}to{transform:none;opacity:1}}
+.mnav-hd{display:grid;grid-template-columns:36px minmax(0,1fr) 44px;gap:10px;align-items:center;padding:6px 4px 12px 8px;border-bottom:1px solid var(--line);margin-bottom:8px;flex:none}
+.mnav-hd .who-txt b{display:block;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mnav-hd .who-txt small{display:block;font-size:12px;color:var(--muted)}
+.mnav nav{display:grid;gap:2px;flex:1 0 auto;align-content:start}
+.mnav nav a{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 12px;border-radius:8px;font-size:14.5px;font-weight:500;color:var(--ink);text-decoration:none}
+.mnav nav a svg{width:19px;height:19px;color:var(--muted);flex:none}
+.mnav nav a:hover{background:var(--panel2)}
+.mnav nav a[aria-current="page"]{background:var(--panel2);color:var(--accent)}
+.mnav nav a[aria-current="page"] svg{color:var(--accent)}
+.mnav-foot{flex:none;padding:12px 4px 0;border-top:1px solid var(--line);margin-top:12px}
+@media (min-width:960px){.burger,.mnav-back{display:none!important}}
+@media (prefers-reduced-motion:reduce){.mnav{animation:none}}

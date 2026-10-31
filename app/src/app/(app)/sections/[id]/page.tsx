@@ -20,7 +20,7 @@ export default async function SectionPage({ params }: { params: Promise<{ id: st
   const head = persons.find((p) => p.id === section.head_person_id);
   const nameOf = new Map(persons.map((p) => [p.id, p.name]));
   return (
-    <Screen title={section.name} sub={`${s.n} tasks · ${s.pct}% complete${head ? ` · ${head.name}` : ""}`} back="/" nav={navOf(ctx, board?.id)}>
+    <Screen title={section.name} sub={`${s.n} tasks · ${s.pct}% complete${head ? ` · ${head.name}` : ""}`} back="/" nav={navOf(ctx, board?.id, tasks.filter((t) => !t.responsible_person_id).length)}>
       <SectionTasks
         tasks={list.map((t) => ({
           id: t.id, status: t.status, progress: t.progress, version: t.version, values: t.values,

@@ -12,7 +12,7 @@ export default async function ImportTasksPage() {
   const secName = new Map(sections.map((s) => [s.id, s.name]));
   const existing = tasks.map((t) => `${(secName.get(t.section_id ?? "") ?? "").trim().toLowerCase()}|${String(t.values.work_description ?? "").trim().toLowerCase()}`);
   return (
-    <Screen title="Import tasks from Excel" sub={list?.name} back="/" short nav={navOf(ctx, list?.id)}>
+    <Screen title="Import tasks from Excel" sub={list?.name} back="/" short nav={navOf(ctx, list?.id, tasks.filter((t) => !t.responsible_person_id).length)}>
       <ImportTasks existing={existing} />
     </Screen>
   );
