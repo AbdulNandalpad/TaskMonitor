@@ -29,17 +29,17 @@ One page for the next call. Each question says why it matters and what happens i
 
 ## Answers
 
-_Fill in during the call._
+Received 31 October 2026 via WhatsApp. Questions 7, 9 and 10 were not in the message sent and remain open.
 
-| # | Answer | Who answered | Date |
-|---|--------|--------------|------|
-| 1 | | | |
-| 2 | | | |
-| 3 | | | |
-| 4 | | | |
-| 5 | | | |
-| 6 | | | |
-| 7 | | | |
-| 8 | | | |
-| 9 | | | |
-| 10 | | | |
+| # | Answer | Consequence for the build |
+|---|--------|---------------------------|
+| 1 | Cloud speech service is acceptable for now; may be revisited with the client after finalisation. | Voice uses cloud speech-to-text and hosted extraction. On-premise stack stays a priced option. |
+| 2 | English preferred; end users choose their own language; mixed speech expected. | Per-user language setting in the profile (default `en-IN`), language switch in the voice sheet, engine configured for mixed Hindi/English. |
+| 3 | Anyone can create or change the task form, for now. | Form settings open to all signed-in roles in the first version; a role restriction stays one flag away. |
+| 4 | At least 3 months. | Retention default 90 days minimum, configurable per area; nothing deleted automatically in the first version. |
+| 5 | No employee list to import; we upload the workforce ourselves. | Workforce Excel upload and Add person are required in the first version (already in scope). |
+| 6 | For the demo we host everything ourselves, in the cloud; production hosting to be discussed after finalisation. | Supabase (iamnuniraa org) + Vercel for the demo. Customer-hosted shape remains documented. |
+| 7 | Open | Test on mid-range Android, version 12 or later |
+| 8 | See 6 | |
+| 9 | Open | We clean during import and report what was skipped |
+| 10 | Open | Shutdown coordinator, area head, plant management |

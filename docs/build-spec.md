@@ -68,7 +68,9 @@ TaskMonitor/
   - no membership in that area → sign out immediately and redirect to `/login?reason=scope` which shows: "*Name* is not scoped to *Area*. Access is granted per area by the administrator." Log the attempt in `audit_log` with action `login_refused_scope`.
   - exactly one membership → dashboard.
   - several memberships → `/areas` picker; the chosen `area_id` is stored in a cookie `tm_area` and every page reads it. Only areas the user is a member of are selectable (the server checks).
-- Roles: `area_admin`, `manager`, `field_user`, `viewer`. Manager menu and Edit button render only for `area_admin` and `manager`. RLS enforces the same on writes.
+- Roles: `area_admin`, `manager`, `field_user`, `viewer`. Manager menu and Edit button render only for `area_admin` and `manager`. RLS enforces the same on writes. Exception agreed with the client on 31 Oct 2026: **Form settings is open to every signed-in role** for now; keep the restriction behind one constant `FORM_EDIT_ROLES` so it can be tightened later.
+- Each profile has `language` (default `en-IN`; options `en-IN`, `hi-IN`, `kn-IN`). The voice sheet shows the current language and lets the user switch for that recording. Mixed Hindi and English speech is expected.
+- Retention: attachments are kept at least 90 days (client answer). Nothing is deleted automatically in this version; record `retention_days = 90` in `area.settings`.
 - Password rules for the first version: minimum 8 characters, forced change on first login via `profiles.must_change_password`. Lockout is deferred (Supabase rate limits cover the basics).
 
 ## 4. Database (migration `0001_init.sql`)
@@ -165,7 +167,7 @@ Status colours: completed `#16a34a`, in progress `#f59e0b`, not started `#ef4444
 ## 7. Voice (first version)
 
 - Start: tap the mic button. Wake word is out of scope for the browser version; keep the "Say Hey Monitor" hint off.
-- Record with `MediaRecorder` (webm/opus) and transcribe live with `SpeechRecognition` (`lang` from the user's profile, default `en-IN`; fall back to `hi-IN` toggle in the sheet). If `SpeechRecognition` is unavailable, show the transcript box as editable text so the user can type.
+- Record with `MediaRecorder` (webm/opus) and transcribe live with `SpeechRecognition` (`lang` from the user's profile, default `en-IN`; a language chip in the sheet switches to `hi-IN` or `kn-IN` for that recording). Cloud speech services are acceptable to the client, so the server-side route `api/voice/transcribe` may call a hosted speech API when a key is configured; without a key, the browser transcript is used. If `SpeechRecognition` is unavailable, show the transcript box as editable text so the user can type.
 - `extract(transcript, task)` rules: "completed|done|finished" → completed 100; "started|starting|begin" → in progress 10; a number followed by "percent|%" → progress; "stopped|hold|waiting|blocked" → in progress with remark flagged needs attention; "(\d+) (people|persons|men|workers)" → manpower; the rest → remarks. Return a confidence per field so the sheet can highlight low ones.
 - Confirm step is mandatory. Save transcript, extracted, confirmed, and upload the audio blob to `attachments` linked to the update.
 
