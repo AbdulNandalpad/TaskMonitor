@@ -118,3 +118,13 @@ Client request: whatever language a person records or types in (Kannada, Hindi, 
 - A correction keeps the corrected text in English; the first original of the entry stays in `text_original` (the Kannada wording of the correction itself is not kept).
 - Not done: translating old entries recorded before this change (a backfill would need a small database function to write the English text; none of the current live data is non-English). Excel-imported remarks are not translated.
 - Tests: `scripts/translate-mock-test.ts` (mocked model) and three new checks in `scripts/acceptance-changes.ts` (20 of 20 pass; without a key on this machine they prove the save-as-written and pending path; the translated path needs the key on the server).
+
+## Fix: AI extraction and translation failed on the live site (found by a phone test)
+
+Symptom: on a phone the Kannada transcript stayed Kannada and the sheet said "Saved as spoken; English translation needs the voice service" even though both keys were set in Vercel (Production).
+
+Cause: every Claude call returned HTTP 400 `invalid_request_error: tool_choice: type "tool" and "any" are not supported for this model`. Claude Sonnet 5.5 rejects a forced tool choice, and `lib/ai/anthropic.ts` forced one. The routes caught the error and the sheet fell back to the browser transcript and the rules reader, so nothing visibly broke and the real reason was hidden.
+
+Fix (`a9ad63a`): `tool_choice` is automatic and the system prompt says to answer by calling the named tool once. The routes now return the failure reason (`detail`: status, error type, a short message; never a key) and the confirm sheet shows it after "Saved as spoken", so a configuration problem is visible at once.
+
+Verified live on `task-monitor-navy.vercel.app` as ravi.k: `/api/voice/extract` for Kannada, Hindi and English text returns English transcript, English remarks, status, progress, manpower and the language; a typed Kannada remark is saved in English with the original in `extracted.original_text`; `/api/voice/transcribe` with a generated English clip returns the text from `gpt-4o-transcribe` in about 1.6 s. Not tested live: Kannada or Hindi audio through the transcriber (no Kannada voice available to generate a test clip) and the report summaries.
