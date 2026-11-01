@@ -55,6 +55,18 @@ Changes
 
 Prove: as `ravi.k`, add a remark on a task without using the mic; it appears at the top of the timeline and as a `note` row in `task_update`; status and progress are unchanged. Add this as an acceptance check.
 
+## CR-5 A recorded remark can be corrected
+
+Rule: a remark that was added wrongly (typed or spoken) can be corrected afterwards. The correction replaces what is shown, but the original text is kept and the entry is marked as edited. Nothing is deleted.
+
+Changes
+- Who: the person who added the remark, or a manager / area admin. Viewers cannot. Only entries of type `note` and `voice` are editable; status, progress, photo, edit and assignment entries are not.
+- Data: add to `task_update` the columns `text_original text`, `edited_by uuid`, `edited_at timestamptz`, `edit_count int not null default 0`. A new database function `task_update_correct(p_update uuid, p_text text)`: checks the role rule above, refuses when `p_text` is blank, copies the current `text` into `text_original` on the first edit only, sets `text`, `edited_by`, `edited_at`, increments `edit_count`. Add it to `0002_forward_only_status.sql` (rename the file `0002_client_requests.sql`) so one migration covers CR-3 and CR-5. `task_update` stays otherwise immutable; the browser role has no direct update right on it.
+- Task screen: on an editable entry the user may open, a small "Edit" action opens a sheet with the current text; Save writes through `task_update_correct`. The entry then shows an "edited" chip with the time; tapping it reveals the original text. For a voice entry the transcript itself is not changed, only the remark shown as the entry text; `extracted` and `confirmed` stay as they were.
+- Report: uses the corrected text; the appendix lists edited entries with both texts.
+
+Prove: as `ravi.k`, add a wrong remark, correct it; the timeline shows the new text with the edited chip and reveals the original; `task_update` row has `text_original` set and `edit_count` 1. As `sunita.m`, correct `ravi.k`'s remark: allowed. As a viewer or as another field user: refused. Add as acceptance checks.
+
 ## Not in this change
 
 Reopening a completed task by a manager (would need a new, audited action), progress edits by managers after completion, deleting old audio objects.
