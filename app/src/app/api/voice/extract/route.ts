@@ -28,7 +28,8 @@ export async function POST(req: Request) {
     return NextResponse.json(out);
   } catch (e) {
     if (e instanceof AiUnavailable) return NextResponse.json({ error: e.message }, { status: 503 });
-    console.error("extract failed", (e as Error).message);
-    return NextResponse.json({ error: "Extraction failed" }, { status: 502 });
+    const detail = (e as Error).message.slice(0, 200);
+    console.error("extract failed", detail);
+    return NextResponse.json({ error: "Extraction failed", detail }, { status: 502 });
   }
 }

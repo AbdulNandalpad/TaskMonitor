@@ -142,6 +142,7 @@ function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Pro
     setBusyText("Reading the update…");
     let e: Extracted = extract(said, t);
     let ai = "rules";
+    let why = "";
     let english = said;
     let language = ({ "hi-IN": "hi", "kn-IN": "kn" } as Record<string, string>)[langRef.current] ?? "en";
     try {
@@ -150,6 +151,7 @@ function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Pro
         body: JSON.stringify({ taskId: t.id, transcript: said, language: langRef.current }),
       });
       if (res.ok) { const j = await res.json(); e = j; ai = j.engine ?? "claude"; english = j.transcriptEn || said; language = j.language || language; }
+      else { const j = await res.json().catch(() => ({})); why = String(j.detail ?? j.error ?? res.status); }
     } catch { /* rules fallback */ }
     // forward only: status never goes back, progress never goes down, completed is final
     const rank = (x: Status) => STATUS_ORDER.indexOf(x);
@@ -162,7 +164,7 @@ function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Pro
       if (e.progress < t.progress) e = { ...e, progress: t.progress };
     }
     setLockNote(lock);
-    setNotice(ai === "rules" && (language !== "en" || /[^ -]/.test(said)) ? "Saved as spoken; English translation needs the voice service." : null);
+    setNotice(ai === "rules" && (language !== "en" || /[^ -]/.test(said)) ? `Saved as spoken; English translation needs the voice service.${why ? ` (${why})` : ""}` : null);
     setOriginal(orig ?? original ?? said);
     setSpoken(language);
     setText(english);

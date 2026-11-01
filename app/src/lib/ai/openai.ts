@@ -24,7 +24,10 @@ export async function transcribe(opts: {
     body: form,
     signal: opts.signal ?? AbortSignal.timeout(40_000),
   });
-  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({}));
+    throw new Error(`OpenAI ${res.status} ${j?.error?.code ?? j?.error?.type ?? "error"}: ${String(j?.error?.message ?? "").slice(0, 140)}`);
+  }
   const j = await res.json();
   return { text: String(j.text ?? "").trim(), model: AI.transcribeModel };
 }

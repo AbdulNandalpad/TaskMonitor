@@ -30,7 +30,11 @@ export async function callClaudeTool<T>(opts: {
     }),
     signal: opts.signal ?? AbortSignal.timeout(25_000),
   });
-  if (!res.ok) throw new Error(`Anthropic ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  if (!res.ok) {
+    // status and error type say what is wrong (bad key, unknown model, no credit, rate limit) without exposing anything secret
+    const j = await res.json().catch(() => ({}));
+    throw new Error(`Anthropic ${res.status} ${j?.error?.type ?? "error"}: ${String(j?.error?.message ?? "").slice(0, 140)}`);
+  }
   const j = await res.json();
   const block = (j.content ?? []).find((b: { type: string }) => b.type === "tool_use");
   if (!block) throw new Error("Anthropic returned no tool call");
