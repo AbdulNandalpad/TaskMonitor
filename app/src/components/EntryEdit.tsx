@@ -30,7 +30,7 @@ export function EntryEdit({
     if (!res.ok) return setError(j.error ?? "Could not save the correction");
     setOpen(false); setError(null);
     router.refresh();
-    toast("Remark corrected · the original is kept");
+    toast(j.pending ? "Remark corrected · English translation needs the voice service" : j.translated ? "Remark corrected · saved in English" : "Remark corrected · the original is kept");
   }
 
   if (!canEdit && !editCount) return null;

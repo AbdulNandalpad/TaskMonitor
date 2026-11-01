@@ -20,10 +20,10 @@ export function AddRemark({ taskId, variant }: { taskId: string; variant: "tile"
     if (!text.trim()) return setError("Type a remark first.");
     setBusy(true);
     try {
-      await postUpdate(taskId, { type: "note", text: text.trim() });
+      const r = await postUpdate(taskId, { type: "note", text: text.trim() });
       setOpen(false); setText(""); setError(null);
       router.refresh();
-      toast("Remark added");
+      toast(r.pending ? "Remark added · English translation needs the voice service" : r.translated ? "Remark added · saved in English" : "Remark added");
     } catch (err) {
       setError((err as Error).message);
     }
@@ -46,7 +46,7 @@ export function AddRemark({ taskId, variant }: { taskId: string; variant: "tile"
                 placeholder="What should the next person know?" />
             </div>
             {error && <div className="errbox" role="alert"><span>{error}</span></div>}
-            <div className="note">Saved with your name and the time. Status and progress are not changed.</div>
+            <div className="note">Write in English, Hindi or Kannada: it is saved in English so reports stay consistent, and your original is kept. Status and progress are not changed.</div>
             <div className="acts">
               <button className="btn" type="button" onClick={() => setOpen(false)}>Cancel</button>
               <button className="btn primary" type="submit" disabled={busy}>{busy ? "Saving…" : "Save remark"}</button>

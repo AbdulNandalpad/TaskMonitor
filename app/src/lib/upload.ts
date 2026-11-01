@@ -22,7 +22,7 @@ export async function uploadAttachment(opts: {
   if (ins.error) throw new Error(ins.error.message);
 }
 
-export async function postUpdate(taskId: string, body: Record<string, unknown>): Promise<{ updateId: string }> {
+export async function postUpdate(taskId: string, body: Record<string, unknown>): Promise<{ updateId: string; translated?: boolean; pending?: boolean }> {
   const res = await fetch(`/api/tasks/${taskId}/update`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const j = await res.json();
   if (!res.ok) throw new Error(j.error ?? "Could not save the update");

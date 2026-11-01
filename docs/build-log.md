@@ -107,3 +107,14 @@ Spec: `docs/changes/2026-11-01-client-requests-3.md`. Migration `0006_area_renam
 - **CR-9:** `/tasks` is grouped by section in section order. Each header shows the section name, head, "done of total" and a mini bar; headers collapse (default expanded, remembered per user in `localStorage`), filters apply before grouping and empty groups are hidden, the repeated Section column is gone, and phone headers are sticky below the app bar. Checked in the browser: collapsing a group removed its rows, the state survived a reload, no horizontal scroll at 375 px.
 - **Acceptance:** `scripts/acceptance-changes2.ts` is now 24 checks (the CR-6 manager-403 check became the CR-8 success check, plus five CR-9 checks).
 - **Dev note:** if a dev server shows a 404 for `_next/static/chunks/app/(app)/layout.js`, its `.next` cache is stale; start a clean one with `NEXT_DIST_DIR=.next-dev3 npx next dev -p 3100`.
+
+## English-only remarks, for every way of entering one
+
+Client request: whatever language a person records or types in (Kannada, Hindi, Hinglish), the remark shown and reported is English, so reports are consistent.
+
+- Voice (already, CR-2): English transcript and English remarks from the extraction step; original kept in `extracted.original_transcript` with `extracted.language`.
+- **New:** typed remarks (Add remark), corrections (Edit on an entry) and any Hindi or Kannada typed into the voice confirm fields are translated to English on save by `lib/ai/translate.ts` (`ensureEnglish`, Claude, forced tool call, equipment names and tag numbers kept as written). The English text is saved as the entry text; the original is kept in `extracted.original_text` with `extracted.language`. The timeline shows "Written in Kannada · original: ..." under the English text.
+- Typed remarks always go through the model (Hinglish in Latin letters cannot be spotted by script); voice text only when non-Latin letters remain. If the AI key is missing or the model fails, the remark is saved as written, flagged `extracted.translation_pending`, the timeline says "English translation pending: saved as written" and the toast says the translation needs the voice service. Nothing is lost.
+- A correction keeps the corrected text in English; the first original of the entry stays in `text_original` (the Kannada wording of the correction itself is not kept).
+- Not done: translating old entries recorded before this change (a backfill would need a small database function to write the English text; none of the current live data is non-English). Excel-imported remarks are not translated.
+- Tests: `scripts/translate-mock-test.ts` (mocked model) and three new checks in `scripts/acceptance-changes.ts` (20 of 20 pass; without a key on this machine they prove the save-as-written and pending path; the translated path needs the key on the server).

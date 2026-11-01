@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 type UpdateRow = {
   id: string; type: string; by_user: string | null; at: string; status_after: string | null; text: string | null;
-  extracted: { changes?: [string, unknown, unknown][]; status?: string; progress?: number; manpower?: number; original_transcript?: string; language?: string } | null;
+  extracted: { changes?: [string, unknown, unknown][]; status?: string; progress?: number; manpower?: number; original_transcript?: string; original_text?: string; translation_pending?: boolean; language?: string } | null;
   edit_count: number; text_original: string | null; edited_by: string | null; edited_at: string | null;
   confirmed: { status?: string; progress?: number; manpower?: number; remarks?: string } | null;
 };
@@ -114,7 +114,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
               : (u.extracted?.changes ?? []).map(([k, o, n]) => [fieldLabel[k] ?? k, `${fmtValue(k, o)} → ${fmtValue(k, n)}`] as [string, string]);
           const canEditEntry = (u.type === "note" || u.type === "voice") && ctx.role !== "viewer" && (ctx.isManager || u.by_user === ctx.userId);
           const LANG: Record<string, string> = { hi: "Hindi", kn: "Kannada", mixed: "Hindi and English" };
-          const spoken = u.type === "voice" && u.extracted?.language && LANG[u.extracted.language] ? LANG[u.extracted.language] : null;
+          const origText = u.extracted?.original_transcript ?? u.extracted?.original_text ?? null;
+          const spoken = u.extracted?.language && LANG[u.extracted.language] ? LANG[u.extracted.language] : null;
+          const how = u.type === "voice" ? "Spoken" : "Written";
           const cls = u.type === "voice" ? "voice" : u.type === "photo" ? "photo" : u.type === "edit" || u.type === "assignment" ? "edit" : "";
           return (
             <div className="upd" key={u.id}>
@@ -122,7 +124,8 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
               <div>
                 <div className="hd"><b>{who.get(u.by_user ?? "") ?? "System"}</b><span>{fmtWhen(u.at)}</span></div>
                 <div className="tx">{u.type === "voice" ? <q>“{u.text}”</q> : u.text}</div>
-                {spoken ? <div className="note">Spoken in {spoken}{u.extracted?.original_transcript ? <> · original: {u.extracted.original_transcript}</> : null}</div> : null}
+                {spoken || origText ? <div className="note">{spoken ? `${how} in ${spoken}` : how}{origText && origText !== u.text ? <> · original: {origText}</> : null}</div> : null}
+                {u.extracted?.translation_pending ? <div className="note" style={{ color: "var(--warn-ink)" }}>English translation pending: saved as written</div> : null}
                 {u.type === "note" || u.type === "voice" ? (
                   <EntryEdit updateId={u.id} text={u.text ?? ""} canEdit={canEditEntry} editCount={u.edit_count} original={u.text_original}
                     editedWhen={u.edited_at ? fmtWhen(u.edited_at) : null} editedBy={u.edited_by ? who.get(u.edited_by) ?? null : null} />

@@ -13,7 +13,7 @@ for (const line of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
   if (m) process.env[m[1]] = m[2];
 }
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!, KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const APP = "http://localhost:3000", PW = "ChangeMe-2026!";
+const APP = process.env.APP ?? "http://localhost:3000", PW = "ChangeMe-2026!";
 const results: [string, boolean, string][] = [];
 const check = (n: string, ok: boolean, d = "") => { results.push([n, ok, d]); console.log(`${ok ? "PASS" : "FAIL"}  ${n}  ${d}`); };
 const skip = (n: string, why: string) => console.log(`SKIP  ${n}  ${why}`);
@@ -111,11 +111,27 @@ async function main() {
     check("CR-5 the browser role has no direct update right", !!direct.error || (direct.data ?? []).length === 0, direct.error?.message ?? "no rows changed");
     skip("CR-5 another field user / viewer refused", "no second field user or viewer is seeded; covered by task_update_correct's role rule (tested on a local database)");
 
+    // English-only remarks: typed Hindi/Kannada is translated on save (needs the AI key on the server); without a key it is saved as written and flagged
+    const kn = "ಬೆಲ್ಟ್ ಜಾಯಿಂಟ್ ಮುಗಿದಿದೆ, ಆರು ಜನ ಇದ್ದರು";
+    const noteKn = await upd(T2, { type: "note", text: kn });
+    const { data: knRow } = await ravi.c.from("task_update").select("text, extracted").eq("id", noteKn.j.updateId).single();
+    const haveKey = noteKn.j.translated === true;
+    const knHtml = await page(`/tasks/${T2}`, rj);
+    check("English remarks: a typed Kannada remark is saved in English with the original kept, or (no key on this server) saved as written and flagged as pending",
+      noteKn.status === 200 && (haveKey ? (knRow.text !== kn && knRow.extracted.original_text === kn && /^[ -]+$/.test(knRow.text) && knHtml.includes("Written in")) : (knRow.text === kn && noteKn.j.pending === true && knRow.extracted.translation_pending === true && knHtml.includes("English translation pending"))),
+      haveKey ? "translated: " + knRow.text : "no key: pending");
+    const hiVoice = await upd(T2, { type: "voice", status: "in_progress", progress: 60, text: "काम साठ प्रतिशत हो गया", extracted: { original_transcript: "काम साठ प्रतिशत हो गया", language: "hi" }, confirmed: { status: "in_progress", progress: 60, manpower: null, remarks: "" } });
+    const { data: hvRow } = await ravi.c.from("task_update").select("text").eq("id", hiVoice.j.updateId).single();
+    check("English remarks: a voice update whose text is still Hindi is translated, or flagged pending when no key", hiVoice.status === 200 && (haveKey ? /^[ -]+$/.test(hvRow.text) : hiVoice.j.pending === true), haveKey ? hvRow.text : "no key: pending");
+    const plain = await upd(T2, { type: "note", text: "Plain English remark" });
+    const { data: pRow } = await ravi.c.from("task_update").select("text, extracted").eq("id", plain.j.updateId).single();
+    check("English remarks: an English remark is saved unchanged with nothing marked pending", pRow.text === "Plain English remark" && !pRow.extracted?.translation_pending && !pRow.extracted?.original_text, "");
+
     // CR-1 / CR-2 static proofs (the voice sheet needs a microphone; the AI path needs keys)
     const voice = fs.readFileSync("src/components/VoiceSheet.tsx", "utf8");
     check("CR-1 the voice sheet never uploads audio or writes an audio attachment", !voice.includes("uploadAttachment") && !voice.includes(`kind: "audio"`), "");
     const { count: audioCount } = await ravi.c.from("attachment").select("id", { count: "exact", head: true }).eq("kind", "audio").gte("created_at", new Date(Date.now() - 20 * 60_000).toISOString());
-    const v = await upd(T2, { type: "voice", status: "in_progress", progress: 50, text: "Work is half done, four people", extracted: { original_transcript: "kaam aadha ho gaya, chaar log", language: "hi" }, confirmed: { status: "in_progress", progress: 50, manpower: 4, remarks: "" } });
+    const v = await upd(T2, { type: "voice", status: "in_progress", progress: 70, text: "Work is mostly done, four people", extracted: { original_transcript: "kaam aadha ho gaya, chaar log", language: "hi" }, confirmed: { status: "in_progress", progress: 70, manpower: 4, remarks: "" } });
     const { count: audioAfter } = await ravi.c.from("attachment").select("id", { count: "exact", head: true }).eq("kind", "audio").gte("created_at", new Date(Date.now() - 20 * 60_000).toISOString());
     const vhtml = await page(`/tasks/${T2}`, rj);
     check("CR-1/2 a voice update stores the English text, keeps the original and language, and adds no audio attachment",

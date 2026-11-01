@@ -14,7 +14,7 @@ for (const line of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
   if (m) process.env[m[1]] = m[2];
 }
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!, KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const APP = "http://localhost:3000", PW = "ChangeMe-2026!";
+const APP = process.env.APP ?? "http://localhost:3000", PW = "ChangeMe-2026!";
 const results: [string, boolean, string][] = [];
 const check = (n: string, ok: boolean, d = "") => { results.push([n, ok, d]); console.log(`${ok ? "PASS" : "FAIL"}  ${n}  ${d}`); };
 const skip = (n: string, why: string) => console.log(`SKIP  ${n}  ${why}`);
