@@ -11,3 +11,4 @@ app/.env.local
 next-env.d.ts
 .next-build/
 app/.next-build/
+.claude/
