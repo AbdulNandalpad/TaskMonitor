@@ -33,7 +33,9 @@ export function MicButton(props: Props) {
 function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClose }: Props & { onClose: () => void }) {
   const router = useRouter();
   const toast = useToast();
-  const [phase, setPhase] = useState<"listen" | "found" | "confirm">("listen");
+  const [phase, setPhase] = useState<"listen" | "processing" | "found" | "confirm">("listen");
+  const [busyText, setBusyText] = useState("Transcribing…");
+  const [engine, setEngine] = useState<{ stt: string; ai: string }>({ stt: "browser", ai: "rules" });
   const [lang, setLang] = useState(LANGS.some((l) => l[0] === language) ? language : "en-IN");
   const [text, setText] = useState("");
   const [interim, setInterim] = useState("");
@@ -127,8 +129,26 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
 
   const changeLang = (l: string) => { setLang(l); langRef.current = l; if (listening.current && srOk) startSR(); };
 
+  /** Claude reads the transcript; if the AI route is not configured or fails, the local rules reader is used. */
+  async function readUpdate(said: string, t: Current) {
+    setBusyText("Reading the update…");
+    let e: Extracted = extract(said, t);
+    let ai = "rules";
+    try {
+      const res = await fetch("/api/voice/extract", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId: t.id, transcript: said, language: langRef.current }),
+      });
+      if (res.ok) { const j = await res.json(); e = j; ai = j.engine ?? "claude"; }
+    } catch { /* rules fallback */ }
+    setEngine((x) => ({ ...x, ai }));
+    setEx(e);
+    setForm({ status: e.status, progress: e.progress, manpower: e.manpower == null ? "" : String(e.manpower), remarks: e.remarks });
+    setPhase("confirm");
+  }
+
   async function finish() {
-    const said = (finalRef.current || text).trim() || text.trim();
+    let said = (finalRef.current || text).trim() || text.trim();
     stopAll();
     const rec = recRef.current;
     if (rec && rec.state !== "inactive") {
@@ -136,6 +156,24 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
       blobRef.current = new Blob(chunks.current, { type: rec.mimeType || "audio/webm" });
     }
     setText(said); setInterim("");
+    setPhase("processing");
+    setBusyText("Transcribing…");
+    let stt = "browser";
+    // best transcript: the recorded audio goes to the speech-to-text service; the browser transcript is the fallback
+    if (blobRef.current && blobRef.current.size > 1500) {
+      try {
+        const fd = new FormData();
+        fd.append("audio", blobRef.current, "update");
+        fd.append("lang", langRef.current);
+        if (target) fd.append("taskId", target.id);
+        const res = await fetch("/api/voice/transcribe", { method: "POST", body: fd });
+        if (res.ok) {
+          const j = await res.json();
+          if (j.text) { said = j.text; stt = j.model ?? "ai"; setText(said); }
+        }
+      } catch { /* keep the browser transcript */ }
+    }
+    setEngine({ stt, ai: "rules" });
     if (!target) {
       const words = said.toLowerCase().split(/\W+/).filter((w) => w.length > 3);
       const score = (t: TaskLite) => { const l = t.title.toLowerCase(); return words.reduce((a, w) => a + (l.includes(w) ? 1 : 0), 0); };
@@ -144,11 +182,16 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
       setPhase("found");
       return;
     }
-    const e = extract(said, target);
-    setEx(e);
-    setForm({ status: e.status, progress: e.progress, manpower: e.manpower == null ? "" : String(e.manpower), remarks: e.remarks });
-    setPhase("confirm");
+    await readUpdate(said, target);
   }
+
+  // a recording is never longer than two minutes
+  useEffect(() => {
+    if (phase !== "listen") return;
+    const t = setTimeout(() => finish(), 120_000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   async function confirm() {
     if (!target) return;
@@ -156,10 +199,12 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
     try {
       const confirmed = { status: form.status, progress: form.progress, manpower: form.manpower === "" ? null : Number(form.manpower), remarks: form.remarks.trim() };
       const { updateId } = await postUpdate(target.id, {
-        type: "voice", status: form.status, progress: form.progress, text, extracted: ex, confirmed,
+        type: "voice", status: form.status, progress: form.progress, text, extracted: { ...ex, engines: engine }, confirmed,
       });
       if (blobRef.current && blobRef.current.size && areaId) {
-        await uploadAttachment({ areaId, taskId: target.id, updateId, kind: "audio", blob: blobRef.current, ext: "webm", durationMs: Date.now() - startedAt.current });
+        const mime = blobRef.current.type;
+        const ext = mime.includes("mp4") ? "m4a" : mime.includes("ogg") ? "ogg" : "webm";
+        await uploadAttachment({ areaId, taskId: target.id, updateId, kind: "audio", blob: blobRef.current, ext, durationMs: Date.now() - startedAt.current });
       }
       toast(`Update saved to task ${target.seq}`);
       onClose();
@@ -171,7 +216,7 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
   }
 
   const low = (k: keyof Extracted["confidence"]) => !!ex && ex.confidence[k] < 0.6;
-  const title = phase === "listen" ? "Listening" : phase === "found" ? (target ? "Task found" : "No matching task") : "Check and confirm";
+  const title = phase === "listen" ? "Listening" : phase === "processing" ? "One moment" : phase === "found" ? (target ? "Task found" : "No matching task") : "Check and confirm";
 
   return (
     <div className="sheet-back" onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -193,12 +238,24 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
           </div>
         )}
 
-        {phase === "listen" && (!srOk || !micOk) ? (
+        {phase === "processing" && (
+          <div className="transcript" role="status" aria-live="polite">
+            {text ? <>{text}<br /></> : null}
+            <span style={{ color: "var(--muted)" }}>{busyText}</span>
+          </div>
+        )}
+
+        {phase === "confirm" ? (
+          <div className="field">
+            <label htmlFor="x-t">What was heard <span className="note">· edit if needed, then Read again</span></label>
+            <textarea id="x-t" value={text} onChange={(e) => setText(e.target.value)} />
+          </div>
+        ) : phase === "listen" && (!srOk || !micOk) ? (
           <div className="field">
             {!micOk && <div className="note">Microphone is not available, so nothing is recorded as audio. Type the update instead.</div>}
             <textarea aria-label="Transcript" placeholder="Type the update, e.g. completed, six people" value={text} onChange={(e) => { setText(e.target.value); finalRef.current = e.target.value; }} />
           </div>
-        ) : (
+        ) : phase === "processing" ? null : (
           <div className="transcript" aria-live="polite">
             {text || interim ? <>{text} <span style={{ color: "var(--hint)" }}>{interim}</span>{phase === "listen" && <span className="cur" />}</> : <span className="ph-text">Speak now, in your own language.</span>}
           </div>
@@ -229,7 +286,11 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
           {phase === "found" && (target
             ? (<><button className="btn" type="button" onClick={onClose}>Cancel</button><button className="btn primary" type="button" onClick={() => { onClose(); router.push(`/tasks/${target.id}?voice=1`); }}>Open and continue</button></>)
             : (<><button className="btn" type="button" onClick={onClose}>Cancel</button><button className="btn primary" type="button" onClick={startListening}><Mic />Speak again</button></>))}
-          {phase === "confirm" && (<><button className="btn" type="button" onClick={startListening}><Mic />Speak again</button><button className="btn primary" type="button" onClick={confirm} disabled={saving || !canUpdate}>{saving ? "Saving…" : "Confirm update"}</button></>)}
+          {phase === "confirm" && (<>
+            <button className="btn" type="button" onClick={startListening}><Mic />Speak again</button>
+            <button className="btn" type="button" onClick={() => { setPhase("processing"); readUpdate(text.trim(), target!); }} disabled={!text.trim()}>Read again</button>
+            <button className="btn primary" type="button" onClick={confirm} disabled={saving || !canUpdate}>{saving ? "Saving…" : "Confirm update"}</button>
+          </>)}
         </div>
       </div>
     </div>

@@ -67,3 +67,14 @@ Database: apply `supabase/migrations/0001_init.sql` then `supabase/seed/seed.sql
 ## Hosting
 
 The single source repository is `iammuniraa-wq/task-monitor` (GitHub). Vercel project `task-monitor` (team veveycrm) deploys `main` from it: Framework Preset Next.js, Root Directory `app`, env vars `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_AREA_CODE=bf1`. Earlier the preset was "Other", which built nothing and returned 404 on Visit.
+
+## AI voice (starting point for AI features)
+
+Code lives in `app/src/lib/ai/` (config, `anthropic.ts`, `openai.ts`, `voice.ts`); new AI capabilities go next to `voice.ts` and reuse the two clients.
+
+- **Transcription:** the recorded audio is posted to `/api/voice/transcribe`, which calls OpenAI `gpt-4o-transcribe` with a plant glossary prompt (tuyere, stave, BLT, SGP, TRT, ...) and the language chip as a hint. If the route is unavailable the browser transcript is used.
+- **Extraction:** `/api/voice/extract` sends the transcript and the task context to Claude (`claude-sonnet-5-5`, forced tool call, structured JSON with per-field confidence). If it is unavailable the local rules reader (`lib/voice/extract.ts`) is used.
+- The confirm step is unchanged and mandatory. The transcript is editable there, with a "Read again" button. The engines used are stored in `task_update.extracted.engines`.
+- **Server-only env vars:** `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` (optional `ANTHROPIC_MODEL`, `OPENAI_TRANSCRIBE_MODEL`). Set them in `app/.env.local` and in the Vercel project, never as `NEXT_PUBLIC_`. Without them everything still works with the browser transcript and rules.
+- **Data flow to note for IT/privacy review:** audio goes to OpenAI (US), the transcript and task title go to Anthropic. Nothing else leaves the system. Kannada accuracy of `gpt-4o-transcribe` is the weakest of the three languages: test with real recordings.
+- Offline check without keys: `npx tsx scripts/ai-mock-test.ts`.
