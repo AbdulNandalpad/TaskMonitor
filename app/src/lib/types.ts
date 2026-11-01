@@ -42,4 +42,4 @@ export type Task = {
   changed_at: string;
   source: string;
 };
-export type TaskList = { id: string; name: string; form_id: string | null; planned_hours: number | null };
+export type TaskList = { id: string; name: string; form_id: string | null; planned_hours: number | null; starts_at: string | null; ends_at: string | null };

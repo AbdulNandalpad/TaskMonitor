@@ -8,6 +8,8 @@ import { Bar, Screen } from "@/components/Screen";
 import { Chev } from "@/components/Icons";
 import { MicButton } from "@/components/VoiceSheet";
 import { BellButton } from "@/components/BellButton";
+import { EditArea, EditList } from "@/components/EditNames";
+import { GenerateReport } from "@/components/GenerateReport";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +35,7 @@ export default async function Dashboard() {
       subPhoneOnly
       wide
       nav={navOf(ctx, list?.id, all.un)}
-      actions={<span className="m-only appbar-acts"><BellButton open={all.open} unassigned={all.un} /></span>}
+      actions={<>{ctx.role === "area_admin" ? <EditArea area={ctx.area} /> : null}<span className="m-only appbar-acts"><BellButton open={all.open} unassigned={all.un} /></span></>}
     >
       {!list ? (
         <div className="card empty"><b>No task list yet</b><span>{ctx.isManager ? "Upload tasks from Excel or create the first task." : "A manager has not set up this area yet."}</span></div>
@@ -42,7 +44,7 @@ export default async function Dashboard() {
           <div className="dash-main">
             <div className="card summary o1">
               <div className="sum-hd">
-                <div><h3>Shutdown task list</h3><div className="when">{list.name} · {hours} h planned · {sections.length} sections</div></div>
+                <div><h3>Shutdown task list</h3><div className="when">{list.name}{ctx.isManager ? <EditList list={list} /> : null} · {hours} h planned · {sections.length} sections</div></div>
                 <div className="bigpct num">{all.pct}%<small>{all.done} of {all.n} tasks complete</small></div>
               </div>
               <Bar {...all} />
@@ -74,6 +76,7 @@ export default async function Dashboard() {
             </div>
           </div>
           <aside className="dash-side">
+            {ctx.isManager ? <GenerateReport listId={list.id} /> : null}
             {ctx.isManager ? (
               <div className="card pad attention d-only o3">
                 <h3>Needs attention</h3>

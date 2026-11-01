@@ -7,6 +7,7 @@ import { guessWorkforceField, parsePeople, readWorkbook, WORKFORCE_FIELDS, type 
 import type { Person } from "@/lib/types";
 import { Arrow, Assign, Plus, Xl } from "./Icons";
 import { Sheet } from "./Sheet";
+import { EditPersonSheet } from "./EditNames";
 import { useToast } from "./Toast";
 
 const av = (name: string) => <span className="avatar" style={{ background: HUES[name.length % HUES.length] }}>{initials(name)}</span>;
@@ -15,6 +16,7 @@ export function WorkforceClient({ persons, load, unassigned, sections }: { perso
   const router = useRouter();
   const toast = useToast();
   const [sheet, setSheet] = useState<"add" | "upload" | null>(null);
+  const [editing, setEditing] = useState<Person | null>(null);
   const vendors = persons.filter((p) => p.kind === "vendor_team").length;
 
   async function add(e: React.FormEvent<HTMLFormElement>) {
@@ -43,13 +45,13 @@ export function WorkforceClient({ persons, load, unassigned, sections }: { perso
         <button className="btn" type="button" onClick={() => setSheet("add")}><Plus />Add person</button>
         <Link className="btn m-only" href="/assign"><Assign />Assign tasks</Link>
       </div>
-      <div className="sec">People in this area</div>
+      <div className="sec">People in this area<span className="note">Tap a person to edit</span></div>
       <div className="card">
         {persons.map((p) => (
-          <div className="person" key={p.id}>
+          <button type="button" className="person" key={p.id} onClick={() => setEditing(p)} aria-label={`Edit ${p.name}`}>
             {av(p.name)}<span><b>{p.name}</b><small>{p.role_title}</small></span>
             <span className={`load num${(load[p.id] ?? 0) > 12 ? " hi" : ""}`}>{load[p.id] ?? 0} tasks</span>
-          </div>
+          </button>
         ))}
       </div>
       <div className="note" style={{ padding: "0 4px" }}>People belong to this area. Granting someone access to another area is done by the administrator, not by the person.</div>
@@ -64,6 +66,7 @@ export function WorkforceClient({ persons, load, unassigned, sections }: { perso
           </form>
         </Sheet>
       )}
+      {editing && <EditPersonSheet person={editing} onClose={() => setEditing(null)} />}
       {sheet === "upload" && <UploadSheet existing={persons.map((p) => p.name)} sections={sections} onClose={() => setSheet(null)} />}
     </>
   );

@@ -7,7 +7,7 @@ export type Board = { list: TaskList | null; sections: Section[]; persons: Perso
 export async function loadBoard(ctx: Ctx): Promise<Board> {
   const { supabase, area } = ctx;
   const { data: lists } = await supabase
-    .from("task_list").select("id, name, form_id, planned_hours").eq("area_id", area.id).order("name").limit(1);
+    .from("task_list").select("id, name, form_id, planned_hours, starts_at, ends_at").eq("area_id", area.id).order("name").limit(1);
   const list = (lists?.[0] as TaskList | undefined) ?? null;
   if (!list) return { list: null, sections: [], persons: [], tasks: [] };
   const [sections, persons, tasks] = await Promise.all([

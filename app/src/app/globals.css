@@ -745,3 +745,36 @@ a.mytasks:hover{border-color:var(--accent)}
 .steps button:disabled{opacity:.55;cursor:not-allowed}
 .steps button[aria-pressed="true"]:disabled{opacity:1}
 .ph.add{cursor:pointer}
+
+/* CR-6 pencil icons */
+.pencil{width:28px;height:28px;min-width:28px;min-height:28px;margin-left:4px;vertical-align:middle;color:var(--muted)}
+.pencil svg{width:15px;height:15px}
+.pencil:hover{color:var(--accent)}
+@media (pointer:coarse){.pencil{width:44px;height:44px}}
+
+/* ---------- CR-7 detailed report blocks ---------- */
+.page .muted-count{font-weight:500;color:#8d9bab;text-transform:none;letter-spacing:0;margin-left:6px}
+.tblock{border:1px solid #e2e7ee;border-radius:8px;padding:10px 12px;display:grid;gap:8px;break-inside:avoid;page-break-inside:avoid}
+.tb-hd{display:flex;align-items:flex-start;gap:8px}
+.tb-hd b{flex:1;font-size:12.5px;line-height:1.35;color:#172230}
+.tb-seq{color:#8d9bab;min-width:22px;font-size:11px;padding-top:1px}
+.tb-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;font-size:11.5px;color:#172230}
+.tb-meta span{display:grid;gap:1px}
+.tb-meta i{font-style:normal;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#8d9bab}
+.tb-sum{margin:0;font-size:12px;line-height:1.5;color:#172230}
+.tb-sum.none{color:#8d9bab;font-style:italic}
+.tb-photos{grid-template-columns:repeat(4,1fr)}
+.tb-flag{font-size:11.5px;font-weight:600;color:#b45309;background:#fef3c7;border-radius:6px;padding:4px 8px;width:fit-content}
+@media (max-width:700px){.tb-meta{grid-template-columns:1fr 1fr}.tb-photos{grid-template-columns:repeat(2,1fr)}}
+
+/* generate report */
+.generate{display:grid;gap:8px;justify-items:start}
+.generate h3{font-size:14px;font-weight:600}
+.generate .note{margin:0}
+.choices{display:grid;gap:10px}
+.choice{display:grid;gap:4px;text-align:left;padding:14px;border:1px solid var(--line2);border-radius:var(--r-card);background:var(--panel);min-height:44px;cursor:pointer}
+.choice:hover:not(:disabled){border-color:var(--accent);background:var(--accent-bg)}
+.choice:disabled{opacity:.6;cursor:default}
+.choice b{font-size:14px;font-weight:600}
+.choice span{font-size:12.5px;color:var(--muted)}
+.gen-progress{display:grid;gap:6px}
