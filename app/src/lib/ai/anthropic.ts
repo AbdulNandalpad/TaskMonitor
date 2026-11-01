@@ -3,7 +3,7 @@ import { AI, AiUnavailable } from "./config";
 type Tool = { name: string; description: string; input_schema: Record<string, unknown> };
 
 /**
- * Calls Claude and forces a single tool call, so the answer is structured JSON that matches `tool.input_schema`.
+ * Calls Claude and asks for a single tool call, so the answer is structured JSON that matches `tool.input_schema`.
  * Plain fetch on purpose: no SDK dependency, easy to read and to mock.
  */
 export async function callClaudeTool<T>(opts: {
@@ -23,10 +23,11 @@ export async function callClaudeTool<T>(opts: {
     body: JSON.stringify({
       model,
       max_tokens: opts.maxTokens ?? 700,
-      system: opts.system,
+      system: `${opts.system}\n\nAnswer only by calling the \`${opts.tool.name}\` tool exactly once.`,
       messages: [{ role: "user", content: opts.user }],
       tools: [opts.tool],
-      tool_choice: { type: "tool", name: opts.tool.name },
+      // Sonnet 5.5 rejects a forced tool_choice ("tool" or "any"), so the choice is automatic and the system prompt asks for the tool
+      tool_choice: { type: "auto" },
     }),
     signal: opts.signal ?? AbortSignal.timeout(25_000),
   });

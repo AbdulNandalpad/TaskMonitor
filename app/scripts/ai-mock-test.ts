@@ -13,7 +13,7 @@ const calls: { url: string; body: unknown }[] = [];
   const t = await transcribe({ audio: new Blob([new Uint8Array(2000)]), filename: "update.webm", language: "hi", prompt: "x" });
   const body = JSON.parse(calls[0].body as string);
   const ok = e.transcriptEn === "Completed, six people on site." && e.language === "kn" && e.status === "completed" && e.progress === 100 && e.manpower === 6 && t.text === "completed, six people"
-    && body.tool_choice.name === "record_update" && body.model === "claude-sonnet-5-5" && (calls[1].body as FormData).get("language") === "hi";
+    && body.tools[0].name === "record_update" && body.tool_choice.type === "auto" && body.system.includes("record_update") && body.model === "claude-sonnet-5-5" && (calls[1].body as FormData).get("language") === "hi";
   console.log(ok ? "PASS ai module (mocked)" : "FAIL", JSON.stringify(e));
   process.exit(ok ? 0 : 1);
 })();
