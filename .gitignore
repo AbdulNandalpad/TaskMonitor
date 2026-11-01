@@ -12,3 +12,5 @@ next-env.d.ts
 .next-build/
 app/.next-build/
 .claude/
+.next-dev3/
+app/.next-dev3/

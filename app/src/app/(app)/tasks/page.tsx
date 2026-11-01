@@ -25,7 +25,8 @@ export default async function TasksPage({ searchParams }: { searchParams: Promis
     <Screen title="All tasks" sub={list ? `${list.name} · ${tasks.length} tasks` : undefined} back="/" wide short nav={navOf(ctx, list?.id, tasks.filter((t) => !t.responsible_person_id).length)}>
       <TaskListClient
         rows={rows}
-        sections={sections.map((s) => ({ id: s.id, name: s.name }))}
+        sections={sections.map((s) => ({ id: s.id, name: s.name, head: persons.find((p) => p.id === s.head_person_id)?.name ?? null }))}
+        userId={ctx.userId}
         persons={persons.map((p) => ({ id: p.id, name: p.name }))}
         initial={{ status: sp.status ?? "all", section: sp.section ?? "", assignee: sp.assignee ?? "", q: sp.q ?? "" }}
       />

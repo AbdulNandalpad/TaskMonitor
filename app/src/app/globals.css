@@ -778,3 +778,21 @@ a.mytasks:hover{border-color:var(--accent)}
 .choice b{font-size:14px;font-weight:600}
 .choice span{font-size:12.5px;color:var(--muted)}
 .gen-progress{display:grid;gap:6px}
+
+/* ---------- CR-9 grouped task list ---------- */
+.gh-btn{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:8px 12px;text-align:left;background:var(--panel2);border:0;font:inherit;cursor:pointer;color:var(--ink)}
+.gh-btn:hover{background:var(--accent-bg)}
+.gh-btn svg{width:16px;height:16px;color:var(--muted);transition:transform .15s;transform:rotate(90deg);flex:none}
+.gh-btn[aria-expanded="false"] svg{transform:none}
+.gh-name{font-weight:600;font-size:13px}
+.gh-head{color:var(--muted);font-size:12.5px}
+.gh-head::before{content:"· ";}
+.gh-count{margin-left:auto;color:var(--muted);font-size:12px;white-space:nowrap}
+.gh-bar{display:flex;width:90px;height:6px;border-radius:3px;overflow:hidden;background:var(--neutral-bg);flex:none}
+.gh-bar i{display:block;height:100%}
+table.grouped tbody + tbody{border-top:1px solid var(--line)}
+table.grouped .ghead td{padding:0;border-bottom:1px solid var(--line)}
+.group{margin-bottom:12px}
+.gh-m{position:sticky;top:calc(59px + env(safe-area-inset-top,0px));z-index:3;border:1px solid var(--line);border-radius:10px;margin-bottom:6px;flex-wrap:wrap;row-gap:2px}
+.gh-m .gh-count{margin-left:auto}
+.gh-m .gh-bar{width:100%;order:9;margin-left:26px;width:calc(100% - 26px)}

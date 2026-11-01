@@ -95,18 +95,29 @@ async function main() {
     check("CR-6 editing a person shows on workforce and report; audit rows per column",
       r3.status === 200 && w3.text.includes(newPer) && p3.text.includes(newPer) && aud3.some((a: any) => a.detail.field === "name" && a.detail.new === newPer) && aud3.some((a: any) => a.detail.field === "phone"), `${r3.status}`);
 
-    const r4 = await post(`/api/edit/area/${area.id}`, aj, { name: "Hijacked area" });
-    const { data: areaNow } = await anil.c.from("area").select("name").eq("id", area.id).single();
-    check("CR-6 a manager cannot rename the area (area admin only)", r4.status === 403 && areaNow.name === area.name, `${r4.status}`);
-    skip("CR-6 area admin renames the area", "no area admin is seeded and sunita.m cannot sign in; covered by the local database test of 0004");
+    // CR-8: managers may rename the area (migration 0006); the code stays untouched
+    const newArea = "Blast Furnace 1 (CR-ACCEPT rename)";
+    restore.push(() => post(`/api/edit/area/${area.id}`, aj, { name: area.name }));
+    const r4 = await post(`/api/edit/area/${area.id}`, aj, { name: newArea });
+    const [dA, repA, loginA] = await Promise.all([page("/", aj), page(`/report/${list.id}`, aj), page("/login", "")]);
+    const audA = await auditFor(area.id, "area_renamed");
+    const { data: areaNow } = await anil.c.from("area").select("name, code").eq("id", area.id).single();
+    check("CR-8 a manager renames the area: shown on dashboard, sign-in label and report; one audit row; the code is unchanged",
+      r4.status === 200 && dA.text.includes(newArea) && repA.text.includes(newArea) && loginA.text.includes(newArea)
+      && audA.filter((a: any) => a.detail.new === newArea).length === 1 && audA.some((a: any) => a.detail.old === area.name && a.detail.new === newArea) && areaNow.code === "bf1" && dA.text.includes("Rename area"),
+      `${r4.status}`);
+    const codeTry = await post(`/api/edit/area/${area.id}`, aj, { code: "hack" });
+    check("CR-8 the area code cannot be edited", codeTry.status === 400, `${codeTry.status}`);
+    skip("CR-6 area admin renames the area", "no area admin is seeded; the same policy covers area_admin, tested on a local database");
 
     const f1 = await post(`/api/edit/list/${list.id}`, rj, { name: "hack" });
     const f2 = await post(`/api/edit/section/${sec.id}`, rj, { name: "hack" });
     const f3 = await post(`/api/edit/person/${ravP.id}`, rj, { name: "hack" });
     const direct = await ravi.c.from("task_list").update({ name: "hack" }).eq("id", list.id).select("id");
+    const directArea = await ravi.c.from("area").update({ name: "hack" }).eq("id", area.id).select("id");
     const rd = await page("/", rj);
     check("CR-6 a field user is refused on every edit, a direct update changes nothing, and sees no pencil icons",
-      [f1, f2, f3].every((x) => x.status === 403) && (direct.data ?? []).length === 0 && !rd.text.includes("Edit task list") && dash.text.includes("Edit task list"),
+      [f1, f2, f3].every((x) => x.status === 403) && (direct.data ?? []).length === 0 && (directArea.data ?? []).length === 0 && !rd.text.includes("Edit task list") && !rd.text.includes("Rename area") && dash.text.includes("Edit task list"),
       `${f1.status}/${f2.status}/${f3.status} direct=${(direct.data ?? []).length}`);
     const blank = await post(`/api/edit/section/${sec.id}`, aj, { name: "   " });
     check("CR-6 a blank name is refused", blank.status === 400, blank.j.error ?? "");
@@ -174,6 +185,22 @@ async function main() {
     check("CR-7 the dashboard offers Generate with two choices to managers only",
       dash.text.includes("Generate report") && !rd.text.includes("Generate report"), "");
     skip("CR-7 live AI summaries for the seeded list (GB 05A belt remarks reflected in the real model's text)", "needs ANTHROPIC_API_KEY on the server; run Generate on the dashboard after adding it");
+
+    // ---- CR-9 tasks grouped by section (server-rendered from the query string)
+    const ids = (html: string) => [...new Set([...html.matchAll(/data-group="([0-9a-f-]{36})"/g)].map((m) => m[1]))];
+    const allTasks = (await anil.c.from("task_current").select("section_id, status, values").eq("task_list_id", list.id).limit(5000)).data as { section_id: string; status: string; values: { work_description?: string } }[];
+    const expectGroups = (pred: (t: (typeof allTasks)[number]) => boolean) => secs.filter((sx: any) => allTasks.some((t) => t.section_id === sx.id && pred(t))).map((sx: any) => sx.id);
+    const tAll = await page("/tasks", aj);
+    check("CR-9 the Tasks page shows one group header per section, in section order", JSON.stringify(ids(tAll.text)) === JSON.stringify(secs.map((sx: any) => sx.id)) && ids(tAll.text).length === secs.length, `${ids(tAll.text).length} groups`);
+    const tNs = await page("/tasks?status=not_started", aj);
+    check("CR-9 the Not started chip leaves only the groups that contain not-started tasks", JSON.stringify(ids(tNs.text)) === JSON.stringify(expectGroups((t) => t.status === "not_started")), `${ids(tNs.text).length} groups`);
+    const tBelt = await page("/tasks?q=belt", aj);
+    check("CR-9 searching \"belt\" shows only the matching groups", JSON.stringify(ids(tBelt.text)) === JSON.stringify(expectGroups((t) => String(t.values.work_description ?? "").toLowerCase().includes("belt"))) && ids(tBelt.text).length > 0, `${ids(tBelt.text).length} groups`);
+    const tSec = await page(`/tasks?section=${secs[1].id}`, aj);
+    check("CR-9 the section dropdown still narrows to one section", JSON.stringify(ids(tSec.text)) === JSON.stringify([secs[1].id]), "");
+    check("CR-9 headers carry the head person and the done count; the repeated Section column is gone",
+      /[0-9]+ of [0-9]+ done/.test(tAll.text) && !tAll.text.includes("<th>Section</th>"), "");
+    skip("CR-9 collapsing a group hides its rows, remembered per user", "client-side, checked in the browser (see build log)");
   } finally {
     await Promise.all(restore.splice(0).map((f) => f().catch(() => null)));
     await anil.c.from("profiles").update({ must_change_password: true }).eq("id", anil.id);

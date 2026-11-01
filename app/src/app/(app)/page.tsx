@@ -31,11 +31,12 @@ export default async function Dashboard() {
   return (
     <Screen
       title={ctx.area.name}
+      titleAction={ctx.isManager ? <EditArea area={ctx.area} /> : undefined}
       sub={`${ctx.profile.display_name} · ${ROLE_LABEL[ctx.role]}`}
       subPhoneOnly
       wide
       nav={navOf(ctx, list?.id, all.un)}
-      actions={<>{ctx.role === "area_admin" ? <EditArea area={ctx.area} /> : null}<span className="m-only appbar-acts"><BellButton open={all.open} unassigned={all.un} /></span></>}
+      actions={<><span className="m-only appbar-acts"><BellButton open={all.open} unassigned={all.un} /></span></>}
     >
       {!list ? (
         <div className="card empty"><b>No task list yet</b><span>{ctx.isManager ? "Upload tasks from Excel or create the first task." : "A manager has not set up this area yet."}</span></div>

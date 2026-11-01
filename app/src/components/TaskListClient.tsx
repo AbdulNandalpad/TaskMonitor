@@ -1,24 +1,57 @@
 "use client";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { STATUS, type Status, type Task } from "@/lib/types";
 import { TaskRow, StatusChip } from "./TaskRow";
-import { Chk } from "./Icons";
+import { Chev, Chk } from "./Icons";
 
 export type ListRow = Task & { sectionName: string; resp: string | null };
 type Filter = "all" | Status;
 type Init = { status: string; section: string; assignee: string; q: string };
+type Sec = { id: string; name: string; head: string | null };
 
 const isStatus = (s: string): s is Status => ["not_started", "in_progress", "completed"].includes(s);
 
-/** Task list with status chips, section and assignee filters and a search box. Table on desktop, task rows on a phone. */
-export function TaskListClient({ rows, sections, persons, initial }: { rows: ListRow[]; sections: { id: string; name: string }[]; persons: { id: string; name: string }[]; initial: Init }) {
+const MiniBar = ({ done, prog, open }: { done: number; prog: number; open: number }) => {
+  const n = done + prog + open || 1;
+  return (
+    <span className="gh-bar" aria-hidden="true">
+      <i style={{ width: `${(done / n) * 100}%`, background: "var(--good)" }} />
+      <i style={{ width: `${(prog / n) * 100}%`, background: "var(--warn)" }} />
+      <i style={{ width: `${(open / n) * 100}%`, background: "var(--bad)" }} />
+    </span>
+  );
+};
+
+/**
+ * Task list grouped by section (CR-9). Filters (status chips, search, section, responsible) apply first, then the rows are
+ * grouped in section order; sections with no matching task are hidden. Headers collapse, remembered per user in the browser.
+ * Table on desktop (no Section column, the header carries it), task rows with sticky headers on a phone.
+ */
+export function TaskListClient({ rows, sections, persons, initial, userId }: {
+  rows: ListRow[]; sections: Sec[]; persons: { id: string; name: string }[]; initial: Init; userId: string;
+}) {
   const router = useRouter();
   const [status, setStatus] = useState<Filter>(isStatus(initial.status) ? initial.status : "all");
   const [section, setSection] = useState(initial.section);
   const [assignee, setAssignee] = useState(initial.assignee);
   const [q, setQ] = useState(initial.q);
+
+  // collapsed sections, remembered per user in this browser
+  const storeKey = `tm_tasks_collapsed_${userId}`;
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    try { setCollapsed(new Set(JSON.parse(localStorage.getItem(storeKey) ?? "[]"))); } catch { /* storage unavailable */ }
+  }, [storeKey]);
+  const toggle = (id: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem(storeKey, JSON.stringify([...next])); } catch { /* ignore */ }
+      return next;
+    });
+  };
 
   const sync = (next: Partial<{ status: Filter; section: string; assignee: string; q: string }>) => {
     const v = { status, section, assignee, q, ...next };
@@ -42,12 +75,25 @@ export function TaskListClient({ rows, sections, persons, initial }: { rows: Lis
   const shown = base.filter((t) => status === "all" || t.status === status);
   const F: [Filter, string][] = [["all", "All"], ["not_started", "Not started"], ["in_progress", "In progress"], ["completed", "Completed"]];
 
-  // phone: group by section
-  const groups: { name: string; items: ListRow[] }[] = [];
-  shown.forEach((t) => {
-    const g = groups[groups.length - 1];
-    if (g && g.name === t.sectionName) g.items.push(t); else groups.push({ name: t.sectionName, items: [t] });
-  });
+  // groups in section order; header totals describe the whole section, the rows below follow the filters
+  const groups = sections.map((s) => {
+    const all = rows.filter((t) => t.section_id === s.id);
+    return {
+      s, items: shown.filter((t) => t.section_id === s.id), total: all.length,
+      done: all.filter((t) => t.status === "completed").length, prog: all.filter((t) => t.status === "in_progress").length, open: all.filter((t) => t.status === "not_started").length,
+    };
+  }).filter((g) => g.items.length);
+  const filtered = status !== "all" || !!q.trim() || !!assignee;
+
+  const headLine = (g: (typeof groups)[number]) => (
+    <>
+      <Chev />
+      <span className="gh-name">{g.s.name}</span>
+      {g.s.head ? <span className="gh-head">{g.s.head}</span> : null}
+      <span className="gh-count num">{g.done} of {g.total} done{filtered ? ` · ${g.items.length} shown` : ""}</span>
+      <MiniBar done={g.done} prog={g.prog} open={g.open} />
+    </>
+  );
 
   return (
     <>
@@ -77,30 +123,42 @@ export function TaskListClient({ rows, sections, persons, initial }: { rows: Lis
       ) : (
         <>
           <div className="card d-only">
-            <table className="dt">
-              <thead><tr><th className="n">#</th><th className="tcell">Task</th><th>Section</th><th>Responsible</th><th className="n">Planned h</th><th>Status</th><th className="n">Progress</th></tr></thead>
-              <tbody>
-                {shown.map((t) => (
-                  <tr key={t.id} className="trlink" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) return; router.push(`/tasks/${t.id}`); }}>
-                    <td className="n num">{t.seq}</td>
-                    <td className="tcell"><Link href={`/tasks/${t.id}`}>{t.values.work_description}</Link>{t.values.vendor ? <small>{t.values.vendor}</small> : null}{t.version > 1 ? <span className="chip accent vtag">v{t.version}</span> : null}</td>
-                    <td>{t.sectionName}</td>
-                    <td>{t.resp ?? <span className="un">Unassigned</span>}</td>
-                    <td className="n num">{t.values.planned_hours ?? 0}</td>
-                    <td><span className={`chip ${STATUS[t.status].chip}`}>{STATUS[t.status].label}</span></td>
-                    <td className="n"><span className="pbar"><i className={`b-${STATUS[t.status].key}`} style={{ width: `${t.progress}%` }} /></span><span className="num pv">{t.progress}%</span></td>
-                  </tr>
-                ))}
-              </tbody>
+            <table className="dt grouped">
+              <thead><tr><th className="n">#</th><th className="tcell">Task</th><th>Responsible</th><th className="n">Planned h</th><th>Status</th><th className="n">Progress</th></tr></thead>
+              {groups.map((g) => {
+                const open = !collapsed.has(g.s.id);
+                return (
+                  <tbody key={g.s.id} data-group={g.s.id}>
+                    <tr className="ghead">
+                      <td colSpan={6}>
+                        <button type="button" className="gh-btn" aria-expanded={open} aria-label={`${g.s.name}, ${g.done} of ${g.total} done`} onClick={() => toggle(g.s.id)}>{headLine(g)}</button>
+                      </td>
+                    </tr>
+                    {open && g.items.map((t) => (
+                      <tr key={t.id} className="trlink" onClick={(e) => { if ((e.target as HTMLElement).closest("a")) return; router.push(`/tasks/${t.id}`); }}>
+                        <td className="n num">{t.seq}</td>
+                        <td className="tcell"><Link href={`/tasks/${t.id}`}>{t.values.work_description}</Link>{t.values.vendor ? <small>{t.values.vendor}</small> : null}{t.version > 1 ? <span className="chip accent vtag">v{t.version}</span> : null}</td>
+                        <td>{t.resp ?? <span className="un">Unassigned</span>}</td>
+                        <td className="n num">{t.values.planned_hours ?? 0}</td>
+                        <td><span className={`chip ${STATUS[t.status].chip}`}>{STATUS[t.status].label}</span></td>
+                        <td className="n"><span className="pbar"><i className={`b-${STATUS[t.status].key}`} style={{ width: `${t.progress}%` }} /></span><span className="num pv">{t.progress}%</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                );
+              })}
             </table>
           </div>
           <div className="m-only">
-            {groups.map((g) => (
-              <div key={g.name} className="group">
-                <div className="sec">{g.name} · {g.items.length}</div>
-                <div className="card">{g.items.map((t) => <TaskRow key={t.id} task={t} resp={t.resp} right={<StatusChip task={t} />} />)}</div>
-              </div>
-            ))}
+            {groups.map((g) => {
+              const open = !collapsed.has(g.s.id);
+              return (
+                <div key={g.s.id} className="group" data-group={g.s.id}>
+                  <button type="button" className="gh-btn gh-m" aria-expanded={open} aria-label={`${g.s.name}, ${g.done} of ${g.total} done`} onClick={() => toggle(g.s.id)}>{headLine(g)}</button>
+                  {open ? <div className="card">{g.items.map((t) => <TaskRow key={t.id} task={t} resp={t.resp} right={<StatusChip task={t} />} />)}</div> : null}
+                </div>
+              );
+            })}
           </div>
         </>
       )}

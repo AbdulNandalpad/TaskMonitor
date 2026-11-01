@@ -11,9 +11,9 @@ import { LogoMark } from "./Logo";
  * (`nav`), then a page header and the content in a centred column, 920px for field screens or 1200px when `wide`.
  */
 export function Screen({
-  title, sub, subPhoneOnly, back, actions, wide, short, nav, children,
+  title, titleAction, sub, subPhoneOnly, back, actions, wide, short, nav, children,
 }: {
-  title: string; sub?: string; subPhoneOnly?: boolean; back?: string; actions?: ReactNode; wide?: boolean; short?: boolean; nav?: NavInfo; children: ReactNode;
+  title: string; titleAction?: ReactNode; sub?: string; subPhoneOnly?: boolean; back?: string; actions?: ReactNode; wide?: boolean; short?: boolean; nav?: NavInfo; children: ReactNode;
 }) {
   return (
     <div className={`shell${wide ? " wide" : ""}`}>
@@ -26,7 +26,7 @@ export function Screen({
             <span className="appbar-mark m-only"><LogoMark size={34} /></span>
           ) : null}
           <div className="ttl">
-            <h2>{title}</h2>
+            <h2>{title}{titleAction}</h2>
             {sub && <span className={subPhoneOnly ? "m-only" : undefined}>{sub}</span>}
           </div>
           {actions}
