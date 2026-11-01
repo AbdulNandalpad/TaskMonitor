@@ -42,6 +42,19 @@ Changes
 
 Prove: acceptance additions — (a) set in progress then try not started → 4xx and unchanged; (b) complete then try in progress → 4xx; (c) progress 60 then 40 → rejected; (d) UI buttons disabled as described.
 
+## CR-4 Remarks can be typed, not only spoken
+
+Rule: a user who works the task can add a remark by typing, with no microphone involved. Voice stays as it is; typing is the second way in.
+
+Changes
+- Task screen: an "Add remark" control next to "Add photo" (and in the top actions on desktop) opens a small sheet with a multi-line text field and a Save button. Nothing else is required; status and progress are not touched by this sheet.
+- Saving writes a `task_update` of type `note` with `text` = the remark, through `task_record_update` (no status or progress arguments). It appears in the updates timeline like any other entry, with the user's name and time.
+- Remarks are saved as typed. No translation on typed text in this change.
+- Field users, managers and area admins may add remarks; viewers may not (same rule as other updates).
+- Empty or whitespace-only remarks are refused with "Type a remark first."
+
+Prove: as `ravi.k`, add a remark on a task without using the mic; it appears at the top of the timeline and as a `note` row in `task_update`; status and progress are unchanged. Add this as an acceptance check.
+
 ## Not in this change
 
 Reopening a completed task by a manager (would need a new, audited action), progress edits by managers after completion, deleting old audio objects.
