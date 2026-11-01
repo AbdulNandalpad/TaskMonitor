@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { extract, type Extracted } from "@/lib/voice/extract";
 import { STATUS, STATUS_ORDER, type Status } from "@/lib/types";
-import { postUpdate, uploadAttachment } from "@/lib/upload";
+import { postUpdate } from "@/lib/upload";
 import { Mic } from "./Icons";
 import { Close } from "./Icons";
 import { useToast } from "./Toast";
@@ -12,6 +12,7 @@ type TaskLite = { id: string; seq: number; title: string };
 type Current = TaskLite & { status: Status; progress: number; manpower: number | null };
 type Props = { tasks: TaskLite[]; taskId?: string; current?: Current; language: string; areaId?: string; canUpdate?: boolean };
 
+const SPOKEN: Record<string, string> = { hi: "Hindi", kn: "Kannada", mixed: "Hindi and English" };
 const LANGS: [string, string][] = [["en-IN", "English"], ["hi-IN", "हिन्दी"], ["kn-IN", "ಕನ್ನಡ"]];
 
 export function MicButton(props: Props) {
@@ -30,7 +31,7 @@ export function MicButton(props: Props) {
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClose }: Props & { onClose: () => void }) {
+function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Props & { onClose: () => void }) {
   const router = useRouter();
   const toast = useToast();
   const [phase, setPhase] = useState<"listen" | "processing" | "found" | "confirm">("listen");
@@ -46,6 +47,10 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
   const [ex, setEx] = useState<Extracted | null>(null);
   const [form, setForm] = useState({ status: "in_progress" as Status, progress: 10, manpower: "", remarks: "" });
   const [saving, setSaving] = useState(false);
+  const [original, setOriginal] = useState("");           // transcript as spoken (kept in extracted.original_transcript)
+  const [spoken, setSpoken] = useState("en");             // en, hi, kn, mixed, other
+  const [notice, setNotice] = useState<string | null>(null);
+  const [lockNote, setLockNote] = useState<string | null>(null);
 
   const finalRef = useRef("");
   const srRef = useRef<any>(null);
@@ -91,7 +96,7 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
   }, []);
 
   const startListening = useCallback(async () => {
-    setPhase("listen"); setText(""); setInterim(""); finalRef.current = ""; blobRef.current = null; chunks.current = []; setEx(null);
+    setPhase("listen"); setText(""); setInterim(""); finalRef.current = ""; blobRef.current = null; chunks.current = []; setEx(null); setNotice(null); setLockNote(null); setOriginal(""); setSpoken("en");
     listening.current = true; startedAt.current = Date.now();
     startSR();
     try {
@@ -129,18 +134,38 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
 
   const changeLang = (l: string) => { setLang(l); langRef.current = l; if (listening.current && srOk) startSR(); };
 
-  /** Claude reads the transcript; if the AI route is not configured or fails, the local rules reader is used. */
-  async function readUpdate(said: string, t: Current) {
+  /**
+   * Claude reads the transcript and returns an English transcript and English remarks (the original is kept separately).
+   * If the AI route is not configured or fails, the local rules reader is used and a notice is shown for non-English speech.
+   */
+  async function readUpdate(said: string, t: Current, orig?: string) {
     setBusyText("Reading the update…");
     let e: Extracted = extract(said, t);
     let ai = "rules";
+    let english = said;
+    let language = ({ "hi-IN": "hi", "kn-IN": "kn" } as Record<string, string>)[langRef.current] ?? "en";
     try {
       const res = await fetch("/api/voice/extract", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ taskId: t.id, transcript: said, language: langRef.current }),
       });
-      if (res.ok) { const j = await res.json(); e = j; ai = j.engine ?? "claude"; }
+      if (res.ok) { const j = await res.json(); e = j; ai = j.engine ?? "claude"; english = j.transcriptEn || said; language = j.language || language; }
     } catch { /* rules fallback */ }
+    // forward only: status never goes back, progress never goes down, completed is final
+    const rank = (x: Status) => STATUS_ORDER.indexOf(x);
+    let lock: string | null = null;
+    if (t.status === "completed") {
+      e = { ...e, status: "completed", progress: 100 };
+      lock = "This task is completed. Status and progress stay as they are; the remark is still saved.";
+    } else {
+      if (rank(e.status) < rank(t.status)) { e = { ...e, status: t.status }; lock = `Status stays ${STATUS[t.status].label}; it cannot go back.`; }
+      if (e.progress < t.progress) e = { ...e, progress: t.progress };
+    }
+    setLockNote(lock);
+    setNotice(ai === "rules" && (language !== "en" || /[^ -]/.test(said)) ? "Saved as spoken; English translation needs the voice service." : null);
+    setOriginal(orig ?? original ?? said);
+    setSpoken(language);
+    setText(english);
     setEngine((x) => ({ ...x, ai }));
     setEx(e);
     setForm({ status: e.status, progress: e.progress, manpower: e.manpower == null ? "" : String(e.manpower), remarks: e.remarks });
@@ -174,6 +199,8 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
       } catch { /* keep the browser transcript */ }
     }
     setEngine({ stt, ai: "rules" });
+    // the clip is used once and discarded: nothing is stored
+    blobRef.current = null; chunks.current = [];
     if (!target) {
       const words = said.toLowerCase().split(/\W+/).filter((w) => w.length > 3);
       const score = (t: TaskLite) => { const l = t.title.toLowerCase(); return words.reduce((a, w) => a + (l.includes(w) ? 1 : 0), 0); };
@@ -182,7 +209,7 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
       setPhase("found");
       return;
     }
-    await readUpdate(said, target);
+    await readUpdate(said, target, said);
   }
 
   // a recording is never longer than two minutes
@@ -197,15 +224,18 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
     if (!target) return;
     setSaving(true);
     try {
-      const confirmed = { status: form.status, progress: form.progress, manpower: form.manpower === "" ? null : Number(form.manpower), remarks: form.remarks.trim() };
-      const { updateId } = await postUpdate(target.id, {
-        type: "voice", status: form.status, progress: form.progress, text, extracted: { ...ex, engines: engine }, confirmed,
-      });
-      if (blobRef.current && blobRef.current.size && areaId) {
-        const mime = blobRef.current.type;
-        const ext = mime.includes("mp4") ? "m4a" : mime.includes("ogg") ? "ogg" : "webm";
-        await uploadAttachment({ areaId, taskId: target.id, updateId, kind: "audio", blob: blobRef.current, ext, durationMs: Date.now() - startedAt.current });
-      }
+      const locked = target.status === "completed";
+      const confirmed = {
+        status: locked ? "completed" : form.status, progress: locked ? 100 : form.progress,
+        manpower: form.manpower === "" ? null : Number(form.manpower), remarks: form.remarks.trim(),
+      };
+      const body: Record<string, unknown> = {
+        type: "voice", text, confirmed,
+        // text is the English transcript; the spoken original and its language are kept alongside
+        extracted: { ...ex, original_transcript: original || text, language: spoken, engines: engine },
+      };
+      if (!locked) { body.status = form.status; body.progress = form.progress; }
+      await postUpdate(target.id, body);
       toast(`Update saved to task ${target.seq}`);
       onClose();
       router.refresh();
@@ -247,12 +277,14 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
 
         {phase === "confirm" ? (
           <div className="field">
-            <label htmlFor="x-t">What was heard <span className="note">· edit if needed, then Read again</span></label>
+            <label htmlFor="x-t">What was said (in English) <span className="note">· edit if needed, then Read again</span></label>
             <textarea id="x-t" value={text} onChange={(e) => setText(e.target.value)} />
+            {SPOKEN[spoken] ? <div className="note">Spoken in {SPOKEN[spoken]}</div> : null}
+            {notice ? <div className="warnbox" role="status"><span>{notice}</span></div> : null}
           </div>
         ) : phase === "listen" && (!srOk || !micOk) ? (
           <div className="field">
-            {!micOk && <div className="note">Microphone is not available, so nothing is recorded as audio. Type the update instead.</div>}
+            {!micOk && <div className="note">Microphone is not available. Type the update instead.</div>}
             <textarea aria-label="Transcript" placeholder="Type the update, e.g. completed, six people" value={text} onChange={(e) => { setText(e.target.value); finalRef.current = e.target.value; }} />
           </div>
         ) : phase === "processing" ? null : (
@@ -264,20 +296,21 @@ function VoiceSheet({ tasks, current, language, areaId, canUpdate = true, onClos
         {phase === "confirm" && ex && (
           <div className="extract">
             <div className="row"><label htmlFor="x-s">Status</label>
-              <select id="x-s" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as Status, progress: e.target.value === "completed" ? 100 : e.target.value === "not_started" ? 0 : form.progress })}>
-                {STATUS_ORDER.map((s) => <option key={s} value={s}>{STATUS[s].label}</option>)}
+              <select id="x-s" value={form.status} disabled={target?.status === "completed"} onChange={(e) => setForm({ ...form, status: e.target.value as Status, progress: e.target.value === "completed" ? 100 : e.target.value === "not_started" ? 0 : form.progress })}>
+                {STATUS_ORDER.map((s) => <option key={s} value={s} disabled={!!target && STATUS_ORDER.indexOf(s) < STATUS_ORDER.indexOf(target.status)}>{STATUS[s].label}</option>)}
               </select></div>
             <div className="row"><label htmlFor="x-p">Progress</label>
-              <div className="inl"><input type="range" id="x-p" min={0} max={100} step={5} value={form.progress} onChange={(e) => setForm({ ...form, progress: +e.target.value })} />
+              <div className="inl"><input type="range" id="x-p" min={target?.status === "in_progress" ? target.progress : 0} max={100} step={5} value={form.progress} disabled={target?.status === "completed"} onChange={(e) => setForm({ ...form, progress: +e.target.value })} />
                 <span className="num" style={{ fontWeight: 600, minWidth: 38, textAlign: "right" }}>{form.progress}%</span></div></div>
             <div className="row"><label htmlFor="x-m">Manpower</label>
               <input id="x-m" type="number" min={0} value={form.manpower} onChange={(e) => setForm({ ...form, manpower: e.target.value })} /></div>
             <div className="row"><label htmlFor="x-r">Remarks</label>
               <textarea id="x-r" value={form.remarks} onChange={(e) => setForm({ ...form, remarks: e.target.value })} /></div>
+            {lockNote ? <div className="conf"><span className="dot" style={{ background: "var(--warn)" }} />{lockNote}</div> : null}
             {(low("status") || low("progress") || low("manpower")) && (
               <div className="conf"><span className="dot" style={{ background: "var(--warn)" }} />Not heard clearly: {[low("status") && "status", low("progress") && "progress", low("manpower") && "manpower"].filter(Boolean).join(", ")}. Please check.</div>
             )}
-            <div className="conf"><span className="dot" />Transcript and audio are kept with this update as evidence.</div>
+            <div className="conf"><span className="dot" />The transcript is kept with this update as the record.</div>
           </div>
         )}
 

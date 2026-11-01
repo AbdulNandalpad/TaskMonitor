@@ -32,7 +32,7 @@ export default async function ReportPage({ params }: { params: Promise<{ listId:
   const stamp = fmtStamp();
 
   const { data: updates } = await supabase.from("task_update")
-    .select("id, task_id, type, by_user, at, text").in("task_id", tasks.map((t) => t.id)).order("at", { ascending: false }).limit(5000);
+    .select("id, task_id, type, by_user, at, text, text_original, edit_count, edited_at").in("task_id", tasks.map((t) => t.id)).order("at", { ascending: false }).limit(5000);
   const ups = updates ?? [];
   const lastRemark = new Map<string, string>();
   ups.forEach((u) => { if (u.text && ["voice", "note"].includes(u.type) && !lastRemark.has(u.task_id)) lastRemark.set(u.task_id, u.text); });
@@ -45,6 +45,8 @@ export default async function ReportPage({ params }: { params: Promise<{ listId:
   const userIds = [...new Set(ups.map((u) => u.by_user).filter(Boolean))] as string[];
   const { data: profs } = userIds.length ? await supabase.from("profiles").select("id, display_name").in("id", userIds) : { data: [] };
   const who = new Map((profs ?? []).map((p) => [p.id, p.display_name as string]));
+  // corrected remarks: the report shows the corrected text (lastRemark above), the appendix lists both versions
+  const edited = ups.filter((u) => (u.edit_count ?? 0) > 0 && u.text_original != null).slice(0, 12);
   const nPhotoUpdates = ups.filter((u) => u.type === "photo").length;
 
   const file = `${area.code.toUpperCase()}-Shutdown-Report`;
@@ -127,6 +129,17 @@ export default async function ReportPage({ params }: { params: Promise<{ listId:
               })}
             </div>
           ) : <div className="note">No photos have been attached yet.</div>}
+          {edited.length ? (
+            <>
+              <h2>Appendix · corrected remarks</h2>
+              <div className="tbl"><table>
+                <thead><tr><th>Task</th><th>Entered by</th><th>Corrected text (shown in this report)</th><th>Original text</th></tr></thead>
+                <tbody>{edited.map((u) => (
+                  <tr key={u.id}><td className="n">{byId.get(u.task_id)?.seq}</td><td>{who.get(u.by_user ?? "") ?? ""}</td><td>{u.text}</td><td>{u.text_original}</td></tr>
+                ))}</tbody>
+              </table></div>
+            </>
+          ) : null}
           <h2>Sign‑off</h2>
           <div className="sig"><div><b>Shutdown coordinator</b>Name, date</div><div><b>Head, {area.name}</b>Name, date</div><div><b>Plant management</b>Name, date</div></div>
           <div className="foot"><span>Full photo set for all tasks is in the appendix export</span><span>Confidential</span></div>

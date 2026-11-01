@@ -128,7 +128,7 @@ This is the primary way the field team records work. It must work on a noisy sho
 3. **Transcribe.** The audio is uploaded and queued. Speech-to-text runs with the language set per user (Hindi, English, Kannada, or mixed) and a custom vocabulary of equipment tags and section names taken from the task list, which sharply improves recognition of terms such as "GB 05A" and "tuyere".
 4. **Extract.** A language model receives the transcript, the task's field definitions and current values, and returns a strict JSON object: status, progress, manpower, remarks, and any form field it can fill, each with a confidence. Low-confidence fields are highlighted for the user.
 5. **Confirm.** The app shows the transcript and the extracted fields in an editable sheet. Nothing is saved until the user taps Confirm. This step is not optional; it is what makes the recorded data trustworthy.
-6. **Store.** The update is saved with the transcript, the extracted fields, the user's corrections, and a reference to the audio file in object storage. The audio is evidence and is retained under the same policy as photos.
+6. **Store.** The update is saved with the English transcript, the extracted fields, the user's corrections, and the spoken original (`extracted.original_transcript`, `extracted.language`). **Change of 1 Nov 2026 (CR-1): audio is no longer stored.** The clip is sent to the transcription service in memory, used once and discarded; nothing of kind `audio` is written to Storage or `attachment` (the enum keeps the value for compatibility). Transcripts and remarks are saved in English (CR-2).
 
 Navigation by voice: if no task is open, the agent matches the spoken task name against the user's tasks and offers to open the best match.
 

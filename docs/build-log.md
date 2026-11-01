@@ -78,3 +78,14 @@ Code lives in `app/src/lib/ai/` (config, `anthropic.ts`, `openai.ts`, `voice.ts`
 - **Server-only env vars:** `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` (optional `ANTHROPIC_MODEL`, `OPENAI_TRANSCRIBE_MODEL`). Set them in `app/.env.local` and in the Vercel project, never as `NEXT_PUBLIC_`. Without them everything still works with the browser transcript and rules.
 - **Data flow to note for IT/privacy review:** audio goes to OpenAI (US), the transcript and task title go to Anthropic. Nothing else leaves the system. Kannada accuracy of `gpt-4o-transcribe` is the weakest of the three languages: test with real recordings.
 - Offline check without keys: `npx tsx scripts/ai-mock-test.ts`.
+
+## Change requests of 1 Nov 2026 (CR-1 to CR-5)
+
+Spec: `docs/changes/2026-11-01-client-requests.md`. Migrations `0002_forward_only_status.sql` (CR-3) and `0003_remark_corrections.sql` (CR-5) are applied on the live project.
+
+- **CR-1 no audio stored:** the voice sheet releases the clip after transcription; no Storage upload, no `attachment` row of kind audio. Copy: "The transcript is kept with this update as the record." Old audio objects stay; nothing reads new ones.
+- **CR-2 English transcripts and remarks:** transcription runs in the spoken language (best accuracy), then Claude returns `transcript_en` and English `remarks` (`lib/ai/voice.ts`). The confirm sheet shows the English text with a "Spoken in X" line; `extracted.original_transcript` and `extracted.language` keep the original. Without the AI keys the browser transcript is used and a notice says the English translation needs the voice service. Regression: `scripts/ai-live-test.ts` (needs both keys).
+- **CR-3 forward-only status:** enforced in `task_record_update` (409 from the API). The task screen disables earlier status buttons ("Cannot go back"), locks status and progress once completed, and the slider starts at the current progress. The voice sheet keeps the current status and says so; the Excel import skips backward statuses (counted in the import report).
+- **CR-4 typed remarks:** "Add remark" sheet on the task screen (tile next to Add photo; button in the top bar on desktop), saved as a `note` through `task_record_update`.
+- **CR-5 corrections:** `task_update_correct()`; Edit action on notes and voice entries the user may correct (author or manager), "edited" chip that reveals the original; the report shows corrected text and lists corrected remarks in an appendix.
+- **Acceptance:** `npx tsx scripts/acceptance-changes.ts` (runs as ravi.k and anil.v). Not runnable: live Hindi/Kannada AI test (no keys on this machine), viewer and second-field-user refusals (no such seed users; covered by the local database test).

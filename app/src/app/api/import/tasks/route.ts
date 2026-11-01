@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   const existing = new Map(tasks.map((t) => [`${t.section_id}|${String(t.values.work_description ?? "").trim().toLowerCase()}`, t]));
   let position = Math.max(0, ...sections.map((s) => s.position));
   const unmatched = new Set<string>();
-  let created = 0, updated = 0, unchanged = 0, sectionsCreated = 0, skipped = Number(b.skipped ?? 0);
+  let created = 0, updated = 0, unchanged = 0, sectionsCreated = 0, statusKept = 0, skipped = Number(b.skipped ?? 0);
   const fail = (msg: string) => NextResponse.json({ error: msg, created, updated }, { status: 400 });
 
   for (const r of rows) {
@@ -70,9 +70,14 @@ export async function POST(req: Request) {
       taskId = data as string;
       existing.set(`${sid}|${r.work_description.trim().toLowerCase()}`, { id: taskId, values, status: "not_started", progress: 0, responsible_person_id: resp ?? null } as never);
     }
-    if ((r.status && r.status !== curStatus) || (r.progress !== null && r.progress !== curProgress)) {
+    // status only moves forward: a sheet that says "not started" for a task already under way leaves the task as it is
+    const rank = (s: string) => (s === "not_started" ? 0 : s === "in_progress" ? 1 : 2);
+    let wantStatus = r.status, wantProgress = r.progress;
+    if (wantStatus && rank(wantStatus) < rank(curStatus)) { wantStatus = null; wantProgress = null; statusKept++; }
+    else if (wantProgress !== null && wantProgress < curProgress) { wantProgress = null; statusKept++; }
+    if ((wantStatus && wantStatus !== curStatus) || (wantProgress !== null && wantProgress !== curProgress)) {
       const { error } = await supabase.rpc("task_record_update", {
-        p_task: taskId, p_type: "status", p_status: r.status, p_progress: r.progress, p_text: "Status from Excel import",
+        p_task: taskId, p_type: "status", p_status: wantStatus, p_progress: wantProgress, p_text: "Status from Excel import",
       });
       if (error) return fail(error.message);
     }
@@ -82,8 +87,8 @@ export async function POST(req: Request) {
     area_id: area.id, kind: "tasks", sheet: b.sheet ?? null, mapping: b.mapping ?? null, status: "done",
     rows_total: rows.length + Number(b.skipped ?? 0), rows_created: created, rows_updated: updated, rows_skipped: skipped,
     by_user: ctx.userId, finished_at: new Date().toISOString(),
-    report: { filename: b.filename ?? null, unmatched_responsible: [...unmatched], sections_created: sectionsCreated, unchanged },
+    report: { filename: b.filename ?? null, unmatched_responsible: [...unmatched], sections_created: sectionsCreated, unchanged, status_kept_forward_only: statusKept },
   });
   await supabase.rpc("log_audit", { p_action: "import", p_area_code: area.code, p_detail: { kind: "tasks", created, updated, skipped } });
-  return NextResponse.json({ created, updated, unchanged, skipped, sectionsCreated, unmatched: [...unmatched] });
+  return NextResponse.json({ created, updated, unchanged, skipped, sectionsCreated, statusKept, unmatched: [...unmatched] });
 }

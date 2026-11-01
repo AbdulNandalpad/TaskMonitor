@@ -734,3 +734,14 @@ a.mytasks:hover{border-color:var(--accent)}
 .mnav-foot{flex:none;padding:12px 4px 0;border-top:1px solid var(--line);margin-top:12px}
 @media (min-width:960px){.burger,.mnav-back{display:none!important}}
 @media (prefers-reduced-motion:reduce){.mnav{animation:none}}
+
+/* ---------- remark entries: edit action, edited chip, original text ---------- */
+.entry-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:6px}
+.entry-meta .chip{cursor:pointer;border:0;font:inherit;font-size:12px;min-height:24px}
+.entry-meta .linkbtn{background:none;border:0;padding:0 2px;min-height:44px;color:var(--accent);font-weight:600;font-size:12.5px;cursor:pointer}
+.entry-meta .linkbtn:hover{text-decoration:underline}
+.entry-meta .orig{flex-basis:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);color:var(--muted);font-size:12.5px;line-height:1.45}
+.entry-meta .orig b{color:var(--ink);font-weight:600}
+.steps button:disabled{opacity:.55;cursor:not-allowed}
+.steps button[aria-pressed="true"]:disabled{opacity:1}
+.ph.add{cursor:pointer}

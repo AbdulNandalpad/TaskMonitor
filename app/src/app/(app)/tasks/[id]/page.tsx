@@ -8,13 +8,16 @@ import { Screen } from "@/components/Screen";
 import { Cam, Chk, Mic, Pen } from "@/components/Icons";
 import { TaskActions } from "@/components/TaskActions";
 import { EditTask } from "@/components/EditTask";
+import { AddRemark } from "@/components/AddRemark";
+import { EntryEdit } from "@/components/EntryEdit";
 import { MicButton } from "@/components/VoiceSheet";
 
 export const dynamic = "force-dynamic";
 
 type UpdateRow = {
   id: string; type: string; by_user: string | null; at: string; status_after: string | null; text: string | null;
-  extracted: { changes?: [string, unknown, unknown][]; status?: string; progress?: number; manpower?: number } | null;
+  extracted: { changes?: [string, unknown, unknown][]; status?: string; progress?: number; manpower?: number; original_transcript?: string; language?: string } | null;
+  edit_count: number; text_original: string | null; edited_by: string | null; edited_at: string | null;
   confirmed: { status?: string; progress?: number; manpower?: number; remarks?: string } | null;
 };
 type Att = { id: string; task_update_id: string; kind: string; object_key: string };
@@ -34,7 +37,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
 
   const [{ list, sections, persons, tasks }, updatesRes, attRes, versRes, chRes] = await Promise.all([
     loadBoard(ctx),
-    supabase.from("task_update").select("id, type, by_user, at, status_after, text, extracted, confirmed").eq("task_id", id).order("at", { ascending: false }),
+    supabase.from("task_update").select("id, type, by_user, at, status_after, text, extracted, confirmed, edit_count, text_original, edited_by, edited_at").eq("task_id", id).order("at", { ascending: false }),
     supabase.from("attachment").select("id, task_update_id, kind, object_key").in("task_update_id",
       ((await supabase.from("task_update").select("id").eq("task_id", id)).data ?? []).map((u) => u.id)),
     supabase.from("task_version").select("id, version, changed_by, changed_at, source, note").eq("task_id", id).order("version", { ascending: false }),
@@ -45,7 +48,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   const versions = (versRes.data ?? []) as VersionRow[];
   const changes = (chRes.data ?? []) as Change[];
 
-  const userIds = [...new Set([...updates.map((u) => u.by_user), ...versions.map((v) => v.changed_by)].filter(Boolean))] as string[];
+  const userIds = [...new Set([...updates.map((u) => u.by_user), ...updates.map((u) => u.edited_by), ...versions.map((v) => v.changed_by)].filter(Boolean))] as string[];
   const { data: profs } = userIds.length ? await supabase.from("profiles").select("id, display_name").in("id", userIds) : { data: [] };
   const who = new Map((profs ?? []).map((p) => [p.id, p.display_name as string]));
 
@@ -68,7 +71,10 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
       back={section ? `/sections/${section.id}` : "/"}
       wide
       nav={navOf(ctx, list?.id, tasks.filter((t) => !t.responsible_person_id).length)}
-      actions={ctx.isManager ? <EditTask task={task} sections={sections} persons={persons} /> : null}
+      actions={<>
+        {ctx.role !== "viewer" && <span className="d-only"><AddRemark taskId={task.id} variant="button" /></span>}
+        {ctx.isManager ? <EditTask task={task} sections={sections} persons={persons} /> : null}
+      </>}
     >
       <div className="task">
       <div className="task-main">
@@ -106,6 +112,9 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
                  ...(u.confirmed.manpower != null ? [["Manpower", String(u.confirmed.manpower)] as [string, string]] : []),
                  ...(u.confirmed.remarks ? [["Remark", u.confirmed.remarks] as [string, string]] : [])]
               : (u.extracted?.changes ?? []).map(([k, o, n]) => [fieldLabel[k] ?? k, `${fmtValue(k, o)} → ${fmtValue(k, n)}`] as [string, string]);
+          const canEditEntry = (u.type === "note" || u.type === "voice") && ctx.role !== "viewer" && (ctx.isManager || u.by_user === ctx.userId);
+          const LANG: Record<string, string> = { hi: "Hindi", kn: "Kannada", mixed: "Hindi and English" };
+          const spoken = u.type === "voice" && u.extracted?.language && LANG[u.extracted.language] ? LANG[u.extracted.language] : null;
           const cls = u.type === "voice" ? "voice" : u.type === "photo" ? "photo" : u.type === "edit" || u.type === "assignment" ? "edit" : "";
           return (
             <div className="upd" key={u.id}>
@@ -113,6 +122,11 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
               <div>
                 <div className="hd"><b>{who.get(u.by_user ?? "") ?? "System"}</b><span>{fmtWhen(u.at)}</span></div>
                 <div className="tx">{u.type === "voice" ? <q>“{u.text}”</q> : u.text}</div>
+                {spoken ? <div className="note">Spoken in {spoken}{u.extracted?.original_transcript ? <> · original: {u.extracted.original_transcript}</> : null}</div> : null}
+                {u.type === "note" || u.type === "voice" ? (
+                  <EntryEdit updateId={u.id} text={u.text ?? ""} canEdit={canEditEntry} editCount={u.edit_count} original={u.text_original}
+                    editedWhen={u.edited_at ? fmtWhen(u.edited_at) : null} editedBy={u.edited_by ? who.get(u.edited_by) ?? null : null} />
+                ) : null}
                 {ex.length ? <div className="ex">{ex.map(([a, b], i) => <span className="chip" key={i}>{a}: {b}</span>)}</div> : null}
                 {photos.length ? (
                   <div className="photos">

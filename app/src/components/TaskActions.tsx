@@ -1,26 +1,32 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { STATUS, STATUS_ORDER, type Status } from "@/lib/types";
 import { postUpdate, uploadAttachment } from "@/lib/upload";
+import { AddRemark } from "./AddRemark";
 import { useToast } from "./Toast";
 
 type T = { id: string; seq: number; status: Status; progress: number };
+const rank = (s: Status) => STATUS_ORDER.indexOf(s);
 
 export function TaskActions({ task, areaId, canUpdate }: { task: T; areaId: string; canUpdate: boolean }) {
   const router = useRouter();
   const toast = useToast();
   const [prog, setProg] = useState(task.progress);
   const [busy, setBusy] = useState(false);
+  // status moves forward only; completed is final
+  const done = task.status === "completed";
+  const minProgress = task.status === "in_progress" ? task.progress : 0;
+
+  useEffect(() => setProg(task.progress), [task.progress, task.status]);
 
   async function run(fn: () => Promise<void>, ok: string) {
     setBusy(true);
-    try { await fn(); router.refresh(); toast(ok); } catch (e) { toast((e as Error).message); }
+    try { await fn(); router.refresh(); toast(ok); } catch (e) { toast((e as Error).message); setProg(task.progress); }
     setBusy(false);
   }
-  const setStatus = (s: Status) => run(async () => {
+  const setStatus = (s: Status) => s !== task.status && run(async () => {
     await postUpdate(task.id, { type: "status", status: s, text: `Status set to ${STATUS[s].label}.` });
-    setProg(s === "completed" ? 100 : s === "not_started" ? 0 : task.progress === 0 || task.progress === 100 ? 10 : task.progress);
   }, "Status updated");
   const saveProgress = (n: number) => run(async () => {
     await postUpdate(task.id, { type: "progress", progress: n, text: `Progress set to ${n}%.` });
@@ -35,22 +41,33 @@ export function TaskActions({ task, areaId, canUpdate }: { task: T; areaId: stri
       <div className="sec">Status</div>
       <div className="card pad">
         <div className="steps">
-          {STATUS_ORDER.map((s) => (
-            <button key={s} type="button" data-s={STATUS[s].key} aria-pressed={task.status === s} disabled={!canUpdate || busy} onClick={() => setStatus(s)}>
-              <i />{STATUS[s].label}
-            </button>
-          ))}
+          {STATUS_ORDER.map((s) => {
+            const back = rank(s) < rank(task.status);
+            return (
+              <button key={s} type="button" data-s={STATUS[s].key} aria-pressed={task.status === s}
+                disabled={!canUpdate || busy || back || done}
+                title={back || (done && s !== task.status) ? "Cannot go back" : undefined}
+                onClick={() => setStatus(s)}>
+                <i />{STATUS[s].label}
+              </button>
+            );
+          })}
         </div>
         <div className="prog">
-          <input type="range" min={0} max={100} step={5} value={prog} aria-label="Progress" disabled={!canUpdate || busy}
-            onChange={(e) => setProg(+e.target.value)} onPointerUp={() => prog !== task.progress && saveProgress(prog)}
+          <input type="range" min={minProgress} max={100} step={5} value={prog} aria-label="Progress"
+            disabled={!canUpdate || busy || done}
+            onChange={(e) => setProg(Math.max(minProgress, +e.target.value))}
+            onPointerUp={() => prog !== task.progress && saveProgress(prog)}
             onKeyUp={() => prog !== task.progress && saveProgress(prog)} />
           <span className="num">{prog}%</span>
+        </div>
+        <div className="note" style={{ marginTop: 8 }}>
+          {done ? "Completed is final: status and progress are locked." : "Status and progress only move forward."}
         </div>
       </div>
       {canUpdate && (
         <>
-          <div className="sec">Add photo</div>
+          <div className="sec">Add photo or remark</div>
           <div className="card pad">
             <div className="photos" style={{ marginTop: 0 }}>
               <label className="ph add">
@@ -58,8 +75,9 @@ export function TaskActions({ task, areaId, canUpdate }: { task: T; areaId: stri
                   onChange={(e) => { addPhoto(e.target.files?.[0]); e.target.value = ""; }} />
                 + Photo
               </label>
+              <AddRemark taskId={task.id} variant="tile" />
             </div>
-            <div className="note" style={{ marginTop: 8 }}>Stamped with task, step, time and who took it.</div>
+            <div className="note" style={{ marginTop: 8 }}>Stamped with task, step, time and who added it.</div>
           </div>
         </>
       )}
