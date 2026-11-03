@@ -51,16 +51,17 @@ R = [
  "Summary report page generated (BF1-Shutdown-Report.pdf, 3 pages) with report title, generated date (04 Nov 2026 01:19), compliance by section, open items and photo evidence. The actual PDF file download (Download PDF button, which uses the browser's print/save) was not executed in this run.", None),
 ("TC_018","PDF Report","Summary counts","P1","Pass",
  "Dashboard: 126 tasks, 64 completed, 38 in progress, 24 not started (65%). Summary report: 64 / 126 completed, 38 in progress, 24 not started, 65%. Per-section rows also match the dashboard. (Actual data was used; the seeded 2/2/2 data does not exist.)", None),
-("TC_019","PDF Report","Detailed report","P1","Fail",
- "Detailed report (12 pages, 126 tasks) lists task ID, title, status, START/END, duration and responsible person. It does not list the task's comments: remarks appear only through the AI work summary, and only 3 of 126 tasks have one ('No AI summary has been generated for this task yet' for tasks 125 and 126). So the English, Kannada and Hindi comments added in this run are not in the report and Kannada/Hindi rendering could not be checked there. Retry: after using Generate > Detailed report on the dashboard, summaries rose from 3 to 15 of 126 and then stopped; tasks 125 and 126 still had none, and no Kannada or Hindi text appears anywhere in the report. Result unchanged: comments are not reliably in the detailed report.", None),
+("TC_019","PDF Report","Detailed report","P1","Pass",
+ "RETEST AFTER FIX (commit 64cc19e, live): each task block now has a Remarks list. Task 126 shows 'Work started on the issue', 'Inspection completed' with 'Original (Kannada): ಪರೀಕ್ಷೆ ಪೂರ್ಣಗೊಂಡಿದೆ', 'Test completed' with 'Original (Hindi): परीक्षण पूर्ण हुआ', and 'Fix is ready for testing'; Kannada and Hindi render correctly. The block also has ID, title, status, assignee and dates. Excel export has a Remarks column. FIRST RUN (before the fix, Fail): the report listed no comments. Detailed report (12 pages, 126 tasks) lists task ID, title, status, START/END, duration and responsible person. It does not list the task's comments: remarks appear only through the AI work summary, and only 3 of 126 tasks have one ('No AI summary has been generated for this task yet' for tasks 125 and 126). So the English, Kannada and Hindi comments added in this run are not in the report and Kannada/Hindi rendering could not be checked there. Retry: after using Generate > Detailed report on the dashboard, summaries rose from 3 to 15 of 126 and then stopped; tasks 125 and 126 still had none, and no Kannada or Hindi text appears anywhere in the report. Result unchanged: comments are not reliably in the detailed report.", None),
 ("TC_020","PDF Report","No data","P2","Blocked",
  "Not run: the Reports screens have no date-range or filter control, so there is no way to select a period with no tasks. Feature gap against the test case.", None),
 ]
 
 OBS = [
- "Detailed report overview shows 'Planned hours 72' and 'Dates – to –', while the dashboard shows 767 h planned. The overview figure looks wrong and should be checked.",
- "Silent audio was transcribed as 'Spelling?' by the speech service. A silence or very short recording should probably be rejected or left blank instead of producing words.",
- "Task 102 still shows an untranslated Kannada remark in the summary report; it was entered before the English-translation change. Old entries are not back-filled.",
+ "FIXED (64cc19e): detailed report overview showed 'Planned hours 72' and 'Dates – to –' against 767 h on the dashboard. It now shows 767 h and 31 Oct 2026 to 04 Nov 2026 (verified live).",
+ "FIXED in code (64cc19e, not re-tested with a microphone): silent audio was transcribed as 'Spelling?'. A recording with no transcript and no sound is no longer sent to the speech service; the sheet says 'Nothing was heard'.",
+ "FIXED (64cc19e): tasks with no updates are no longer sent for an AI summary; the report says 'No updates recorded yet.' and counts summaries only for tasks with updates (14 of 103 on live).",
+ "Open: task 102 still shows an untranslated Kannada remark in the summary report; it was entered before the English-translation change. Using Edit on that entry translates it. Reports still have no date-range filter (TC_020).",
  "Test data left on the live site by this run: tasks 125 (TC_001 Fix login issue, completed) and 126 (TC_007 Assignment and comments test) with their remarks and one voice update. The app cannot delete tasks.",
 ]
 
