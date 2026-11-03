@@ -25,10 +25,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ listId:
   const rows = [...data.blocks].sort((a, b) => (order.get(a.sectionId ?? "") ?? 999) - (order.get(b.sectionId ?? "") ?? 999) || a.seq - b.seq).map((b) => ({
     Section: b.sectionName, "#": b.seq, "Work description": b.description, Responsible: b.responsible ?? "",
     Start: stamp(b.start), End: stamp(b.end), Duration: fmtDuration(b.durationMin), "Planned hours": b.plannedHours ?? "",
-    Status: STATUS[b.status].label, "Progress %": b.progress, Summary: b.summary ?? "", "Photo count": b.photos.length,
+    Status: STATUS[b.status].label, "Progress %": b.progress, Summary: b.summary ?? "",
+    Remarks: b.remarks.map((r) => `${stamp(r.at)}${r.by ? ` · ${r.by}` : ""}: ${r.text}${r.original && r.original !== r.text ? ` (original: ${r.original})` : ""}`).join("\n"),
+    "Photo count": b.photos.length,
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
-  ws["!cols"] = [{ wch: 26 }, { wch: 5 }, { wch: 60 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 10 }, { wch: 80 }, { wch: 11 }];
+  ws["!cols"] = [{ wch: 26 }, { wch: 5 }, { wch: 60 }, { wch: 18 }, { wch: 20 }, { wch: 20 }, { wch: 12 }, { wch: 13 }, { wch: 13 }, { wch: 10 }, { wch: 80 }, { wch: 80 }, { wch: 11 }];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Detailed report");
   const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;

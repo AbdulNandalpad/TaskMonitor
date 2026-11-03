@@ -61,6 +61,8 @@ function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Pro
   const audioCtxRef = useRef<AudioContext | null>(null);
   const blobRef = useRef<Blob | null>(null);
   const startedAt = useRef(0);
+  const peakRef = useRef(0);
+  const [quiet, setQuiet] = useState<string | null>(null);
   const listening = useRef(false);
   const langRef = useRef(lang);
   langRef.current = lang;
@@ -97,7 +99,7 @@ function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Pro
 
   const startListening = useCallback(async () => {
     setPhase("listen"); setText(""); setInterim(""); finalRef.current = ""; blobRef.current = null; chunks.current = []; setEx(null); setNotice(null); setLockNote(null); setOriginal(""); setSpoken("en");
-    listening.current = true; startedAt.current = Date.now();
+    listening.current = true; startedAt.current = Date.now(); peakRef.current = 0; setQuiet(null);
     startSR();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -115,7 +117,9 @@ function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Pro
       const data = new Uint8Array(an.frequencyBinCount);
       const tick = () => {
         an.getByteFrequencyData(data);
-        setLevels(Array.from({ length: 9 }, (_, i) => data[i + 1] / 255));
+        const lv = Array.from({ length: 9 }, (_, i) => data[i + 1] / 255);
+        peakRef.current = Math.max(peakRef.current, ...lv);
+        setLevels(lv);
         rafRef.current = requestAnimationFrame(tick);
       };
       tick();
@@ -181,6 +185,14 @@ function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Pro
     if (rec && rec.state !== "inactive") {
       await new Promise<void>((res) => { rec.onstop = () => res(); rec.stop(); });
       blobRef.current = new Blob(chunks.current, { type: rec.mimeType || "audio/webm" });
+    }
+    // nothing typed, nothing heard by the browser and no sound at the microphone: do not send silence to the speech service
+    // (it can invent words from silence); ask the user to speak again
+    if (!said && peakRef.current < 0.06) {
+      blobRef.current = null; chunks.current = [];
+      startListening();
+      setQuiet("Nothing was heard. Check the microphone, then speak again.");
+      return;
     }
     setText(said); setInterim("");
     setPhase("processing");
@@ -291,7 +303,7 @@ function VoiceSheet({ tasks, current, language, canUpdate = true, onClose }: Pro
           </div>
         ) : phase === "processing" ? null : (
           <div className="transcript" aria-live="polite">
-            {text || interim ? <>{text} <span style={{ color: "var(--hint)" }}>{interim}</span>{phase === "listen" && <span className="cur" />}</> : <span className="ph-text">Speak now, in your own language.</span>}
+            {text || interim ? <>{text} <span style={{ color: "var(--hint)" }}>{interim}</span>{phase === "listen" && <span className="cur" />}</> : <span className="ph-text">{quiet ?? "Speak now, in your own language."}</span>}
           </div>
         )}
 

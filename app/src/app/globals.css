@@ -763,6 +763,11 @@ a.mytasks:hover{border-color:var(--accent)}
 .tb-meta i{font-style:normal;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:#8d9bab}
 .tb-sum{margin:0;font-size:12px;line-height:1.5;color:#172230}
 .tb-sum.none{color:#8d9bab;font-style:italic}
+.tb-remarks{margin-top:6px;font-size:12px;line-height:1.5;color:#172230}
+.tb-remarks>i{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6a7a8c}
+.tb-remarks ul{margin:2px 0 0;padding-left:16px}
+.tb-remarks .tb-by{color:#6a7a8c;font-size:11px}
+.tb-remarks .tb-orig{display:block;color:#6a7a8c;font-size:11px}
 .tb-photos{grid-template-columns:repeat(4,1fr)}
 .tb-flag{font-size:11.5px;font-weight:600;color:#b45309;background:#fef3c7;border-radius:6px;padding:4px 8px;width:fit-content}
 @media (max-width:700px){.tb-meta{grid-template-columns:1fr 1fr}.tb-photos{grid-template-columns:repeat(2,1fr)}}

@@ -7,7 +7,10 @@ import type { Status } from "../types";
 export type UpdateRow = {
   id: string; task_id: string; type: string; by_user: string | null; at: string;
   status_after: Status | null; progress_after: number | null; text: string | null; edit_count: number;
+  extracted: { original_text?: string; original_transcript?: string; language?: string } | null;
 };
+/** A written or spoken remark as it is printed in the report: English text first, the original wording kept beside it. */
+export type RemarkRow = { at: string; by: string; text: string; original: string | null; language: string | null };
 export type PhotoRow = { id: string; task_id: string; update_id: string; object_key: string; label: string | null; at: string; by: string };
 
 export type Evidence = {
@@ -21,7 +24,7 @@ export type TaskBlock = {
   id: string; seq: number; description: string; sectionId: string | null; sectionName: string;
   status: Status; progress: number; plannedHours: number | null; responsible: string | null;
   start: string | null; end: string | null; durationMin: number | null;
-  evidence: Evidence; hash: string; summary: string | null; summaryStale: boolean;
+  evidence: Evidence; hash: string; summary: string | null; summaryStale: boolean; remarks: RemarkRow[];
   photos: (PhotoRow & { url?: string })[]; noCompletionPhoto: boolean;
 };
 
@@ -65,7 +68,7 @@ export async function loadDetailed(supabase: SupabaseClient, areaId: string, lis
     (a, b) => supabase.from("task_current").select("id, seq, section_id, status, progress, responsible_person_id, values").eq("task_list_id", listId).order("seq").range(a, b));
   const taskIds = new Set(tasks.map((t) => t.id));
   const updates = (await fetchAll<UpdateRow>((a, b) =>
-    supabase.from("task_update").select("id, task_id, type, by_user, at, status_after, progress_after, text, edit_count").eq("area_id", areaId).order("at").range(a, b))).filter((u) => taskIds.has(u.task_id));
+    supabase.from("task_update").select("id, task_id, type, by_user, at, status_after, progress_after, text, edit_count, extracted").eq("area_id", areaId).order("at").range(a, b))).filter((u) => taskIds.has(u.task_id));
   const atts = await fetchAll<{ id: string; task_update_id: string; object_key: string; label: string | null; created_at: string }>(
     (a, b) => supabase.from("attachment").select("id, task_update_id, object_key, label, created_at").eq("area_id", areaId).eq("kind", "photo").range(a, b));
   const sums = await fetchAll<{ task_id: string; evidence_hash: string; text: string; model: string }>(
@@ -109,8 +112,20 @@ export async function loadDetailed(supabase: SupabaseClient, areaId: string, lis
       id: t.id, seq: t.seq, description: v.work_description ?? "", sectionId: t.section_id, sectionName: secName.get(t.section_id ?? "") ?? "",
       status: t.status, progress: t.progress, plannedHours: v.planned_hours ?? null, responsible: personName.get(t.responsible_person_id ?? "") ?? null,
       ...tl, evidence, hash, summary: sm?.text ?? null, summaryStale: !!sm && sm.evidence_hash !== hash,
+      remarks: ups.filter((u) => (u.type === "note" || u.type === "voice") && u.text?.trim()).map((u) => ({
+        at: u.at, by: who.get(u.by_user ?? "") ?? "", text: u.text!.trim(),
+        original: (u.extracted?.original_transcript ?? u.extracted?.original_text ?? null), language: u.extracted?.language ?? null,
+      })),
       photos: ph, noCompletionPhoto: !!v.photo_on_completion && !ph.length,
     };
   });
-  return { list, sections: sections ?? [], blocks, personName };
+  // list-level planned hours and dates are optional settings and often stale or empty: fall back to what the tasks say
+  const starts = blocks.map((b) => b.start).filter(Boolean) as string[];
+  const ends = blocks.map((b) => b.end ?? b.start).filter(Boolean) as string[];
+  const totals = {
+    plannedHours: blocks.reduce((a, b) => a + (b.plannedHours ?? 0), 0),
+    from: list.starts_at ?? (starts.length ? starts.reduce((a, b) => (a < b ? a : b)) : null),
+    to: list.ends_at ?? (ends.length ? ends.reduce((a, b) => (a > b ? a : b)) : null),
+  };
+  return { list, sections: sections ?? [], blocks, personName, totals };
 }

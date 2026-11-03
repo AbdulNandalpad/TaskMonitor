@@ -128,3 +128,11 @@ Cause: every Claude call returned HTTP 400 `invalid_request_error: tool_choice: 
 Fix (`a9ad63a`): `tool_choice` is automatic and the system prompt says to answer by calling the named tool once. The routes now return the failure reason (`detail`: status, error type, a short message; never a key) and the confirm sheet shows it after "Saved as spoken", so a configuration problem is visible at once.
 
 Verified live on `task-monitor-navy.vercel.app` as ravi.k: `/api/voice/extract` for Kannada, Hindi and English text returns English transcript, English remarks, status, progress, manpower and the language; a typed Kannada remark is saved in English with the original in `extracted.original_text`; `/api/voice/transcribe` with a generated English clip returns the text from `gpt-4o-transcribe` in about 1.6 s. Not tested live: Kannada or Hindi audio through the transcriber (no Kannada voice available to generate a test clip) and the report summaries.
+
+## Fixes from the browser test run (4 Nov 2026)
+Test report: `docs/test-execution/Task_Monitor_Test_Execution_Report.docx` (20 cases run in Chrome on the live site).
+- Detailed report (TC_019): each task block now lists its remarks, English first with the original Kannada/Hindi wording underneath; the Excel export has a Remarks column. Previously remarks appeared only through the AI summary.
+- Detailed report overview: planned hours is the sum of the tasks (was a stale list value, 72 against 767 on the dashboard); dates fall back to the first start and last end when the list has none.
+- AI summaries skip tasks with no updates (nothing to summarise); those blocks say "No updates recorded yet." and the overview counts only tasks with updates.
+- Voice sheet: a recording with no typed or browser transcript and no sound at the microphone is not sent to the speech service (it invented "Spelling?" from silence); the sheet asks the user to speak again.
+- Not changed: no date-range filter on reports (TC_020, new feature); old non-English remarks stay as entered until edited (Edit on the entry translates them).

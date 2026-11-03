@@ -25,10 +25,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ listId:
   const limit = Math.max(1, Math.min(12, Number(body?.limit) || 6));
   if (!hasAnthropic()) {
     const data = await loadDetailed(supabase, list.area_id, listId);
-    const pending = data ? data.blocks.filter((b) => !b.summary || b.summaryStale).length : 0;
+    const scope = data ? data.blocks.filter((b) => b.evidence.events.length > 0) : [];
+    const pending = scope.filter((b) => !b.summary || b.summaryStale).length;
     // nothing to write when everything is cached, even without a key
-    if (!pending) return NextResponse.json({ total: data?.blocks.length ?? 0, cached: data?.blocks.length ?? 0, generated: 0, failed: 0, pending: 0 });
-    return NextResponse.json({ error: "AI summaries are not configured", total: data?.blocks.length ?? 0, pending }, { status: 503 });
+    if (!pending) return NextResponse.json({ total: scope.length, cached: scope.length, generated: 0, failed: 0, pending: 0 });
+    return NextResponse.json({ error: "AI summaries are not configured", total: scope.length, pending }, { status: 503 });
   }
   const out = await fillSummaries(supabase, list.area_id, listId, { limit });
   if (!out) return NextResponse.json({ error: "Not found" }, { status: 404 });

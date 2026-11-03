@@ -23,7 +23,8 @@ export default async function DetailedReport({ params }: { params: Promise<{ lis
   const area = ctx.area;
   const stamp = fmtStamp();
   const all = stats(blocks.map((b) => ({ status: b.status, progress: b.progress, responsible_person_id: b.responsible })));
-  const withSummary = blocks.filter((b) => b.summary).length;
+  const withUpdates = blocks.filter((b) => b.evidence.events.length > 0);
+  const withSummary = withUpdates.filter((b) => b.summary).length;
   const pages = sections.filter((s) => blocks.some((b) => b.sectionId === s.id)).length + 2;
   const file = `${area.code.toUpperCase()}-Detailed-Report`;
 
@@ -56,10 +57,10 @@ export default async function DetailedReport({ params }: { params: Promise<{ lis
           <table>
             <tbody>
               <tr><td><b>Task list</b></td><td>{list.name}</td></tr>
-              <tr><td><b>Dates</b></td><td>{dateOnly(list.starts_at)} to {dateOnly(list.ends_at)}</td></tr>
-              <tr><td><b>Planned hours</b></td><td>{list.planned_hours ?? "–"}</td></tr>
+              <tr><td><b>Dates</b></td><td>{dateOnly(data.totals.from)} to {dateOnly(data.totals.to)}</td></tr>
+              <tr><td><b>Planned hours</b></td><td>{data.totals.plannedHours} h</td></tr>
               <tr><td><b>Sections</b></td><td>{sections.length}</td></tr>
-              <tr><td><b>Work summaries</b></td><td>{withSummary} of {blocks.length} tasks{withSummary < blocks.length ? " (the rest have no AI summary yet)" : ""}</td></tr>
+              <tr><td><b>Work summaries</b></td><td>{withSummary} of {withUpdates.length} tasks with updates{withSummary < withUpdates.length ? " (the rest have no AI summary yet)" : ""}</td></tr>
             </tbody>
           </table>
           <h2>Contents</h2>
@@ -90,7 +91,20 @@ export default async function DetailedReport({ params }: { params: Promise<{ lis
                     <span><i>Duration</i>{fmtDuration(b.durationMin)}{b.plannedHours ? ` vs ${b.plannedHours} h planned` : ""}</span>
                     <span><i>Responsible</i>{b.responsible ?? "Unassigned"}</span>
                   </div>
-                  <p className={b.summary ? "tb-sum" : "tb-sum none"}>{b.summary ?? "No AI summary has been generated for this task yet."}{b.summary && b.summaryStale ? " (the evidence changed after this summary was written)" : ""}</p>
+                  <p className={b.summary ? "tb-sum" : "tb-sum none"}>{b.summary ?? (b.evidence.events.length ? "No AI summary has been generated for this task yet." : "No updates recorded yet.")}{b.summary && b.summaryStale ? " (the evidence changed after this summary was written)" : ""}</p>
+                  {b.remarks.length ? (
+                    <div className="tb-remarks">
+                      <i>Remarks</i>
+                      <ul>
+                        {b.remarks.map((r, k) => (
+                          <li key={k}>
+                            {r.text} <span className="tb-by">· {r.by ? `${r.by} · ` : ""}{fmtWhen(r.at)}</span>
+                            {r.original && r.original !== r.text ? <span className="tb-orig">Original{r.language && r.language !== "en" ? ` (${r.language === "kn" ? "Kannada" : r.language === "hi" ? "Hindi" : r.language})` : ""}: {r.original}</span> : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                   {b.photos.length ? (
                     <div className="pgrid tb-photos">
                       {b.photos.map((p) => (

@@ -15,7 +15,8 @@ export async function fillSummaries(
 ) {
   const data = await loadDetailed(supabase, areaId, listId);
   if (!data) return null;
-  const scope = opts.only ? data.blocks.filter((b) => opts.only!.includes(b.id)) : data.blocks;
+  // a task nobody has recorded anything for has nothing to summarise, so it is never sent to the model
+  const scope = (opts.only ? data.blocks.filter((b) => opts.only!.includes(b.id)) : data.blocks).filter((b) => b.evidence.events.length > 0);
   const pending = scope.filter((b) => !b.summary || b.summaryStale);
   const todo = pending.slice(0, Math.max(1, opts.limit ?? 6));
   let generated = 0, failed = 0, unavailable = false;
