@@ -21,6 +21,7 @@ export function LoginForm({ initialError, area }: { initialError: string | null;
       const j = await res.json();
       if (j.ok) { router.push(j.next); router.refresh(); return; }
       if (j.scope) { router.replace(`/login?reason=scope&name=${encodeURIComponent(j.name)}`); router.refresh(); return; }
+      if (j.noApp) { router.replace(`/login?reason=noapp&name=${encodeURIComponent(j.name)}`); router.refresh(); return; }
       setError(j.error ?? "User ID or password is incorrect.");
     } catch {
       setError("Could not reach the server. Check the connection and try again.");

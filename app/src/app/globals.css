@@ -768,6 +768,28 @@ a.mytasks:hover{border-color:var(--accent)}
 .tb-remarks ul{margin:2px 0 0;padding-left:16px}
 .tb-remarks .tb-by{color:#6a7a8c;font-size:11px}
 .tb-remarks .tb-orig{display:block;color:#6a7a8c;font-size:11px}
+
+/* ---- app launcher, app chooser and access screen ---- */
+.launch{min-height:100dvh;background:#f6f7fb}
+.launch-hd{display:flex;align-items:center;gap:12px;padding:14px max(16px,env(safe-area-inset-right)) 14px max(16px,env(safe-area-inset-left));background:#fff;border-bottom:1px solid #e4e8f0}
+.launch-brand{display:flex;align-items:center;gap:10px;font-size:17px;margin-right:auto}
+.launch-user{font-size:13px;color:#4b5a6b}
+.launch-body{max-width:880px;margin:0 auto;padding:28px 16px 48px}
+.launch-body h1{margin:0 0 6px;font-size:26px;color:#172230}
+.launch-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;margin:22px 0}
+.launch-tile{display:flex;flex-direction:column;gap:8px;padding:20px;background:#fff;border:1px solid #e4e8f0;border-radius:18px;box-shadow:0 6px 18px rgba(23,34,48,.06);color:inherit;text-decoration:none;transition:transform .12s,box-shadow .12s}
+.launch-tile:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(79,70,229,.18)}
+.launch-tile b{font-size:18px;color:#172230}
+.launch-tile small{color:#4b5a6b;font-size:13px;line-height:1.4}
+.lt-ic{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;color:#fff;margin-bottom:6px}
+.lt-go{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:8px;font-weight:600;font-size:14px;color:#4f46e5}
+.access-card{overflow-x:auto;margin-top:16px}
+.access-tbl{width:100%;border-collapse:collapse;font-size:14px}
+.access-tbl th,.access-tbl td{padding:12px 14px;text-align:left;border-bottom:1px solid #eef1f6;vertical-align:middle}
+.access-tbl th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#6a7a8c}
+.access-tbl td small{display:block;color:#6a7a8c;font-size:12px}
+.switch-row{display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.switch-row input{width:18px;height:18px;accent-color:#4f46e5}
 .tb-photos{grid-template-columns:repeat(4,1fr)}
 .tb-flag{font-size:11.5px;font-weight:600;color:#b45309;background:#fef3c7;border-radius:6px;padding:4px 8px;width:fit-content}
 @media (max-width:700px){.tb-meta{grid-template-columns:1fr 1fr}.tb-photos{grid-template-columns:repeat(2,1fr)}}

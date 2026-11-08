@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { isActivePath, navLinks, type NavIconName, type NavInfo } from "@/lib/nav";
 import { initials } from "@/lib/format";
 import { Logo } from "./Logo";
-import { Assign, Chev, FormIcon, Home, List, Pdf, People, Plus, SignOut, Xl } from "./Icons";
+import { Assign, Chev, FormIcon, Grid, Home, List, Pdf, People, Plus, SignOut, Xl } from "./Icons";
 
 export function NavIcon({ name }: { name: NavIconName }) {
   switch (name) {
@@ -17,6 +17,7 @@ export function NavIcon({ name }: { name: NavIconName }) {
     case "assign": return <Assign />;
     case "pdf": return <Pdf />;
     case "form": return <FormIcon />;
+    case "apps": return <Grid />;
   }
 }
 
@@ -39,7 +40,7 @@ export function AppNav(info: NavInfo) {
   }, [open]);
   useEffect(() => { setOpen(false); }, [path]);
 
-  const { primary, create, more } = navLinks(info);
+  const { primary, create, more, apps } = navLinks(info);
   const active = (href: string) => isActivePath(path, href);
   const moreActive = more.some((m) => active(m.href));
 
@@ -67,6 +68,7 @@ export function AppNav(info: NavInfo) {
           )}
         </nav>
         {create && <Link className="btn primary cta" href={create.href}><Plus />{create.label}</Link>}
+        {apps.length > 0 && <Link className="iconbtn" href="/apps" aria-label="All apps" title="All apps"><Grid /></Link>}
         <div className="topnav-user" title={`${info.user} · ${info.role}`}>
           <span className="avatar sm">{initials(info.user)}</span>
           <span className="who-txt"><b>{info.user}</b><small>{info.role}</small></span>

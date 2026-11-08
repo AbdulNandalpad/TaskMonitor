@@ -72,6 +72,8 @@ async function main() {
     { user_id: anil, area_id: areaId.sp1, role: "manager" },
     { user_id: meena, area_id: areaId.sp1, role: "field_user" },
   ]), "membership");
+  // platform layer (migration 0007); skipped quietly when that migration has not been applied yet
+  await db.from("app_access").upsert([sunita, ravi, anil, meena].map((u) => ({ user_id: u, app_code: "task_monitor" })));
 
   const bf1 = areaId.bf1;
   const existing = (await db.from("task_list").select("id").eq("area_id", bf1)).data ?? [];

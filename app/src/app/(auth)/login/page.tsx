@@ -10,7 +10,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const supabase = await createClient();
   const { data: areaName } = await supabase.rpc("public_area_name", { p_code: AREA_CODE });
   const area = (areaName as string | null) ?? AREA_CODE.toUpperCase();
-  const scopeError = sp.reason === "scope" ? `${sp.name ?? "This account"} is not scoped to ${area}. Access is granted per area by the administrator.` : null;
+  const scopeError = sp.reason === "scope" ? `${sp.name ?? "This account"} is not scoped to ${area}. Access is granted per area by the administrator.`
+    : sp.reason === "noapp" ? `${sp.name ?? "This account"} has not been given access to any application yet. Ask your administrator.` : null;
   return (
     <AuthShell>
       <LoginForm initialError={scopeError} area={area} />

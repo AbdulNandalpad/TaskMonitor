@@ -136,3 +136,11 @@ Test report: `docs/test-execution/Task_Monitor_Test_Execution_Report.docx` (20 c
 - AI summaries skip tasks with no updates (nothing to summarise); those blocks say "No updates recorded yet." and the overview counts only tasks with updates.
 - Voice sheet: a recording with no typed or browser transcript and no sound at the microphone is not sent to the speech service (it invented "Spelling?" from silence); the sheet asks the user to speak again.
 - Not changed: no date-range filter on reports (TC_020, new feature); old non-English remarks stay as entered until edited (Edit on the entry translates them).
+
+## Platform layer: one login, several apps (8 Nov 2026)
+Direction agreed with the owner: Task Monitor becomes one app of several behind one login; Furnace Analysis is app #2 (vendor PDF report uploaded by JSW staff, email notifications through Resend to a configurable recipients table; design starts when the sample report is shared).
+- `supabase/migrations/0007_platform_apps.sql` (apply in the SQL editor): `app`, `app_access` (default deny), `platform_admin`, functions `has_app`, `my_apps`, `app_access_set`, `platform_users`, `is_platform_admin`. `is_member` and `has_role` now also require the Task Monitor app, so removing a user's Task Monitor access closes every Task Monitor table at the database. Everyone with a membership is backfilled with Task Monitor. Furnace Analysis is registered but switched off (`enabled = false`) until it exists.
+- App: `/launch` (sign-in landing: no app signs out with a message, one app goes straight in, several show the chooser), `/apps` (chooser, "All apps" link appears in the nav only for multi-app users), `/furnace` (guarded placeholder), `/admin/access` + `POST /api/admin/access` (platform admins grant or revoke per user and app). Task Monitor keeps its addresses.
+- Safe to deploy before the migration: `myApps` falls back to "Task Monitor only" while `my_apps()` does not exist.
+- Platform admin is set in SQL: `insert into platform_admin select id from profiles where login = '<login>';`
+- Tests: pglite 18/18 (migration twice, grants, revoke closes data, refusals); `app/scripts/acceptance-platform.ts` runs against the live project once 0007 is applied.

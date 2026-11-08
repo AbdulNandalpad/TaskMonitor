@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "./supabase/server";
 import { isManagerRole, type Role } from "./roles";
+import { myApps, openable, TASK_MONITOR } from "./apps";
 
 export const AREA_CODE = process.env.NEXT_PUBLIC_AREA_CODE ?? "bf1";
 export const AREA_COOKIE = "tm_area";
@@ -17,6 +18,8 @@ export type Ctx = {
   userId: string;
   profile: Profile;
   memberships: { role: Role; area: AreaRef }[];
+  /** true when the user can open more than one app, so the navigation offers a way back to the app chooser */
+  multiApp: boolean;
   area: AreaRef;
   role: Role;
   isManager: boolean;
@@ -38,7 +41,9 @@ export async function requireCtx(opts: { allowNoArea?: boolean; managerOnly?: bo
   const { data: profile } = await supabase
     .from("profiles").select("id, login, display_name, language, must_change_password").eq("id", auth.user.id).maybeSingle();
   if (!profile) redirect("/api/auth/logout?next=/login");
-  const memberships = await loadMemberships(supabase, auth.user.id);
+  const [memberships, apps] = await Promise.all([loadMemberships(supabase, auth.user.id), myApps(supabase)]);
+  // Task Monitor is one app among several: without the app (access table) the user goes to the launcher, never into its screens
+  if (!apps.some((a) => a.code === TASK_MONITOR)) redirect("/launch");
   if (!memberships.some((m) => m.area.code === AREA_CODE)) {
     redirect(`/api/auth/logout?reason=scope&name=${encodeURIComponent(profile.display_name)}`);
   }
@@ -52,7 +57,7 @@ export async function requireCtx(opts: { allowNoArea?: boolean; managerOnly?: bo
     else redirect("/areas");
   }
   const ctx: Ctx = {
-    supabase, userId: auth.user.id, profile, memberships,
+    supabase, userId: auth.user.id, profile, memberships, multiApp: openable(apps, memberships, AREA_CODE).length > 1,
     area: active!.area, role: active!.role, isManager: isManagerRole(active!.role),
   };
   if (opts.managerOnly && !ctx.isManager) redirect("/");

@@ -109,6 +109,10 @@ begin
         jsonb_build_object('status','completed','progress',100,'manpower',(t->>'manpower')::int), v_ravi);
     end if;
   end loop;
+  -- platform layer (migration 0007): the seeded users get Task Monitor; harmless if 0007 has not been applied yet
+  if to_regclass('public.app_access') is not null then
+    insert into app_access (user_id, app_code) select id, 'task_monitor' from profiles on conflict do nothing;
+  end if;
   raise notice 'Seeded 12 people, 10 sections, 99 tasks, 4 users (password ChangeMe-2026!).';
 end
 $seed$;
