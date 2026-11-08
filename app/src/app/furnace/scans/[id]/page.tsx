@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
-import { fmtDateTime, limitsOfVersion, loadScan, previousScan } from "@/lib/fa/data";
+import { activeLimits, fmtDateTime, loadScan, previousScan } from "@/lib/fa/data";
 import { counts, delta, evaluate, type Status } from "@/lib/fa/evaluate";
 import { requireFa } from "@/lib/fa/guard";
 import { sectionOrder } from "@/lib/fa/zones";
@@ -18,12 +18,14 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
   const data = await loadScan(supabase, id);
   if (!data) notFound();
   const { scan, readings } = data;
-  const [{ data: conv }, prev, limits, ver] = await Promise.all([
+  // judged with the converter's current limits; the version it was first saved with is shown as a note
+  const [{ data: conv }, prev, lim, saved] = await Promise.all([
     supabase.from("fa_converter").select("name").eq("id", scan.converter_id).maybeSingle(),
     previousScan(supabase, scan),
-    limitsOfVersion(supabase, scan.limit_version_id),
-    scan.limit_version_id ? supabase.from("fa_limit_version").select("version, note").eq("id", scan.limit_version_id).maybeSingle() : Promise.resolve({ data: null }),
+    activeLimits(supabase, scan.converter_id),
+    scan.limit_version_id ? supabase.from("fa_limit_version").select("version").eq("id", scan.limit_version_id).maybeSingle() : Promise.resolve({ data: null }),
   ]);
+  const limits = lim.rows;
   const prevBy = new Map((prev?.readings ?? []).map((r) => [r.zone, r]));
   const rows = readings.map((r) => ({ r, ev: evaluate(r, limits), d: delta(prevBy.get(r.zone), r) }))
     .sort((a, b) => sectionOrder(a.r.section) - sectionOrder(b.r.section) || a.r.zone.localeCompare(b.r.zone, undefined, { numeric: true }));
@@ -40,7 +42,8 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
         {k.unset > 0 && <div className="fa-stat unset"><b>{k.unset}</b><span>No limit</span></div>}
       </div>
       <p className="fa-note">
-        {ver.data ? <>Judged with limits version {(ver.data as { version: number }).version}{(ver.data as { note: string | null }).note ? ` (${(ver.data as { note: string }).note})` : ""}. </> : <>No limits were set when this scan was saved, so zones have no status. </>}
+        {lim.version ? <>Judged with the current limits, version {lim.version.version}{lim.version.note ? ` (${lim.version.note})` : ""}. </> : <>No limits are set for this converter, so zones have no status. </>}
+        {saved.data ? <>When saved it was judged with version {(saved.data as { version: number }).version}. </> : <>It was saved before any limits existed. </>}
         {prev ? <>Changes are against heat {prev.scan.heat} (measurement {prev.scan.meas_no}). </> : <>This is the first scan, so there is nothing to compare with. </>}
         {scan.steel_level_m != null && <>Steel level {scan.steel_level_m} m{scan.steel_tonnes != null ? ` @ ${scan.steel_tonnes} t` : ""}. </>}
         {scan.bath_level_m != null && <>Bath level {scan.bath_level_m} m.</>}

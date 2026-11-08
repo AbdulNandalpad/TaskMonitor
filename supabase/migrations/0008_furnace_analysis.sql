@@ -1,5 +1,5 @@
 -- 0008 · Furnace Analysis (converter lining scans). Needs 0007. Safe to run twice.
--- A vendor report PDF per heat is uploaded, its 23-zone table is read and confirmed, then every zone is judged against
+-- A vendor report PDF per heat is uploaded, its 22-zone table is read and confirmed, then every zone is judged against
 -- limits that an administrator maintains (versioned, with recommendations). Nothing here touches Task Monitor.
 
 do $$ begin create type fa_role_t as enum ('admin', 'analyst', 'viewer'); exception when duplicate_object then null; end $$;

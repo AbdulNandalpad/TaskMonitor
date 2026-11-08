@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
-import { activeLimits, fmtDateTime, limitsOfVersion, listConverters, loadScan, recentScans, statusCounts } from "@/lib/fa/data";
+import { activeLimits, fmtDateTime, listConverters, loadScan, recentScans, statusCounts } from "@/lib/fa/data";
 import { evaluate } from "@/lib/fa/evaluate";
 import { requireFa } from "@/lib/fa/guard";
 
@@ -11,18 +11,18 @@ export default async function FurnaceHome() {
   const ctx = await requireFa();
   const { supabase } = ctx;
   const [converters, scans] = await Promise.all([listConverters(supabase), recentScans(supabase, 30)]);
-  const counts = await statusCounts(supabase, scans.map((s) => s.id));
+  // zones are judged with each converter's current limits
+  const limByConv = new Map(await Promise.all(converters.map(async (c) => [c.id, await activeLimits(supabase, c.id)] as const)));
+  const counts = await statusCounts(supabase, scans, new Map([...limByConv].map(([id, l]) => [id, l.rows])));
 
   const cards = await Promise.all(converters.map(async (c) => {
     const mine = scans.filter((s) => s.converter_id === c.id);
     const latest = mine[0] ?? null;
-    const lim = await activeLimits(supabase, c.id);
+    const lim = limByConv.get(c.id)!;
     let attention: { zone: string; section: string; avg: number; min: number; status: "critical" | "warning" | "ok" | "unset"; recs: string[] }[] = [];
     if (latest) {
       const full = await loadScan(supabase, latest.id);
-      // judged with the limits the scan was saved with, so the dashboard and the scan page agree
-      const used = await limitsOfVersion(supabase, latest.limit_version_id);
-      attention = (full?.readings ?? []).map((r) => { const e = evaluate(r, used); return { zone: r.zone, section: r.section, avg: r.avg_mm, min: r.min_mm, status: e.status, recs: e.recommendations }; })
+      attention = (full?.readings ?? []).map((r) => { const e = evaluate(r, lim.rows); return { zone: r.zone, section: r.section, avg: r.avg_mm, min: r.min_mm, status: e.status, recs: e.recommendations }; })
         .filter((r) => r.status === "critical" || r.status === "warning")
         .sort((a, b) => (a.status === b.status ? a.min - b.min : a.status === "critical" ? -1 : 1)).slice(0, 8);
     }

@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Limit, Status } from "./evaluate";
+import { evaluate, type Limit, type Status } from "./evaluate";
 
 export type Converter = { id: string; code: string; name: string; plant: string; active: boolean };
 export type ScanRow = {
@@ -48,13 +48,16 @@ export async function recentScans(supabase: SupabaseClient, limit = 12) {
   return (data ?? []) as ScanRow[];
 }
 
-export async function statusCounts(supabase: SupabaseClient, scanIds: string[]) {
+/** Zone counts per scan, judged with each converter's current limits (so a scan saved before the limits existed is judged too). */
+export async function statusCounts(supabase: SupabaseClient, scans: Pick<ScanRow, "id" | "converter_id">[], limitsBy: Map<string, Limit[]>) {
   const out = new Map<string, { critical: number; warning: number; ok: number; unset: number }>();
-  if (!scanIds.length) return out;
-  const { data } = await supabase.from("fa_reading").select("scan_id, status").in("scan_id", scanIds).limit(5000);
+  if (!scans.length) return out;
+  const conv = new Map(scans.map((s) => [s.id, s.converter_id]));
+  const { data } = await supabase.from("fa_reading").select("scan_id, zone, avg_mm, min_mm").in("scan_id", scans.map((s) => s.id)).limit(10000);
   for (const r of data ?? []) {
     const c = out.get(r.scan_id as string) ?? { critical: 0, warning: 0, ok: 0, unset: 0 };
-    c[r.status as Status]++;
+    const st = evaluate({ zone: r.zone as string, avg_mm: Number(r.avg_mm), min_mm: Number(r.min_mm) }, limitsBy.get(conv.get(r.scan_id as string) ?? "") ?? []).status;
+    c[st]++;
     out.set(r.scan_id as string, c);
   }
   return out;

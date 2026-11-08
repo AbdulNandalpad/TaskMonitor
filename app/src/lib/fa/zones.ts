@@ -13,8 +13,8 @@ export function sectionOf(zone: string): Section | "Other" {
   return "Other";
 }
 
-/** The vendor report lists these 23 zones; a read with another count is shown to the user as something to check. */
-export const EXPECTED_ZONES = 23;
+/** The vendor report lists 22 zones (Tapside 4, Left and Right Trunion 4 each, ChargePad 4 and 4A, SL-Drive, SL-NON Drive); a read with another count is shown to the user as something to check. */
+export const EXPECTED_ZONES = 22;
 
 export const sectionOrder = (s: string) => {
   const i = (SECTIONS as readonly string[]).indexOf(s);
