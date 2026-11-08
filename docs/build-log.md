@@ -144,3 +144,6 @@ Direction agreed with the owner: Task Monitor becomes one app of several behind 
 - Safe to deploy before the migration: `myApps` falls back to "Task Monitor only" while `my_apps()` does not exist.
 - Platform admin is set in SQL: `insert into platform_admin select id from profiles where login = '<login>';`
 - Tests: pglite 18/18 (migration twice, grants, revoke closes data, refusals); `app/scripts/acceptance-platform.ts` runs against the live project once 0007 is applied.
+
+## Vercel: commit identity (8 Nov 2026)
+Vercel bills per team member and blocks a commit whose author is not a member. This repo now commits as the team owner's GitHub no-reply address (repo-local `git config user.email 294941189+iammuniraa-wq@users.noreply.github.com`, name unchanged); the global git setting is untouched. Docs-only pushes show "Canceled by Ignored Build Step", which is expected.

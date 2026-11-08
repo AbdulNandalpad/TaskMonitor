@@ -7,7 +7,10 @@ export type AppInfo = { code: string; name: string; description: string | null; 
 
 export const TASK_MONITOR = "task_monitor";
 
-/** Apps the signed-in user has been given and that are switched on. The database decides; nothing here widens it. */
+/**
+ * Apps the signed-in user has been given and that are switched on. The database decides; nothing here widens it.
+ * If migration 0007 has not been applied yet, the user is treated as having Task Monitor only (the single-app product).
+ */
 export async function myApps(supabase: SupabaseClient): Promise<AppInfo[]> {
   const { data, error } = await supabase.rpc("my_apps");
   // Before migration 0007 is applied the function does not exist: behave as the single-app product it was (Task Monitor only)
