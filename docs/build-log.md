@@ -147,3 +147,12 @@ Direction agreed with the owner: Task Monitor becomes one app of several behind 
 
 ## Vercel: commit identity (8 Nov 2026)
 Vercel bills per team member and blocks a commit whose author is not a member. This repo now commits as the team owner's GitHub no-reply address (repo-local `git config user.email 294941189+iammuniraa-wq@users.noreply.github.com`, name unchanged); the global git setting is untouched. Docs-only pushes show "Canceled by Ignored Build Step", which is expected.
+
+## Furnace Analysis, first version (8 Nov 2026)
+Source: vendor converter lining scan reports (6-page image PDFs, one per heat; page 5 is a 23-zone table of average and minimum thickness) and a draft BRD that is mostly wrong (two files per campaign, Angle/Depth as readings). Owner decisions: admin-maintained limits with recommendations, zones shown as OK / Warning / Critical against them; findings are what the limits say, no separate findings text; email through Resend.
+- `supabase/migrations/0008_furnace_analysis.sql` (needs 0007): converters, campaigns, scans, zone readings, versioned limits (zone, section or `*`; minimum or average; warning and critical levels; recommendations), recipients, send log, roles (admin, analyst, viewer; platform admins are administrators), private `fa-reports` bucket. All writes go through functions; pglite 27/27.
+- App: `/furnace` dashboard, `/furnace/upload` (PDF to the bucket from the browser, read by Claude as a PDF document, shown for confirmation, saved on confirm), `/furnace/scans/[id]` (status per zone, change since the previous scan, "Repair?" when a minimum rises 30 mm or more, recommendation, original PDF), `/furnace/trends`, `/furnace/settings` (limits editor with Excel template and upload, recipients, converters, roles). Limits are applied on the server at save; the version used is stored with the scan.
+- Email: Resend (`RESEND_API_KEY`, optional `FA_MAIL_FROM`); without a key nothing is sent and the log says so. Reminders are not built yet.
+- New logo: flame hexagon with a converter vessel (`components/fa/FaLogo.tsx`), shown on the app chooser.
+- Tests: `app/scripts/fa-unit-test.ts` (20 checks: limits precedence, judging, report draft rules, mail, limits sheet).
+- Not verified against a real report yet: reading with Claude needs the deployed keys and the migration applied.

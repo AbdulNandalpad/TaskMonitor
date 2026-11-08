@@ -8,7 +8,8 @@ type Tool = { name: string; description: string; input_schema: Record<string, un
  */
 export async function callClaudeTool<T>(opts: {
   system: string;
-  user: string;
+  /** plain text, or content blocks (for example a PDF document block followed by a text block) */
+  user: string | unknown[];
   tool: Tool;
   model?: string;
   maxTokens?: number;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogoMark } from "./Logo";
 import { Arrow, Grid, SignOut } from "./Icons";
+import { FaLogoMark } from "./fa/FaLogo";
 import type { AppInfo } from "@/lib/apps";
 
 const HUE: Record<string, string> = { task_monitor: "#4f46e5", furnace_analysis: "#f97316" };
@@ -21,7 +22,9 @@ export function AppChooser({ user, apps, admin }: { user: string; apps: AppInfo[
         <div className="launch-grid">
           {apps.map((a, i) => (
             <Link key={a.code} href={a.home_path} className="launch-tile">
-              <span className="lt-ic" style={{ background: HUE[a.code] ?? FALLBACK[i % FALLBACK.length] }}><Grid /></span>
+              {a.code === "task_monitor" ? <LogoMark size={52} className="lt-mark" />
+                : a.code === "furnace_analysis" ? <FaLogoMark size={52} className="lt-mark" />
+                : <span className="lt-ic" style={{ background: HUE[a.code] ?? FALLBACK[i % FALLBACK.length] }}><Grid /></span>}
               <b>{a.name}</b>
               {a.description ? <small>{a.description}</small> : null}
               <span className="lt-go">Open<Arrow /></span>
