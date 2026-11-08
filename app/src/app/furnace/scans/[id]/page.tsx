@@ -76,7 +76,7 @@ function SectionRows({ sec, rows }: { sec: string; rows: { r: { zone: string; av
             <td className={`n ${d && d.avg < 0 ? "fa-down" : d && d.avg > 0 ? "fa-up" : ""}`}>{d ? sign(d.avg) : "–"}</td>
             <td className={`n ${d && d.min < 0 ? "fa-down" : d && d.min > 0 ? "fa-up" : ""}`}>{d ? sign(d.min) : "–"}{d?.rose && <span className="fa-flag">Repair?</span>}</td>
             <td><small>{lm ? `${lm.warn_below ?? "–"} / ${lm.critical_below ?? "–"} mm` : "–"}</small></td>
-            <td>{ev.recommendations.length ? ev.recommendations.join(" ") : ""}</td>
+            <td>{ev.recommendations.map((t, i) => <div key={i}>{t}</div>)}</td>
           </tr>
         );
       })}

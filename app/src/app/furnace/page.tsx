@@ -63,7 +63,7 @@ export default async function FurnaceHome() {
                   <thead><tr><th>Zone</th><th className="n">Average</th><th className="n">Minimum</th><th>Status</th><th>Recommendation</th></tr></thead>
                   <tbody>{attention.map((a) => (
                     <tr key={a.zone} className={a.status}><td><b>{a.zone}</b><small>{a.section}</small></td><td className="n">{a.avg} mm</td><td className="n">{a.min} mm</td>
-                      <td><StatusBadge status={a.status} /></td><td>{a.recs.length ? a.recs.join(" ") : <small>No recommendation set</small>}</td></tr>
+                      <td><StatusBadge status={a.status} /></td><td>{a.recs.length ? a.recs.map((t, i) => <div key={i}>{t}</div>) : <small>No recommendation set</small>}</td></tr>
                   ))}</tbody>
                 </table></div>
               </>
