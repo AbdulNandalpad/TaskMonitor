@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Furnace Analysis - One Pager</title>
+<style>
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+body{margin:0;font-family:Segoe UI,Arial,sans-serif;color:#1c2b4a;background:#fff;font-size:10.5px;line-height:1.38}
+.pg{width:210mm;height:297mm;padding:11mm 12mm;overflow:hidden}
+.top{background:linear-gradient(100deg,#1f5fbf,#2aa7e0);color:#fff;border-radius:12px;padding:14px 18px}
+.top h1{margin:0;font-size:25px}.top p{margin:4px 0 0;font-size:12.5px;opacity:.97}
+h2{font-size:12.5px;margin:12px 0 5px;color:#1f5fbf;text-transform:uppercase;letter-spacing:.5px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.st{border-radius:10px;padding:8px 9px;color:#123}
+.st b{display:block;font-size:11.5px;margin-bottom:2px}.n{display:inline-block;width:18px;height:18px;border-radius:50%;background:#fff;text-align:center;font-weight:700;margin-right:4px}
+.c1{background:#dff1ff}.c2{background:#e4f8e0}.c3{background:#fff3c9}.c4{background:#ffe1e1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.box{border:1.5px solid #cfe0f7;border-radius:10px;padding:8px 10px;background:#f7fbff}
+ul{margin:3px 0 0;padding-left:15px}li{margin:1.5px 0}
+.pill{display:inline-block;border-radius:20px;padding:1px 9px;font-weight:700;color:#fff;font-size:10px}
+.ok{background:#1fa64a}.wa{background:#e0a100}.cr{background:#d93636}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #d5e3f7;padding:3px 6px;text-align:left;font-size:10px}th{background:#e8f2ff}
+.ex{background:#fffbe8;border:1.5px dashed #e3c24a;border-radius:10px;padding:8px 10px}
+.foot{margin-top:9px;font-size:9.5px;color:#4a5b7a;text-align:center}
+</style></head><body><div class="pg">
+<div class="top"><h1>Furnace Analysis</h1><p>Know how worn the lining of every steel converter is, heat by heat, and get warned before it becomes unsafe.</p></div>
+
+<h2>What it does</h2>
+<p style="margin:0">The converter's inside is lined with bricks that wear thin. After a heat, the vendor scans the lining and sends a PDF report. Furnace Analysis reads that report, checks every part of the lining against safe limits, and shows what needs attention. No more hunting through PDFs and spreadsheets.</p>
+
+<h2>How it works</h2>
+<div class="steps">
+<div class="st c1"><b><span class="n">1</span>Upload</b>The analyst drops in the vendor's PDF for one heat.</div>
+<div class="st c2"><b><span class="n">2</span>Read</b>The app reads the 22 lining zones for you (about 30 seconds).</div>
+<div class="st c3"><b><span class="n">3</span>Check &amp; save</b>The analyst compares with the PDF, fixes any slip, then saves.</div>
+<div class="st c4"><b><span class="n">4</span>Alert</b>Every zone gets a colour. If any is Warning or Critical, an email goes out.</div>
+</div>
+
+<h2>The colours</h2>
+<div class="two">
+<div class="box"><span class="pill ok">OK</span> &nbsp;lining is thick enough<br><span class="pill wa">Warning</span> &nbsp;getting thin, keep watching<br><span class="pill cr">Critical</span> &nbsp;too thin, act now<br><span class="pill" style="background:#7a869c">No limit</span> &nbsp;no limit set for that zone yet<br>
+<div style="margin-top:4px">Each zone has two numbers in mm: <b>Average</b> and <b>Minimum</b> thickness. The worse of the two decides the colour.</div></div>
+<div class="box"><b>Limits</b> are set by an administrator for each converter: <i>Warning below</i> and <i>Critical below</i> (in mm), for one zone, a whole section or all zones. Every change is saved as a new version, so history is kept. Each limit can carry a recommendation, for example "Stop and inspect".</div>
+</div>
+
+<h2>What you see</h2>
+<table>
+<tr><th style="width:21%">Dashboard</th><td>Latest scan, count of Critical / Warning / OK zones, the 8 zones needing attention most, and recent scans.</td></tr>
+<tr><th>Scan page</th><td>All 22 zones in four sections (Tapside, Trunnion, Charge Pad, Slag line) with colour, change since the previous scan, and a <b>Repair?</b> flag when the lining got thicker by 30 mm or more (it cannot thicken by wear, so it was probably patched). Opens the vendor's original PDF.</td></tr>
+<tr><th>Trends</th><td>A chart of one zone's Average and Minimum over all scans, with the warning and critical lines drawn on it.</td></tr>
+<tr><th>Settings</th><td>Administrators manage converters, limits (type them or upload Excel), email recipients and who may upload.</td></tr>
+</table>
+
+<h2>Who can do what</h2>
+<table><tr><th>Viewer</th><th>Analyst</th><th>Administrator</th></tr>
+<tr><td>See dashboard, scans, trends and PDFs</td><td>Everything a Viewer can, plus upload and save reports</td><td>Everything an Analyst can, plus Settings (limits, converters, recipients, roles)</td></tr></table>
+<div style="margin-top:4px">Sign in with User ID and password. Each person only sees the applications they have been given. Times are shown in Indian time (IST).</div>
+
+<h2>Example</h2>
+<div class="ex">Heat <b>2886</b> (measurement 25, scanned 1 Nov 2026) of Converter 1, judged with Warning below 400 mm and Critical below 150 mm: <b>2 zones Critical</b> (Right Trunion-1 at 108 mm and ChargePad-1 at 130 mm), <b>7 Warning</b>, <b>13 OK</b>. The dashboard lists them worst first and an email goes to the recipients.</div>
+
+<h2>Not included</h2>
+<p style="margin:0">Offline use, editing or deleting a saved scan, generated PDF reports (the vendor's PDF is kept and can be opened), in-app notifications (email is used).</p>
+<div class="foot">Furnace Analysis &nbsp;|&nbsp; Version 1.0 &nbsp;|&nbsp; November 2026</div>
+</div></body></html>
