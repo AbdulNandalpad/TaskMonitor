@@ -1,40 +1,21 @@
-# Furnace Analysis (Converter Analyzer) - Functional Requirements (as built)
+# Functional Requirements Document
+Furnace Analysis (Converter Analyzer) | Version 1.0 | 9 November 2026
 
-Version 1.0 | 9 November 2026
+## 1. Introduction
 
-## 1. Purpose
+Requirements are identified FR-FA-nnn and business rules BR-FA-nn; test cases refer to these identifiers.
 
-This document describes Furnace Analysis exactly as it is built and running today. It is the reference for testing. It replaces the early draft BRD/FRD (v0.1) that the first test cases were written from: that draft described a different product (two files per campaign, benchmarks with percentages and tolerance, file-versus-file compare, generated PDF reports, audit screen, in-app notifications). Test cases derived from the draft must not be used; use the test cases that accompany this document (Furnace_Analysis_Test_Cases.xlsx).
+## 2. Overview
 
-## 2. What the application is
-
-Furnace Analysis is the second application on the same sign-in platform as Task Monitor. It tracks the wear of the refractory lining of steel converters from the vendor's laser-scan reports.
+Furnace Analysis is an application on the common sign-in platform. It tracks the wear of the refractory lining of steel converters from the vendor's laser-scan reports.
 
 An analyst uploads the vendor's six-page PDF report for one heat. An AI service reads the table of 22 zones (average and minimum lining thickness in mm). The analyst checks the values against the PDF, corrects anything wrong and saves. Nothing is stored until they save.
 
-Each zone is judged against limits that an administrator keeps per converter (warning below / critical below, in mm). The dashboard shows the counts and the zones needing attention; the scan page shows every zone with its change since the previous scan; Trends shows one zone over time. When a saved scan has Warning or Critical zones, an email goes to the configured recipients.
+Each zone is judged against limits that an administrator keeps per converter (warning below, critical below, in mm). The dashboard shows the counts and the zones needing attention; the scan page shows every zone with its change since the previous scan; Trends shows one zone over time. When a saved scan has Warning or Critical zones, an email is sent to the configured recipients.
 
-Comparison is therefore done through: (1) the change columns on each scan page (this scan against the previous one), (2) Repair? markers, (3) the Trends chart and table. There is no separate compare screen.
+## 3. Users and roles
 
-## 3. Differences from draft v0.1
-
-| Topic | Draft v0.1 (not built) | As built |
-|---|---|---|
-| Files per campaign | Two files (1 and 2) are uploaded and compared. | One vendor PDF = one heat = one scan. No pairing. |
-| Readings | Angle, Depth and Average/Minimum with names like Area Name. | Only Average and Minimum thickness (mm) are judged. Angle and depth are printed text only. |
-| Rules | Benchmarks with fixed or percentage thresholds and a tolerance. | Limits: Warning below and Critical below, fixed mm values, per converter, versioned. No percentages, no tolerance. |
-| Status | Zone and section status. | Zone status only (OK, Warning, Critical, No limit). No section status. |
-| Compare | Compare screen (file 1 versus file 2) and cross-campaign compare. | Change since the previous scan on each scan page, plus Trends for one zone across scans. |
-| Reports | Generated Summary and Detailed PDF reports with history and sign-off. | None generated. The original vendor PDF is stored and can be opened. |
-| Audit | Audit trail screen with search and filters. | Events are recorded in the database; there is no screen. |
-| Notifications | In-app notifications. | Email only, when a saved scan has Warning or Critical zones. |
-| Users | User-management screen with five roles. | Three roles (Viewer, Analyst, Administrator). The platform administrator grants the application at /admin/access; an administrator sets roles in Settings. |
-| Master data | Campaign and converter master screens. | Converters are added in Settings; campaigns are created automatically from the number printed in the report. |
-
-
-## 4. Roles
-
-| Role | Can do | Navigation |
+| Role | Permissions | Navigation |
 |---|---|---|
 | Viewer | Has the application. Dashboard, scan pages, Trends, Open vendor PDF. | Navigation: Dashboard, Trends. |
 | Analyst | Viewer + Upload report (read, review, save scans). | Navigation: Dashboard, Upload report, Trends. |
@@ -42,7 +23,7 @@ Comparison is therefore done through: (1) the change columns on each scan page (
 | Platform administrator | Grants or revokes applications per user at /admin/access. Always a Furnace Analysis administrator. | Also sees the access screen. |
 
 
-## 5. Glossary
+## 4. Glossary
 
 | Term | Meaning |
 |---|---|
@@ -59,7 +40,7 @@ Comparison is therefore done through: (1) the change columns on each scan page (
 | IST | Indian Standard Time, UTC+05:30. |
 
 
-## 6. Functional requirements
+## 5. Functional requirements
 
 
 ### A. Access and navigation
@@ -146,7 +127,7 @@ Comparison is therefore done through: (1) the change columns on each scan page (
 - **FR-FA-101** Writing is allowed only through server rules by the proper role: a viewer cannot save scans or limits even by calling the interface directly (answer 403 "Not allowed"); an analyst cannot change limits, recipients, roles or converters. _[System]_
 - **FR-FA-102** An audit entry is recorded when a scan is saved (heat, measurement) and when limits are saved (version). There is no audit screen. _[System]_
 
-## 7. Business rules
+## 6. Business rules
 
 | ID | Rule |
 |---|---|
@@ -161,22 +142,45 @@ Comparison is therefore done through: (1) the change columns on each scan page (
 | BR-FA-09 | Change since previous scan = this scan minus the previous scan of the same converter by scan time, across campaigns. A rise of 30 mm or more in the minimum is marked "Repair?"; 29 mm or less is not. |
 | BR-FA-10 | Times are scan times as printed by the scanner (Indian time). They are always displayed in IST (UTC+05:30) whatever the browser's time zone. |
 | BR-FA-11 | Zones are listed grouped by section in the order Tapside, Trunnion, Charge Pad, Slag line; inside a section in natural order (1, 1A, 2, 2A ...; Left before Right). |
-| BR-FA-12 | A saved measurement cannot be edited or replaced in the application. Correct data by saving a corrected measurement under a different measurement number only if the owner agrees. |
+| BR-FA-12 | A saved measurement cannot be edited or replaced in the application. A wrong value is corrected before saving, in the review form. |
 
 
-## 8. Reference data
+## 7. Screens
 
-Environment assumptions:
+| Address | Screen |
+|---|---|
+| /launch | After sign-in routing |
+| /apps | Application chooser |
+| /furnace | Dashboard |
+| /furnace/upload | Upload report (Analyst, Administrator) |
+| /furnace/scans/{id} | One scan |
+| /furnace/trends | Trends |
+| /furnace/settings | Settings (Administrator) |
+| /admin/access | Platform access (platform administrator) |
+| /api/furnace/scans/{id}/pdf | Vendor PDF (signed-in with application) |
 
-- Application address: https://task-monitor-navy.vercel.app (sign in, then open Furnace Analysis; its pages are under /furnace).
-- Reference converter: code 1, name "JSW SMS4 Converter 1", campaign 2, with the six scans below (heats 2083, 2203, 2614, 2668, 2751, 2886), all saved from the vendor PDFs shared in the project group chat.
-- Reference limits ("Set A", limits version 1): Average warning below 700, critical below 500; Minimum warning below 400, critical below 150; applied to every zone (*); no recommendation texts. These numbers are ILLUSTRATIVE TEST VALUES, not the plant's real limits.
-- If an administrator has since saved other limits, the expected counts in this suite will differ: first restore Set A with test FA-LIM-007, or recompute from the reference tables.
-- Accounts (ask the project owner): Administrator, Analyst, Viewer (has the application, no extra role), one account with no application, and one platform administrator.
-- Email tests need the email service to be configured on the environment; if it is not, run the "not set up" variant instead and record the result.
-- Tests that save data should use a separate test converter: in the review form change Converter to QA1 before Confirm and save, then rename it in Settings. Do not add new scans to converter 1, it holds the reference data.
 
-### 8.1 Scans
+## 8. Non-functional requirements
+
+- HTTPS only. Supported on current Chrome and Edge; Firefox and Safari best effort.
+- Phone-width layout: no sideways page scroll; tables scroll inside their card.
+- Reading a PDF takes about 30 seconds (90 seconds at most). Times are always shown in IST.
+- Data is private to signed-in users who have the application; writes follow server-side role rules.
+
+## 9. Out of scope
+
+- Offline mode
+- Editing or deleting a saved scan
+- Generated PDF reports (the original vendor PDF is stored and can be opened)
+- Audit trail screen and user-management screen
+- In-app notifications (notification is by email)
+- Percentage thresholds, tolerances and section-level status
+
+## Appendix A. Worked example
+
+Six scans of one converter judged with limits Set A.
+
+### A.1 Scans
 
 | Heat | Meas. | Campaign | Scan time (IST) | Steel level (m) @ t | Bath level (m) |
 |---|---|---|---|---|---|
@@ -188,7 +192,7 @@ Environment assumptions:
 | 2886 | 25 | 2 | 01 Nov 2026 03:48:33 | 8.71 @ 350 | -2.96 |
 
 
-### 8.2 Readings avg / min (mm)
+### A.2 Average / minimum (mm)
 
 | Zone | Section | 2083 | 2203 | 2614 | 2668 | 2751 | 2886 |
 |---|---|---|---|---|---|---|---|
@@ -216,7 +220,7 @@ Environment assumptions:
 | SL-NON Drive | Slag line | 818 / 721 | 821 / 729 | 744 / 670 | 775 / 675 | 771 / 677 | 759 / 671 |
 
 
-### 8.3 Limits Set A and expected status
+### A.3 Limits Set A and zone status
 
 | Zone / section | Metric | Warning below | Critical below |
 |---|---|---|---|
@@ -250,7 +254,7 @@ Environment assumptions:
 | SL-NON Drive | Ok | Ok | Ok | Ok | Ok | Ok |
 
 
-### 8.4 Expected counts (Set A)
+### A.4 Zone counts
 
 | Heat | Scan time (IST) | Critical | Warning | OK |
 |---|---|---|---|---|
@@ -262,7 +266,7 @@ Environment assumptions:
 | 2886 | 01 Nov 2026 03:48:33 | 2 | 7 | 13 |
 
 
-### 8.5 Repair? markers
+### A.5 Repair? markers
 
 | Scan vs previous | Zones |
 |---|---|
@@ -273,11 +277,11 @@ Environment assumptions:
 | 2886 vs 2751 | ChargePad-1A (+78) |
 
 
-### 8.6 Needs attention (heat 2886, Set A)
+### A.6 Needs attention (heat 2886, Set A)
 
 1 Right Trunion-1 (avg 951, min 108) Critical; 2 ChargePad-1 (avg 959, min 130) Critical; 3 ChargePad-1A (avg 861, min 202) Warning; 4 Tapside Area-1 (avg 1008, min 286) Warning; 5 ChargePad-3 (avg 669, min 366) Warning; 6 ChargePad-3A (avg 641, min 366) Warning; 7 ChargePad-4A (avg 603, min 450) Warning; 8 Left Trunion-4 (avg 673, min 453) Warning.
 
-### 8.7 Trends (newest first)
+### A.7 Trends (newest first)
 
 | Zone | Rows |
 |---|---|
@@ -285,7 +289,7 @@ Environment assumptions:
 | Left Trunion-2 | 2886: avg 1005, min 900, change -7 / 2751: avg 1032, min 907, change +44 / 2668: avg 988, min 863, change +227 / 2614: avg 856, min 636, change -1058 / 2203: avg 2265, min 1694, change +137 / 2083: avg 1566, min 1557, change - |
 
 
-### 8.8 Limits Set B
+### A.8 Limits Set B
 
 | Zone / section | Metric | Warning below | Critical below | Recommendation (warning) | Recommendation (critical) |
 |---|---|---|---|---|---|
@@ -294,47 +298,11 @@ Environment assumptions:
 | ChargePad-1A | Minimum | 150 | 100 |  |  |
 
 
-With Set B on heat 2886: 2 Critical (Right Trunion-1, ChargePad-1), 2 Warning (ChargePad-3, ChargePad-3A), 18 OK.
+With Set B on heat 2886: 2 Critical (Right Trunion-1, ChargePad-1), 2 Warning (ChargePad-3, ChargePad-3A), 18 OK. Tapside Area-1 and ChargePad-1A are OK because their section or zone limit takes precedence over *.
 
-## 9. Screens
-
-| Address | Screen |
-|---|---|
-| /launch | After sign-in routing |
-| /apps | Application chooser |
-| /furnace | Dashboard |
-| /furnace/upload | Upload report (Analyst, Administrator) |
-| /furnace/scans/{id} | One scan |
-| /furnace/trends | Trends |
-| /furnace/settings | Settings (Administrator) |
-| /admin/access | Platform access (platform administrator) |
-| /api/furnace/scans/{id}/pdf | Vendor PDF (signed-in with application) |
-
-
-## 10. Not built (do not test)
-
-- File-versus-file compare screen, cross-campaign compare, tolerance and percentage thresholds
-- Generated Summary/Detailed PDF reports, report history, sign-off
-- Audit trail screen; user-management screen; forgot-password; configurable session timeout
-- In-app notifications (email only)
-- Section status; campaign master screens; Excel export of results
-- Editing or deleting a saved scan
-- Offline mode
-
-## 11. Known limitations
-
-- The reference limits (Set A) are test values, not the plant's real limits. Expected counts in the tests depend on them.
-- A scan is judged with the CURRENT limits each time it is viewed; the version it was saved with is only a note. Past results are not frozen.
-- Trends and the change columns compare successive scans of a converter in time order across campaigns, so a reline can show as a large positive jump (and Repair?). Open point for the owner.
-- A zone row with a negative number is silently left out at save (FA-UPL-015). A visible error may be preferable.
-- Reading depends on the AI service; every value must be checked against the PDF before saving. Wrong readings are the analyst's to correct.
-- Email delivery depends on the email service being configured on the environment; it has not been confirmed on every environment.
-- Only the Average and Minimum are judged. Angle and depth are not.
-
-## 12. Change history
+## Document history
 
 | Version | Change | Date |
 |---|---|---|
-| 0.1 (draft) | Early BRD/FRD from which the first 130 test cases were written. Superseded. | - |
-| 1.0 | Rewritten from the built application, with reference data and a new test suite. | 9 Nov 2026 |
+| 1.0 | First issue. | 9 Nov 2026 |
 
