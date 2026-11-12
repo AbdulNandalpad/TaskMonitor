@@ -94,13 +94,15 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
 
       <section className="fa-card">
         <h2>Average thickness by zone</h2>
+        <p className="fa-takeaway"><b className="fa-down">{dn} of {rows.length} zones</b> got thinner on average. Biggest drop: <b>{small.zone}</b> ({f1(small.dAvg)} mm).</p>
+        <p className="fa-note">Each row is one zone. The two dots are the two heats and the line between them is the change: red means the lining got thinner, green thicker. The number on the right is the change in mm.</p>
         <DumbbellLegend aLabel={label(A)} bLabel={label(B)} />
         <Dumbbell title="Average thickness by zone" aLabel={label(A)} bLabel={label(B)} rows={sameOrder.map((r) => ({ zone: r.zone, section: r.group, a: r.aAvg, b: r.bAvg }))} />
       </section>
 
       <section className="fa-card">
         <h2>Minimum thickness by zone</h2>
-        <p className="fa-note">A large rise in a minimum is usually a repair, not wear.</p>
+        <p className="fa-note">Same reading for the thinnest point of each zone. A large rise in a minimum is usually a repair, not wear.</p>
         <DumbbellLegend aLabel={label(A)} bLabel={label(B)} />
         <Dumbbell title="Minimum thickness by zone" aLabel={label(A)} bLabel={label(B)} rows={sameOrder.map((r) => ({ zone: r.zone, section: r.group, a: r.aMin, b: r.bMin }))} />
       </section>

@@ -79,17 +79,16 @@ function ZoneRangeSvg({ items, compact }: { items: RangeRow[]; compact: boolean 
   return (
     <svg className="fa-chart" viewBox={`0 0 ${w} ${height}`} role="img" aria-label="Minimum and average thickness of every zone against its limits">
       <Axis x={x} top={top} step={step} height={height} X1={X1} />
-      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>{compact ? "min · avg" : "min · avg (mm)"}</text>
+      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>{compact ? "thin · avg" : "thinnest · average (mm)"}</text>
       {out.map((o) => {
         if (o.kind === "head") return <text key={`h${o.y}`} x={0} y={o.y + 17} fontSize="12" fontWeight="600" fill={MUTED} style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{o.text}</text>;
         const r = o.item, cy = o.y + ROW / 2;
         return (
           <g key={r.zone}>
-            {r.crit != null && <rect x={x(0)} y={cy - 7} width={Math.max(0, x(r.crit) - x(0))} height="14" rx="2" fill={CRIT_BG} />}
-            {r.warn != null && <rect x={x(r.crit ?? 0)} y={cy - 7} width={Math.max(0, x(r.warn) - x(r.crit ?? 0))} height="14" rx="2" fill={WARN_BG} />}
-            <line x1={x(Math.min(r.min, r.avg))} x2={x(Math.max(r.min, r.avg))} y1={cy} y2={cy} stroke="#98a2b3" strokeWidth="1.5" />
-            <circle cx={x(r.avg)} cy={cy} r="4.5" fill="#fff" stroke={MUTED} strokeWidth="1.8"><title>{`${r.zone}: average ${r.avg} mm`}</title></circle>
-            <circle cx={x(r.min)} cy={cy} r="5.5" fill={COLOR[r.status]}><title>{`${r.zone}: minimum ${r.min} mm, ${STATUS_WORD[r.status]}`}</title></circle>
+            <rect x={x(0)} y={cy - 6} width={Math.max(2, x(r.avg) - x(0))} height="12" rx="6" fill="#e7e2da"><title>{`${r.zone}: average ${r.avg} mm`}</title></rect>
+            <rect x={x(0)} y={cy - 6} width={Math.max(6, x(r.min) - x(0))} height="12" rx="6" fill={COLOR[r.status]}><title>{`${r.zone}: thinnest point ${r.min} mm, ${STATUS_WORD[r.status]}`}</title></rect>
+            {r.warn != null && <line x1={x(r.warn)} x2={x(r.warn)} y1={cy - 10} y2={cy + 10} stroke={COLOR.warning} strokeWidth="2" strokeLinecap="round"><title>{`Warning below ${r.warn} mm`}</title></line>}
+            {r.crit != null && <line x1={x(r.crit)} x2={x(r.crit)} y1={cy - 10} y2={cy + 10} stroke={COLOR.critical} strokeWidth="2" strokeLinecap="round"><title>{`Critical below ${r.crit} mm`}</title></line>}
             <text x={X0 - (compact ? 8 : 12)} y={cy + 4} textAnchor="end" fontSize="12" fill={INK}>{r.zone}</text>
             <text x={X1 + (compact ? 10 : 16)} y={cy + 4} fontSize="12" fill={INK}><tspan fontWeight="600" fill={r.status === "critical" ? "#b42318" : r.status === "warning" ? "#b54708" : INK}>{r.min}</tspan><tspan fill={MUTED}> · {r.avg}</tspan></text>
           </g>
@@ -102,12 +101,10 @@ function ZoneRangeSvg({ items, compact }: { items: RangeRow[]; compact: boolean 
 export function ZoneRangeLegend() {
   return (
     <div className="fa-legend">
-      <span><i style={{ background: COLOR.ok, borderRadius: "50%" }} />Minimum, OK</span>
-      <span><i style={{ background: COLOR.warning, borderRadius: "50%" }} />Minimum, Warning</span>
-      <span><i style={{ background: COLOR.critical, borderRadius: "50%" }} />Minimum, Critical</span>
-      <span><i style={{ background: "#fff", border: `2px solid ${MUTED}`, borderRadius: "50%", boxSizing: "border-box" }} />Average</span>
-      <span><i style={{ background: WARN_BG, width: 18 }} />Warning range</span>
-      <span><i style={{ background: CRIT_BG, width: 18 }} />Critical range</span>
+      <span><i style={{ background: COLOR.ok, width: 18, borderRadius: 6 }} />Thinnest point (colour = status)</span>
+      <span><i style={{ background: "#e7e2da", width: 18, borderRadius: 6 }} />Average</span>
+      <span><i style={{ background: COLOR.warning, width: 3, height: 14 }} />Warning level</span>
+      <span><i style={{ background: COLOR.critical, width: 3, height: 14 }} />Critical level</span>
     </div>
   );
 }

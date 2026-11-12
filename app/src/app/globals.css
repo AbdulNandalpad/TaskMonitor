@@ -1291,3 +1291,8 @@ a.fa-seg:hover{background:#fff;filter:none}
   .fa-main{padding-bottom:110px}
 }
 @media print{.fa-nav{display:none!important}}
+
+/* one-sentence takeaway above a chart */
+.fa-takeaway{margin:6px 0 4px;font-size:15px;line-height:1.5;color:var(--fa-ink);max-width:80ch}
+.fa-takeaway b{font-weight:600}
+.fa-legend i{flex:none}

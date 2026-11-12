@@ -129,12 +129,13 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
 
           <section className="fa-card" style={{ marginBottom: 0 }}>
             <h3>Campaign trend</h3>
-            <p className="fa-note">Lowest minimum and mean of averages over the last {history.length} scans.</p>
+            {trendLow.length > 1 && <p className="fa-takeaway">Thinnest point went from <b>{trendLow[0].v} mm</b> to <b className={trendLow[trendLow.length - 1].v < trendLow[0].v ? "fa-down" : "fa-up"}>{trendLow[trendLow.length - 1].v} mm</b> in {trendLow.length} scans; the average from {trendAvg[0].v} to {trendAvg[trendAvg.length - 1].v} mm.</p>}
+            <p className="fa-note">One point per scan. The lower line is the thinnest reading anywhere in the converter, the upper line the average across all zones. Lines going down mean the lining is wearing.</p>
             {trendLow.length > 1 ? (
               <>
-                <div className="fa-legend"><span><i style={{ background: COLOR.b }} />Lowest minimum</span><span><i style={{ background: COLOR.a }} />Mean of averages</span></div>
+                <div className="fa-legend"><span><i style={{ background: COLOR.b }} />Thinnest point</span><span><i style={{ background: COLOR.a }} />Average</span></div>
                 <LineChart title="Lowest minimum and mean of averages over the last scans" height={430} width={520}
-                  series={[{ label: "Mean of averages", color: COLOR.a, points: trendAvg }, { label: "Lowest minimum", color: COLOR.b, points: trendLow }]} />
+                  series={[{ label: "Average", color: COLOR.a, points: trendAvg }, { label: "Thinnest point", color: COLOR.b, points: trendLow }]} />
               </>
             ) : <p className="fa-note">A trend needs at least two scans.</p>}
           </section>
@@ -143,8 +144,9 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
 
       {zones.length > 0 && (
         <section className="fa-card fa-section">
-          <h3>Every zone against its limits</h3>
-          <p className="fa-note">Each row is one zone of heat {latest!.heat}. The filled dot is its minimum thickness, the hollow dot its average; the bands behind are its limits.</p>
+          <h3>How much lining is left, zone by zone</h3>
+          <p className="fa-takeaway">{k && (k.critical > 0 || k.warning > 0) ? <>{k.critical > 0 && <b className="fa-down">{k.critical} {k.critical === 1 ? "zone is" : "zones are"} below the critical level</b>}{k.critical > 0 && k.warning > 0 ? " and " : ""}{k.warning > 0 && <b style={{ color: "var(--fa-warn-ink)" }}>{k.warning} below the warning level</b>}. Thinnest: <b>{zones.slice().sort((a, b) => a.min - b.min)[0].zone}</b> at {zones.slice().sort((a, b) => a.min - b.min)[0].min} mm.</> : "Every zone is above its warning level."}</p>
+          <p className="fa-note">Each bar is one zone of heat {latest!.heat}: the longer the bar, the more lining is left. The coloured part is the thinnest point in that zone, the grey part its average. A coloured bar that ends before an amber or red tick is below that level.</p>
           <ZoneRangeLegend />
           <ZoneRange items={zones.map((z) => ({ zone: z.zone, section: z.section, min: z.min, avg: z.avg, status: z.status, warn: z.warn, crit: z.crit }))} />
         </section>
