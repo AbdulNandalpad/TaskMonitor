@@ -1248,3 +1248,19 @@ a.fa-seg:hover{background:#fff;filter:none}
 .fa-kpi.open .fa-more svg{transform:rotate(180deg)}
 .fa-kpi .s{order:4;margin-top:4px}
 .fa-seg{gap:4px}
+
+/* consistency pass: one size for card titles, one corner/edge language for every tile */
+.fa-card h2,.fa-card h3{font-size:19px;line-height:1.3}
+.fa-hero h2{font-size:24px}
+.fa-kpis{align-items:start}
+.fa-kpi .l{line-height:1.35;margin-top:6px}
+.fa-kpi .v{margin-bottom:0}
+.fa-mini{border:1px solid var(--fa-line);border-left:1px solid var(--fa-line);border-radius:18px;padding:14px 16px;gap:8px;background:#fff}
+.fa-mini:hover{border-color:var(--fa-line-strong);box-shadow:none;background:var(--fa-row)}
+.fa-mini.sel{outline:2px solid var(--fa-brand);outline-offset:-2px}
+.fa-mini-val{font-family:var(--fa-head);font-size:24px;font-weight:600;letter-spacing:-.02em}
+.fa-facts div{border:0;background:var(--fa-row);border-radius:16px;padding:12px 16px}
+.fa-sechead{font-size:11.5px;letter-spacing:.06em}
+.fa-file{border-radius:20px}
+.fa-busy{border-radius:16px}
+@media(max-width:700px){.fa-kpi .l{min-height:2.7em}}

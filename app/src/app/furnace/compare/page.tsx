@@ -81,7 +81,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       <div className="fa-kpis">
         <Kpi label="Mean of averages" value={`${mA.toFixed(0)} → ${mB.toFixed(0)} mm`} dClass={cls(mB - mA)} detail={`${f1(mB - mA)} mm`} />
         <Kpi label="Lowest minimum" value={`${lowA.aMin} → ${lowB.bMin} mm`} detail={`${lowA.zone} → ${lowB.zone}`} />
-        <Kpi label="Zones with a higher average" value={`${up} of ${rows.length}`} detail={`${dn} lower, ${rows.length - up - dn} unchanged`} />
+        <Kpi label="Higher average" value={`${up} of ${rows.length} zones`} detail={`${dn} lower, ${rows.length - up - dn} unchanged`} />
         <Kpi label="Largest increase" vClass={cls(big.dAvg)} value={`${f1(big.dAvg)} mm`} detail={big.zone} />
         <Kpi label="Largest decrease" vClass={cls(small.dAvg)} value={`${f1(small.dAvg)} mm`} detail={small.zone} />
       </div>
