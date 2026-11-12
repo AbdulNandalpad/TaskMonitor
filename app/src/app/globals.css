@@ -980,3 +980,8 @@ a.fa-leg-row:hover,.fa-leg-row.sel{background:var(--fa-brand-tint)}
 .fa-print-only{display:none}
 @page{size:A4 landscape;margin:12mm}
 @media print{.fa-top,.fa-actions,.fa-sel,.no-print{display:none!important}.fa-app{background:#fff}.fa-card{box-shadow:none;break-inside:avoid}.fa-tablewrap{overflow:visible}.fa-print-only{display:block}}
+.fa-limits{min-width:960px}
+.fa-limits th:nth-child(1),.fa-limits td:nth-child(1){min-width:170px}
+.fa-limits th:nth-child(2),.fa-limits td:nth-child(2){min-width:120px}
+.fa-limits th:nth-child(3),.fa-limits td:nth-child(3),.fa-limits th:nth-child(4),.fa-limits td:nth-child(4){min-width:110px}
+.fa-limits th:nth-child(5),.fa-limits td:nth-child(5),.fa-limits th:nth-child(6),.fa-limits td:nth-child(6){min-width:220px}

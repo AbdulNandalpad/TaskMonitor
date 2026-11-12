@@ -103,7 +103,7 @@ export function LimitsEditor({ converterId, initial, zones, sections }: { conver
   return (
     <>
       <datalist id="fa-zones">{["*", ...sections, ...zones].map((z) => <option key={z} value={z} />)}</datalist>
-      <div className="fa-tablewrap"><table className="fa-tbl">
+      <div className="fa-tablewrap"><table className="fa-tbl fa-limits">
         <thead><tr><th>Zone, section or *</th><th>Metric</th><th className="n">Warning below (mm)</th><th className="n">Critical below (mm)</th><th>Recommendation (warning)</th><th>Recommendation (critical)</th><th></th></tr></thead>
         <tbody>{rows.map((r, i) => (
           <tr key={i}>
