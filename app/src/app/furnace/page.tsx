@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Kpi } from "@/components/fa/Kpi";
 import { LineChart, StatusBar, ZoneRange, ZoneRangeLegend, COLOR } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
 import { activeLimits, buildMatrix, fmtDate, fmtDateTime, latestScansByConverter, listConverters, readingsOf, statusCounts, summarise } from "@/lib/fa/data";
@@ -98,10 +99,10 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
           <>
             <StatusBar counts={k} hrefFor={(s) => (filter === s ? home : href(s))} selected={filter} />
             <div className="fa-kpis" style={{ marginBottom: 0 }}>
-              <div className="fa-kpi"><div className="l">Lowest minimum</div><div className="v">{sumNow.lowMin} mm</div><div className="s">{sumNow.lowZone}{sumPrev ? ` · ${sg(sumNow.lowMin - sumPrev.lowMin)} mm since heat ${prevScan!.heat}` : ""}</div></div>
-              <div className="fa-kpi"><div className="l">Mean of averages</div><div className="v">{Math.round(sumNow.meanAvg)} mm</div><div className={`s ${sumPrev ? (sumNow.meanAvg < sumPrev.meanAvg ? "fa-down" : "fa-up") : ""}`}>{sumPrev ? `${sg(Math.round(sumNow.meanAvg - sumPrev.meanAvg))} mm since heat ${prevScan!.heat}` : `${zones.length} zones`}</div></div>
-              <div className="fa-kpi"><div className="l">Biggest drop in a minimum</div><div className={`v ${drops[0] && drops[0].d < 0 ? "fa-down" : ""}`}>{drops[0] && prevScan ? `${sg(drops[0].d)} mm` : "–"}</div><div className="s">{drops[0] && prevScan ? drops[0].zone : "first scan"}</div></div>
-              <div className="fa-kpi"><div className="l">Zones needing attention</div><div className="v">{attentionAll.length} of {zones.length}</div><div className="s">{k.critical} critical, {k.warning} warning</div></div>
+              <Kpi label="Lowest minimum" value={`${sumNow.lowMin} mm`} detail={`${sumNow.lowZone}${sumPrev ? ` · ${sg(sumNow.lowMin - sumPrev.lowMin)} mm since heat ${prevScan!.heat}` : ""}`} />
+              <Kpi label="Mean of averages" value={`${Math.round(sumNow.meanAvg)} mm`} dClass={sumPrev ? (sumNow.meanAvg < sumPrev.meanAvg ? "fa-down" : "fa-up") : ""} detail={sumPrev ? `${sg(Math.round(sumNow.meanAvg - sumPrev.meanAvg))} mm since heat ${prevScan!.heat}` : `${zones.length} zones`} />
+              <Kpi label="Biggest drop in a minimum" vClass={drops[0] && drops[0].d < 0 ? "fa-down" : ""} value={drops[0] && prevScan ? `${sg(drops[0].d)} mm` : "–"} detail={drops[0] && prevScan ? drops[0].zone : "first scan"} />
+              <Kpi label="Zones needing attention" value={`${attentionAll.length} of ${zones.length}`} detail={`${k.critical} critical, ${k.warning} warning`} />
             </div>
           </>
         )}

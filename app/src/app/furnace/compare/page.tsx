@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Kpi } from "@/components/fa/Kpi";
 import { COLOR, Dumbbell, DumbbellLegend } from "@/components/fa/Charts";
 import { AutoForm } from "@/components/fa/AutoForm";
 import { FaPrint } from "@/components/fa/FaPrint";
@@ -78,11 +79,11 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       </div>
 
       <div className="fa-kpis">
-        <div className="fa-kpi"><div className="l">Mean of averages</div><div className="v">{mA.toFixed(0)} → {mB.toFixed(0)} mm</div><div className={`s ${cls(mB - mA)}`}>{f1(mB - mA)} mm</div></div>
-        <div className="fa-kpi"><div className="l">Lowest minimum</div><div className="v">{lowA.aMin} → {lowB.bMin} mm</div><div className="s">{lowA.zone} → {lowB.zone}</div></div>
-        <div className="fa-kpi"><div className="l">Zones with a higher average</div><div className="v">{up} of {rows.length}</div><div className="s">{dn} lower, {rows.length - up - dn} unchanged</div></div>
-        <div className="fa-kpi"><div className="l">Largest increase</div><div className={`v ${cls(big.dAvg)}`}>{f1(big.dAvg)} mm</div><div className="s">{big.zone}</div></div>
-        <div className="fa-kpi"><div className="l">Largest decrease</div><div className={`v ${cls(small.dAvg)}`}>{f1(small.dAvg)} mm</div><div className="s">{small.zone}</div></div>
+        <Kpi label="Mean of averages" value={`${mA.toFixed(0)} → ${mB.toFixed(0)} mm`} dClass={cls(mB - mA)} detail={`${f1(mB - mA)} mm`} />
+        <Kpi label="Lowest minimum" value={`${lowA.aMin} → ${lowB.bMin} mm`} detail={`${lowA.zone} → ${lowB.zone}`} />
+        <Kpi label="Zones with a higher average" value={`${up} of ${rows.length}`} detail={`${dn} lower, ${rows.length - up - dn} unchanged`} />
+        <Kpi label="Largest increase" vClass={cls(big.dAvg)} value={`${f1(big.dAvg)} mm`} detail={big.zone} />
+        <Kpi label="Largest decrease" vClass={cls(small.dAvg)} value={`${f1(small.dAvg)} mm`} detail={small.zone} />
       </div>
 
       <section className="fa-card">
@@ -140,8 +141,8 @@ function StatusChanges({ rows, aLabel, bLabel, cA, cB }: { rows: { zone: string;
       <div className="fa-kpis" style={{ margin: 0, alignItems: "start" }}>
         <div className="fa-kpi"><div className="l">{aLabel}</div><div className="s">{fmt(cA)}</div></div>
         <div className="fa-kpi"><div className="l">{bLabel}</div><div className="s">{fmt(cB)}</div></div>
-        <div className="fa-kpi"><div className="l">Worse</div><div className="v fa-down">{worse.length}</div><div className="s">{worse.length ? worse.map((r) => `${r.zone} (${r.a} to ${r.b})`).join(", ") : "no zone got worse"}</div></div>
-        <div className="fa-kpi"><div className="l">Better</div><div className="v fa-up">{better.length}</div><div className="s">{better.length ? better.map((r) => `${r.zone} (${r.a} to ${r.b})`).join(", ") : "no zone got better"}</div></div>
+        <Kpi label="Worse" vClass="fa-down" value={worse.length} detail={worse.length ? worse.map((r) => `${r.zone} (${r.a} to ${r.b})`).join(", ") : "no zone got worse"} />
+        <Kpi label="Better" vClass="fa-up" value={better.length} detail={better.length ? better.map((r) => `${r.zone} (${r.a} to ${r.b})`).join(", ") : "no zone got better"} />
       </div>
     </>
   );

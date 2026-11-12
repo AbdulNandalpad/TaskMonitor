@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Kpi } from "@/components/fa/Kpi";
 import { notFound } from "next/navigation";
 import { StatusBar, ZoneRange, ZoneRangeLegend } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
@@ -44,9 +45,9 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
       <div className="fa-card">
         <StatusBar counts={k} />
         <div className="fa-kpis" style={{ marginBottom: 0 }}>
-          <div className="fa-kpi"><div className="l">Lowest minimum</div><div className="v">{lowest.r.min_mm} mm</div><div className="s">{lowest.r.zone}</div></div>
-          <div className="fa-kpi"><div className="l">Mean of averages</div><div className="v">{meanAvg} mm</div><div className={`s ${prevMean == null ? "" : meanAvg - prevMean < 0 ? "fa-down" : meanAvg - prevMean > 0 ? "fa-up" : ""}`}>{prevMean == null ? "first scan" : `${meanAvg - prevMean > 0 ? "+" : ""}${meanAvg - prevMean} mm since heat ${prev!.scan.heat}`}</div></div>
-          <div className="fa-kpi"><div className="l">Zones needing attention</div><div className="v">{k.critical + k.warning} of {rows.length}</div><div className="s">{k.critical} critical, {k.warning} warning</div></div>
+          <Kpi label="Lowest minimum" value={`${lowest.r.min_mm} mm`} detail={lowest.r.zone} />
+          <Kpi label="Mean of averages" value={`${meanAvg} mm`} dClass={prevMean == null ? "" : meanAvg - prevMean < 0 ? "fa-down" : meanAvg - prevMean > 0 ? "fa-up" : ""} detail={prevMean == null ? "first scan" : `${meanAvg - prevMean > 0 ? "+" : ""}${meanAvg - prevMean} mm since heat ${prev!.scan.heat}`} />
+          <Kpi label="Zones needing attention" value={`${k.critical + k.warning} of ${rows.length}`} detail={`${k.critical} critical, ${k.warning} warning`} />
         </div>
         <dl className="fa-facts" style={{ marginBottom: 0 }}>
           <div><dt>Limits applied</dt><dd>{lim.version ? `Version ${lim.version.version}${lim.version.note ? `, ${lim.version.note}` : ""}` : "None set"}</dd></div>

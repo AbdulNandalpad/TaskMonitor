@@ -50,9 +50,10 @@ export function StatusBar({ counts, hrefFor, selected }: { counts: { critical: n
       </div>
       <div className="fa-segbar" role="group" aria-label={`Zones by status: ${order.map((s) => `${counts[s]} ${STATUS_WORD[s]}`).join(", ")}`}>
         {order.filter((s) => counts[s] > 0).map((s) => {
-          const inner = (<><span className="fa-seg-l"><i aria-hidden="true" />{STATUS_WORD[s]}</span><b>{counts[s]}</b><em>{Math.round((counts[s] / total) * 100)}% of zones</em></>);
+          const inner = (<><span className="fa-seg-l"><i aria-hidden="true" />{STATUS_WORD[s]}</span><b>{counts[s]}</b></>);
           const cls = `fa-seg ${s}${selected === s ? " sel" : ""}`;
-          return hrefFor ? <Link key={s} href={hrefFor(s)} className={cls}>{inner}</Link> : <div key={s} className={cls}>{inner}</div>;
+          const tip = `${counts[s]} of ${total} zones (${Math.round((counts[s] / total) * 100)}%)`;
+          return hrefFor ? <Link key={s} href={hrefFor(s)} className={cls} title={tip}>{inner}</Link> : <div key={s} className={cls} title={tip}>{inner}</div>;
         })}
       </div>
     </div>
