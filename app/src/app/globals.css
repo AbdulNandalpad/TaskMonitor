@@ -1279,3 +1279,4 @@ a.fa-seg:hover{background:#fff;filter:none}
   .fa-attn td[data-label]{display:flex;justify-content:flex-start;gap:6px;font-size:13.5px}
   .fa-tbl:not(.fa-stack) th,.fa-tbl:not(.fa-stack) td{white-space:nowrap}
 }
+@media(max-width:700px){.fa-attn td:nth-child(4)::before{display:none}}
