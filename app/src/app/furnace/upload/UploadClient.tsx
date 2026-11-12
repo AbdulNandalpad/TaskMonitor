@@ -9,7 +9,7 @@ type Draft = {
   steel_level_m: number | null; steel_tonnes: number | null; bath_level_m: number | null; zones: Zone[]; warnings: string[]; blockers: string[];
 };
 type Item = {
-  id: string; name: string; state: "uploading" | "reading" | "review" | "saving" | "saved" | "error";
+  id: string; name: string; size?: number; state: "uploading" | "reading" | "review" | "saving" | "saved" | "error";
   draft?: Draft; token?: string; key?: string; bytes?: number; error?: string;
   result?: { id: string; severity: string; counts: { critical: number; warning: number; ok: number; unset: number }; limitVersion: number | null; mail: { sent: number; failed: number; skipped: number; recipients: number } };
 };
@@ -36,7 +36,7 @@ export function UploadClient() {
 
   async function process(file: File) {
     const id = crypto.randomUUID();
-    setItems((xs) => [...xs, { id, name: file.name, state: "uploading" }]);
+    setItems((xs) => [...xs, { id, name: file.name, size: file.size, state: "uploading" }]);
     if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) return patch(id, { state: "error", error: "This is not a PDF file." });
     if (file.size > MAX) return patch(id, { state: "error", error: "The PDF is larger than 15 MB." });
     try {
@@ -79,8 +79,7 @@ export function UploadClient() {
       {items.map((it) => (
         <section key={it.id} className="fa-card" style={{ marginTop: 18 }}>
           <h2>{it.name}</h2>
-          {it.state === "uploading" && <p className="fa-note">Uploading…</p>}
-          {it.state === "reading" && <p className="fa-note">Reading the report. This takes about half a minute.</p>}
+          {(it.state === "uploading" || it.state === "reading") && <Busy it={it} />}
           {it.state === "error" && (
             <>
               <div className="fa-banner err" role="alert">{it.error}</div>
@@ -138,5 +137,22 @@ function Review({ it, onSave, onReread, onDiscard }: { it: Item; onSave: () => v
         <button type="button" className="fa-btn" onClick={onDiscard} disabled={busy}>Discard</button>
       </div>
     </>
+  );
+}
+
+const mb = (n?: number) => (n ? `${(n / 1048576).toFixed(1)} MB` : "");
+
+/** Spinner with the step the file is at: 1 uploading the PDF, 2 reading it. */
+function Busy({ it }: { it: Item }) {
+  const up = it.state === "uploading";
+  return (
+    <div className="fa-busy" role="status" aria-live="polite">
+      <span className="fa-spin" aria-hidden="true" />
+      <div>
+        <b>{up ? `Uploading the PDF${it.size ? ` (${mb(it.size)})` : ""}…` : "Reading the report…"}</b>
+        <div className="fa-note" style={{ margin: "2px 0 0" }}>{up ? "Step 1 of 2. Keep this page open until the upload finishes." : "Step 2 of 2. This takes about half a minute."}</div>
+        <div className="fa-steps"><i className="on" /><i className={up ? "" : "on"} /></div>
+      </div>
+    </div>
   );
 }
