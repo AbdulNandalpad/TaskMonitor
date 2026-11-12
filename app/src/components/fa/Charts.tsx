@@ -159,12 +159,13 @@ export function LineChart({ series, lines = [], title, height = 280, width = W }
   const y = (v: number) => T + (1 - v / top) * (height - T - B);
   const grid: number[] = []; for (let v = 0; v <= top + 0.001; v += step) grid.push(v);
   const ticks = [...new Set(all.map((p) => p.t))].sort((a, b) => a - b);
-  const every = Math.max(1, Math.ceil(ticks.length / 7));
+  const every = Math.max(1, Math.ceil(ticks.length / (Wd < 600 ? 4 : 7)));
+  const lastI = ticks.length - 1;
   return (
     <svg className="fa-chart" viewBox={`0 0 ${Wd} ${height}`} role="img" aria-label={title}>
       {grid.map((g) => (<g key={g}><line x1={L} x2={Wd - R} y1={y(g)} y2={y(g)} stroke={GRID} /><text x={L - 8} y={y(g) + 4} textAnchor="end" fontSize="12" fill={MUTED}>{g}</text></g>))}
       {lines.map((l) => (<g key={l.label}><line x1={L} x2={Wd - R} y1={y(l.v)} y2={y(l.v)} stroke={l.color} strokeWidth="1.5" strokeDasharray="5 4" /><text x={Wd - R + 8} y={y(l.v) + 4} fontSize="12" fill={l.color}>{l.label}</text></g>))}
-      {ticks.map((t, i) => (i % every === 0 || i === ticks.length - 1) && <text key={t} x={x(t)} y={height - 12} textAnchor="middle" fontSize="12" fill={MUTED}>{dshort(t)}</text>)}
+      {ticks.map((t, i) => (i === lastI || (i % every === 0 && lastI - i >= every)) && <text key={t} x={x(t)} y={height - 12} textAnchor="middle" fontSize="12" fill={MUTED}>{dshort(t)}</text>)}
       {series.map((s) => (
         <g key={s.label}>
           <path d={s.points.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`).join("")} fill="none" stroke={s.color} strokeWidth="2.5" strokeLinejoin="round" strokeDasharray={s.dash} />
