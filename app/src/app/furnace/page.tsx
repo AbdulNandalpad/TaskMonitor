@@ -132,7 +132,7 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
             {trendLow.length > 1 ? (
               <>
                 <div className="fa-legend"><span><i style={{ background: COLOR.b }} />Lowest minimum</span><span><i style={{ background: COLOR.a }} />Mean of averages</span></div>
-                <LineChart title="Lowest minimum and mean of averages over the last scans" height={300} width={520}
+                <LineChart title="Lowest minimum and mean of averages over the last scans" height={430} width={520}
                   series={[{ label: "Mean of averages", color: COLOR.a, points: trendAvg }, { label: "Lowest minimum", color: COLOR.b, points: trendLow }]} />
               </>
             ) : <p className="fa-note">A trend needs at least two scans.</p>}
