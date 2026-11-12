@@ -137,7 +137,7 @@ function StatusChanges({ rows, aLabel, bLabel, cA, cB }: { rows: { zone: string;
   const fmt = (c: typeof cA) => `${c.critical} critical, ${c.warning} warning, ${c.ok} OK${c.unset ? `, ${c.unset} no limit` : ""}`;
   return (
     <>
-      <div className="fa-kpis" style={{ margin: 0 }}>
+      <div className="fa-kpis" style={{ margin: 0, alignItems: "start" }}>
         <div className="fa-kpi"><div className="l">{aLabel}</div><div className="s">{fmt(cA)}</div></div>
         <div className="fa-kpi"><div className="l">{bLabel}</div><div className="s">{fmt(cB)}</div></div>
         <div className="fa-kpi"><div className="l">Worse</div><div className="v fa-down">{worse.length}</div><div className="s">{worse.length ? worse.map((r) => `${r.zone} (${r.a} to ${r.b})`).join(", ") : "no zone got worse"}</div></div>
