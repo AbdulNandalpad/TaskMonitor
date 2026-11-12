@@ -56,7 +56,7 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
   const k = latest ? (counts.get(latest.id) ?? countOf(zones.map((z) => z.status))) : null;
   const rank = (s: Status) => (s === "critical" ? 0 : s === "warning" ? 1 : 2);
   const attentionAll = zones.filter((z) => z.status === "critical" || z.status === "warning").sort((a, b) => rank(a.status) - rank(b.status) || a.min - b.min);
-  const shown = filter ? zones.filter((z) => z.status === filter).sort((a, b) => a.min - b.min) : attentionAll.slice(0, 8);
+  const shown = filter ? zones.filter((z) => z.status === filter).sort((a, b) => a.min - b.min) : attentionAll.slice(0, 5);
 
   const sumNow = latest ? summarise(byScan(latest.id)) : null;
   const sumPrev = history.length > 1 ? summarise(byScan(history[history.length - 2].id)) : null;

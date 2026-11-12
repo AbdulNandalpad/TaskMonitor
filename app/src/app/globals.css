@@ -1224,3 +1224,6 @@ a.fa-seg:hover{background:#fff;filter:none}
   .fa-seg{flex:0 1 auto}
 }
 @media print{.fa-top{display:none!important}.fa-app{display:block}.fa-main{padding:0;margin:0}}
+
+.fa-card .fa-tablewrap{margin:0 -12px}
+@media(max-width:700px){.fa-card .fa-tablewrap{margin:0}}
