@@ -179,7 +179,7 @@ function DeltaSvg({ rows, aLabel, bLabel, title, compact }: { rows: DumbbellRow[
       <text x={x(-lim)} y={TOP - 8} fontSize="12" fontWeight="600" fill="#b42318">{"\u2190 thinner"}</text>
       <text x={x(lim)} y={TOP - 8} textAnchor="end" fontSize="12" fontWeight="600" fill="#067647">{"thicker \u2192"}</text>
       <text x={X1} y={height - 4} textAnchor="end" fontSize="12" fill={MUTED}>change in thickness (mm)</text>
-      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>{compact ? "change" : "change (before \u2192 after)"}</text>
+      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>{compact ? "change" : "change (mm)"}</text>
       {out.map((o) => {
         if (o.kind === "head") return <text key={`h${o.y}`} x={0} y={o.y + 17} fontSize="12" fontWeight="600" fill={MUTED} style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{o.text}</text>;
         const r = o.item, cy = o.y + ROW / 2, d = r.b - r.a;
