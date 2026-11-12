@@ -7,7 +7,10 @@ const INK = "#101828", MUTED = "#667085", GRID = "#eef0f3", CRIT_BG = "#fee4e2",
 type St = "critical" | "warning" | "ok" | "unset";
 const STATUS_WORD: Record<St, string> = { critical: "Critical", warning: "Warning", ok: "OK", unset: "No limit" };
 
-const W = 880, LBL = 150, RIGHT = 150, X0 = LBL, X1 = W - RIGHT, ROW = 22, HEAD = 26, TOP = 22, AXIS = 42;
+const W = 880, ROW = 22, HEAD = 26, TOP = 22, AXIS = 42;
+/** The same chart is drawn twice, wide for desktop and compact for a phone; CSS shows one of them. */
+const frame = (compact: boolean) => { const w = compact ? 380 : 880, lbl = compact ? 112 : 150, right = compact ? 84 : 150; return { w, X0: lbl, X1: w - right }; };
+function Both({ children }: { children: (compact: boolean) => React.ReactNode }) { return (<><div className="fa-wide-only">{children(false)}</div><div className="fa-narrow-only">{children(true)}</div></>); }
 
 /** Round the top of a scale up to a tidy number and give a tidy tick step. */
 const scale = (max: number) => { const step = max > 1500 ? 500 : max > 600 ? 200 : 100; return { top: Math.ceil((max * 1.04) / step) * step, step }; };
@@ -24,7 +27,7 @@ function layout<T extends { section: string }>(items: T[]) {
   return { out, height: y + AXIS };
 }
 
-function Axis({ x, top, step, height, from = 0, unit = "mm" }: { x: (v: number) => number; top: number; step: number; height: number; from?: number; unit?: string }) {
+function Axis({ x, top, step, height, X1, from = 0, unit = "mm" }: { x: (v: number) => number; top: number; step: number; height: number; X1: number; from?: number; unit?: string }) {
   const ticks: number[] = []; for (let v = from; v <= top + 0.001; v += step) ticks.push(v);
   return (
     <g>
@@ -60,13 +63,18 @@ export type RangeRow = { zone: string; section: string; min: number; avg: number
  * (that zone's own limits). A filled dot is the minimum, coloured by status; a hollow dot is the average; both values are printed.
  */
 export function ZoneRange({ items }: { items: RangeRow[] }) {
+  return <Both>{(compact) => <ZoneRangeSvg items={items} compact={compact} />}</Both>;
+}
+
+function ZoneRangeSvg({ items, compact }: { items: RangeRow[]; compact: boolean }) {
+  const { w, X0, X1 } = frame(compact);
   const { out, height } = layout(items);
   const { top, step } = scale(Math.max(...items.flatMap((i) => [i.avg, i.min, i.warn ?? 0]), 100));
   const x = (v: number) => X0 + (v / top) * (X1 - X0);
   return (
-    <svg className="fa-chart" viewBox={`0 0 ${W} ${height}`} role="img" aria-label="Minimum and average thickness of every zone against its limits">
-      <Axis x={x} top={top} step={step} height={height} />
-      <text x={X1 + 16} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>min · avg (mm)</text>
+    <svg className="fa-chart" viewBox={`0 0 ${w} ${height}`} role="img" aria-label="Minimum and average thickness of every zone against its limits">
+      <Axis x={x} top={top} step={step} height={height} X1={X1} />
+      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>{compact ? "min · avg" : "min · avg (mm)"}</text>
       {out.map((o) => {
         if (o.kind === "head") return <text key={`h${o.y}`} x={0} y={o.y + 17} fontSize="12" fontWeight="600" fill={MUTED} style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{o.text}</text>;
         const r = o.item, cy = o.y + ROW / 2;
@@ -77,8 +85,8 @@ export function ZoneRange({ items }: { items: RangeRow[] }) {
             <line x1={x(Math.min(r.min, r.avg))} x2={x(Math.max(r.min, r.avg))} y1={cy} y2={cy} stroke="#98a2b3" strokeWidth="1.5" />
             <circle cx={x(r.avg)} cy={cy} r="4.5" fill="#fff" stroke={MUTED} strokeWidth="1.8"><title>{`${r.zone}: average ${r.avg} mm`}</title></circle>
             <circle cx={x(r.min)} cy={cy} r="5.5" fill={COLOR[r.status]}><title>{`${r.zone}: minimum ${r.min} mm, ${STATUS_WORD[r.status]}`}</title></circle>
-            <text x={X0 - 12} y={cy + 4} textAnchor="end" fontSize="12" fill={INK}>{r.zone}</text>
-            <text x={X1 + 16} y={cy + 4} fontSize="12" fill={INK}><tspan fontWeight="600" fill={r.status === "critical" ? "#b42318" : r.status === "warning" ? "#b54708" : INK}>{r.min}</tspan><tspan fill={MUTED}> · {r.avg}</tspan></text>
+            <text x={X0 - (compact ? 8 : 12)} y={cy + 4} textAnchor="end" fontSize="12" fill={INK}>{r.zone}</text>
+            <text x={X1 + (compact ? 10 : 16)} y={cy + 4} fontSize="12" fill={INK}><tspan fontWeight="600" fill={r.status === "critical" ? "#b42318" : r.status === "warning" ? "#b54708" : INK}>{r.min}</tspan><tspan fill={MUTED}> · {r.avg}</tspan></text>
           </g>
         );
       })}
@@ -103,16 +111,21 @@ export function ZoneRangeLegend() {
 export type DumbbellRow = { zone: string; section: string; a: number; b: number };
 
 /** One row per zone: earlier value (slate dot) to later value (brand dot), the line red when thinner and green when thicker, the change printed. */
-export function Dumbbell({ rows, aLabel, bLabel, title }: { rows: DumbbellRow[]; aLabel: string; bLabel: string; title: string }) {
+export function Dumbbell(props: { rows: DumbbellRow[]; aLabel: string; bLabel: string; title: string }) {
+  return <Both>{(compact) => <DumbbellSvg {...props} compact={compact} />}</Both>;
+}
+
+function DumbbellSvg({ rows, aLabel, bLabel, title, compact }: { rows: DumbbellRow[]; aLabel: string; bLabel: string; title: string; compact: boolean }) {
+  const { w, X0, X1 } = frame(compact);
   const { out, height } = layout(rows);
   const lo = Math.min(...rows.flatMap((r) => [r.a, r.b])), hi = Math.max(...rows.flatMap((r) => [r.a, r.b]));
   const { top, step } = scale(hi);
   const from = Math.max(0, Math.floor((lo * 0.92) / step) * step);
   const x = (v: number) => X0 + ((v - from) / (top - from)) * (X1 - X0);
   return (
-    <svg className="fa-chart" viewBox={`0 0 ${W} ${height}`} role="img" aria-label={`${title}: ${aLabel} against ${bLabel}`}>
-      <Axis x={x} top={top} step={step} height={height} from={from} />
-      <text x={X1 + 16} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>change (mm)</text>
+    <svg className="fa-chart" viewBox={`0 0 ${w} ${height}`} role="img" aria-label={`${title}: ${aLabel} against ${bLabel}`}>
+      <Axis x={x} top={top} step={step} height={height} X1={X1} from={from} />
+      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>change</text>
       {out.map((o) => {
         if (o.kind === "head") return <text key={`h${o.y}`} x={0} y={o.y + 17} fontSize="12" fontWeight="600" fill={MUTED} style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{o.text}</text>;
         const r = o.item, cy = o.y + ROW / 2, d = r.b - r.a;
@@ -122,8 +135,8 @@ export function Dumbbell({ rows, aLabel, bLabel, title }: { rows: DumbbellRow[];
             <line x1={x(r.a)} x2={x(r.b)} y1={cy} y2={cy} stroke={line} strokeWidth="3" strokeLinecap="round" />
             <circle cx={x(r.a)} cy={cy} r="5" fill={COLOR.a}><title>{`${r.zone} · ${aLabel}: ${r.a} mm`}</title></circle>
             <circle cx={x(r.b)} cy={cy} r="5" fill={COLOR.b}><title>{`${r.zone} · ${bLabel}: ${r.b} mm`}</title></circle>
-            <text x={X0 - 12} y={cy + 4} textAnchor="end" fontSize="12" fill={INK}>{r.zone}</text>
-            <text x={X1 + 16} y={cy + 4} fontSize="12" fontWeight="600" fill={d < 0 ? "#b42318" : d > 0 ? "#067647" : MUTED}>{d > 0 ? `+${d}` : d}</text>
+            <text x={X0 - (compact ? 8 : 12)} y={cy + 4} textAnchor="end" fontSize="12" fill={INK}>{r.zone}</text>
+            <text x={X1 + (compact ? 10 : 16)} y={cy + 4} fontSize="12" fontWeight="600" fill={d < 0 ? "#b42318" : d > 0 ? "#067647" : MUTED}>{d > 0 ? `+${d}` : d}</text>
           </g>
         );
       })}
@@ -148,9 +161,13 @@ export type Series = { label: string; color: string; points: Pt[]; dash?: string
 const dshort = (t: number) => new Date(t).toLocaleDateString("en-IN", { day: "2-digit", month: "short", timeZone: "Asia/Kolkata" });
 
 /** Lines over a real time axis, with optional horizontal limit lines labelled in the right gutter. */
-export function LineChart({ series, lines = [], title, height = 280, width = W }: { series: Series[]; lines?: { v: number; color: string; label: string }[]; title: string; height?: number; width?: number }) {
+export function LineChart(props: { series: Series[]; lines?: { v: number; color: string; label: string }[]; title: string; height?: number; width?: number }) {
+  return (<><div className="fa-wide-only"><LineSvg {...props} /></div><div className="fa-narrow-only"><LineSvg {...props} width={360} height={Math.min(props.height ?? 280, 260)} compact /></div></>);
+}
+
+function LineSvg({ series, lines = [], title, height = 280, width = W, compact = false }: { series: Series[]; lines?: { v: number; color: string; label: string }[]; title: string; height?: number; width?: number; compact?: boolean }) {
   const Wd = width;
-  const L = 48, R = 96, T = 14, B = 34;
+  const L = compact ? 40 : 48, R = compact ? 70 : 96, T = 14, B = 34;
   const all = series.flatMap((s) => s.points);
   if (!all.length) return null;
   const t0 = Math.min(...all.map((p) => p.t)), t1 = Math.max(...all.map((p) => p.t)) || t0 + 1;

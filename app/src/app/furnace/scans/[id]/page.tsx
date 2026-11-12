@@ -62,7 +62,7 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
         <ZoneRange items={rows.map((x) => ({ zone: x.r.zone, section: x.r.section, min: x.r.min_mm, avg: x.r.avg_mm, status: x.ev.status, warn: x.ev.min.limit?.warn_below ?? null, crit: x.ev.min.limit?.critical_below ?? null }))} />
       </div>
       <div className="fa-card">
-        <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Every zone of this scan"><table className="fa-tbl">
+        <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Every zone of this scan"><table className="fa-tbl fa-stack">
           <thead><tr><th>Zone</th><th className="n">Average (mm)</th><th className="n">Minimum (mm)</th><th>Status</th><th className="n">Δ avg</th><th className="n">Δ min</th><th>Limits on min (mm)</th><th>Recommendation</th></tr></thead>
           <tbody>{sections.map((sec) => (
             <SectionRows key={sec} sec={sec} rows={rows.filter((x) => x.r.section === sec)} />
@@ -84,11 +84,11 @@ function SectionRows({ sec, rows }: { sec: string; rows: { r: { zone: string; av
         return (
           <tr key={r.zone} className={st}>
             <td><b>{r.zone}</b><small>{clean(r.angle) ? `${clean(r.angle)}° · ${clean(r.depth)} m` : ""}</small></td>
-            <td className="n">{r.avg_mm}</td><td className="n">{r.min_mm}</td>
-            <td><StatusBadge status={st} /></td>
-            <td className={`n ${d && d.avg < 0 ? "fa-down" : d && d.avg > 0 ? "fa-up" : ""}`}>{d ? sign(d.avg) : "–"}</td>
-            <td className={`n ${d && d.min < 0 ? "fa-down" : d && d.min > 0 ? "fa-up" : ""}`}>{d ? sign(d.min) : "–"}{d?.rose && <span className="fa-flag">Repair?</span>}</td>
-            <td><small>{lm ? `W ${lm.warn_below ?? "–"} · C ${lm.critical_below ?? "–"}` : "–"}</small></td>
+            <td className="n" data-label="Average (mm)">{r.avg_mm}</td><td className="n" data-label="Minimum (mm)">{r.min_mm}</td>
+            <td data-label="Status"><StatusBadge status={st} /></td>
+            <td data-label="Change in average" className={`n ${d && d.avg < 0 ? "fa-down" : d && d.avg > 0 ? "fa-up" : ""}`}>{d ? sign(d.avg) : "–"}</td>
+            <td data-label="Change in minimum" className={`n ${d && d.min < 0 ? "fa-down" : d && d.min > 0 ? "fa-up" : ""}`}>{d ? sign(d.min) : "–"}{d?.rose && <span className="fa-flag">Repair?</span>}</td>
+            <td data-label="Limits on minimum"><small>{lm ? `W ${lm.warn_below ?? "–"} · C ${lm.critical_below ?? "–"}` : "–"}</small></td>
             <td>{ev.recommendations.map((t, i) => <div key={i}>{t}</div>)}</td>
           </tr>
         );

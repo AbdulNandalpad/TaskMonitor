@@ -115,11 +115,11 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
               {filter && <Link className="fa-btn sm" href={home}>Show attention list</Link>}
             </div>
             {shown.length === 0 ? <p className="fa-note">{filter ? "No zones in this status." : "No zone needs attention."}</p> : (
-              <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Zones that need attention"><table className="fa-tbl">
+              <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Zones that need attention"><table className="fa-tbl fa-stack">
                 <thead><tr><th>Zone</th><th className="n">Min (mm)</th><th className="n">Avg (mm)</th><th>Status</th><th>Recommendation</th></tr></thead>
                 <tbody>{shown.map((a) => (
-                  <tr key={a.zone} className={a.status}><td className="nw"><b>{a.zone}</b><small>{a.section}</small></td><td className="n">{a.min}</td><td className="n">{a.avg}</td>
-                    <td><StatusBadge status={a.status} /></td><td>{a.recs.length ? a.recs.map((t, i) => <div key={i}>{t}</div>) : <small>{a.status === "critical" || a.status === "warning" ? "No recommendation set" : ""}</small>}</td></tr>
+                  <tr key={a.zone} className={a.status}><td className="nw"><b>{a.zone}</b><small>{a.section}</small></td><td className="n" data-label="Minimum (mm)">{a.min}</td><td className="n" data-label="Average (mm)">{a.avg}</td>
+                    <td data-label="Status"><StatusBadge status={a.status} /></td><td>{a.recs.length ? a.recs.map((t, i) => <div key={i}>{t}</div>) : <small>{a.status === "critical" || a.status === "warning" ? "No recommendation set" : ""}</small>}</td></tr>
                 ))}</tbody>
               </table></div>
             )}
@@ -170,10 +170,10 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
       {scansDesc.length > 0 && (
         <section className="fa-card">
           <h3>Recent scans</h3>
-          <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Recent scans"><table className="fa-tbl">
+          <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Recent scans"><table className="fa-tbl fa-stack">
             <thead><tr><th>Date</th><th>Heat</th><th className="n">Meas.</th><th className="n">Critical</th><th className="n">Warning</th><th className="n">OK</th><th><span className="sr-only">Open</span></th></tr></thead>
             <tbody>{scansDesc.slice(0, 8).map((s) => { const x = counts.get(s.id); return (
-              <tr key={s.id}><td>{fmtDateTime(s.scanned_at)}</td><td>{s.heat}</td><td className="n">{s.meas_no}</td><td className="n">{x?.critical ?? 0}</td><td className="n">{x?.warning ?? 0}</td><td className="n">{x?.ok ?? 0}</td>
+              <tr key={s.id}><td><b>{fmtDateTime(s.scanned_at)}</b></td><td data-label="Heat">{s.heat}</td><td className="n" data-label="Measurement">{s.meas_no}</td><td className="n" data-label="Critical">{x?.critical ?? 0}</td><td className="n" data-label="Warning">{x?.warning ?? 0}</td><td className="n" data-label="OK">{x?.ok ?? 0}</td>
                 <td className="n"><Link href={`/furnace/scans/${s.id}`}>Open →</Link></td></tr>); })}</tbody>
           </table></div>
         </section>

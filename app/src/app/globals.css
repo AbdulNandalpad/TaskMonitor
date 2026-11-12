@@ -1050,3 +1050,56 @@ a.fa-seg:hover{filter:brightness(.97)}
 .fa-readings summary{cursor:pointer;font-weight:600;font-size:14px;margin:var(--s2) 0}
 .fa-section{margin-top:var(--s5)}
 .fa-tbl td.nw{white-space:nowrap}
+
+/* phone: nothing may push the page wider than the screen */
+.fa-tablewrap{position:relative}
+.fa-twocol>*,.fa-wide-left>*,.fa-card{min-width:0}
+
+/* ---- phone ---- */
+.fa-narrow-only{display:none}
+@media(max-width:700px){
+  .fa-wide-only{display:none}
+  .fa-narrow-only{display:block}
+  /* header: brand and icons on the first row, the tabs scroll on the second; not sticky, so it does not eat the screen */
+  .fa-top{position:static}
+  .fa-top-in{gap:var(--s2);min-height:0;padding-top:var(--s2);padding-bottom:0}
+  .fa-brand{margin-right:0;order:1;flex:1 1 auto;min-width:0}
+  .fa-who{order:2;margin-left:auto}
+  .fa-top-in>a.iconbtn{order:3}
+  .fa-top-in>form{order:4}
+  .fa-nav{order:5;flex-basis:100%;margin:0 calc(var(--s4) * -1);padding:0 var(--s4) var(--s2);-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent);mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .fa-nav a{min-height:40px}
+  .fa-main{padding-top:var(--s4)}
+  .fa-head{margin-bottom:var(--s4)}
+  .fa-head h1{font-size:20px}
+  .fa-actions{width:100%}
+  .fa-actions .fa-btn{flex:1 1 auto}
+  .fa-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fa-kpi .v{font-size:18px}
+  .fa-seg{flex:1 1 100%;min-width:0}
+  .fa-sel select{width:100%;min-width:0}
+  .fa-sel label{flex:1 1 100%}
+  .fa-twocol{grid-template-columns:minmax(0,1fr)}
+  .fa-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fa-mini-top{flex-wrap:wrap}
+  .fa-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fa-card{border-radius:var(--r-md)}
+  /* tables that are lists become cards */
+  .fa-stack thead{display:none}
+  .fa-stack,.fa-stack tbody,.fa-stack tr,.fa-stack td{display:block;width:100%;box-sizing:border-box}
+  .fa-stack tr{padding:var(--s3) var(--s3) var(--s3) var(--s4);border-bottom:1px solid var(--fa-line)}
+  .fa-stack tr.fa-sec{padding:0}
+  .fa-stack tr.fa-sec td{padding:var(--s2) var(--s3)}
+  .fa-stack td{border:0;padding:2px 0;text-align:left}
+  .fa-stack td.n{text-align:left}
+  .fa-stack td[data-label]{display:flex;justify-content:space-between;gap:var(--s3);align-items:center}
+  .fa-stack td[data-label]::before{content:attr(data-label);color:var(--fa-ink-3);font-size:12px;flex:none}
+  .fa-stack tr.critical{box-shadow:inset 3px 0 0 var(--fa-crit)}
+  .fa-stack tr.warning{box-shadow:inset 3px 0 0 var(--fa-warn)}
+  .fa-stack tr.critical td:first-child,.fa-stack tr.warning td:first-child{box-shadow:none}
+  .fa-stack tbody tr:hover td{background:transparent}
+  .fa-tablewrap{margin:0}
+  /* the grid keeps its zone names in view while it scrolls sideways */
+  .fa-matrix tbody th{position:sticky;left:0;background:var(--fa-surface);z-index:1;box-shadow:1px 0 0 var(--fa-line)}
+  .fa-matrix thead th:first-child{position:sticky;left:0;z-index:2;background:var(--fa-row)}
+}
