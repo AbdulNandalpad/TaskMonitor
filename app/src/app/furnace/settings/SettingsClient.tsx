@@ -103,8 +103,8 @@ export function LimitsEditor({ converterId, initial, zones, sections }: { conver
   return (
     <>
       <datalist id="fa-zones">{["*", ...sections, ...zones].map((z) => <option key={z} value={z} />)}</datalist>
-      <div className="fa-tablewrap"><table className="fa-tbl fa-limits">
-        <thead><tr><th>Zone, section or *</th><th>Metric</th><th className="n">Warning below (mm)</th><th className="n">Critical below (mm)</th><th>Recommendation (warning)</th><th>Recommendation (critical)</th><th></th></tr></thead>
+      <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Limits table"><table className="fa-tbl fa-limits">
+        <thead><tr><th>Zone, section or *</th><th>Metric</th><th className="n">Warning below (mm)</th><th className="n">Critical below (mm)</th><th>Recommendation (warning)</th><th>Recommendation (critical)</th><th><span className="sr-only">Remove</span></th></tr></thead>
         <tbody>{rows.map((r, i) => (
           <tr key={i}>
             <td><input className="fa-in" list="fa-zones" value={r.zone} onChange={(e) => set(i, "zone", e.target.value)} aria-label="Zone" /></td>
@@ -113,7 +113,7 @@ export function LimitsEditor({ converterId, initial, zones, sections }: { conver
             <td><input className="fa-in num" inputMode="decimal" value={r.crit} onChange={(e) => set(i, "crit", e.target.value)} aria-label="Critical below" /></td>
             <td><input className="fa-in" value={r.recW} onChange={(e) => set(i, "recW", e.target.value)} aria-label="Recommendation for warning" /></td>
             <td><input className="fa-in" value={r.recC} onChange={(e) => set(i, "recC", e.target.value)} aria-label="Recommendation for critical" /></td>
-            <td><button type="button" className="fa-btn sm" onClick={() => setRows((x) => (x.length > 1 ? x.filter((_, j) => j !== i) : [blank()]))} aria-label="Remove row">Remove</button></td>
+            <td><button type="button" className="fa-btn sm" onClick={() => setRows((x) => (x.length > 1 ? x.filter((_, j) => j !== i) : [blank()]))} aria-label={`Remove the ${r.zone || "*"} ${r.metric === "avg" ? "average" : "minimum"} row`}>Remove</button></td>
           </tr>
         ))}</tbody>
       </table></div>
@@ -151,20 +151,21 @@ export function RecipientsEditor({ converters, initial }: { converters: { id: st
     if (!x.ok) setMsg({ ok: false, text: x.error! }); else router.refresh();
   }
   async function remove(r: Rec) {
+    if (!window.confirm(`Delete ${r.email}? They will no longer receive emails.`)) return;
     const x = await send("/api/furnace/recipients", "DELETE", { id: r.id });
     if (!x.ok) setMsg({ ok: false, text: x.error! }); else router.refresh();
   }
   return (
     <>
       {initial.length > 0 && (
-        <div className="fa-tablewrap"><table className="fa-tbl">
-          <thead><tr><th>Name</th><th>Email</th><th>Converter</th><th>Send from</th><th>Active</th><th></th></tr></thead>
+        <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Email recipients"><table className="fa-tbl">
+          <thead><tr><th>Name</th><th>Email</th><th>Converter</th><th>Send from</th><th>Active</th><th><span className="sr-only">Delete</span></th></tr></thead>
           <tbody>{initial.map((r) => (
             <tr key={r.id}>
               <td>{r.name || "–"}</td><td>{r.email}</td><td>{converters.find((c) => c.id === r.converter_id)?.name ?? "All"}</td>
               <td><select className="fa-in" value={r.min_severity} onChange={(e) => patch(r, { min_severity: e.target.value as Rec["min_severity"] })} aria-label="Minimum severity"><option value="warning">Warning and critical</option><option value="critical">Critical only</option></select></td>
               <td><input type="checkbox" checked={r.active} onChange={(e) => patch(r, { active: e.target.checked })} aria-label={`${r.email} active`} /></td>
-              <td><button type="button" className="fa-btn sm" onClick={() => remove(r)}>Delete</button></td>
+              <td><button type="button" className="fa-btn sm" onClick={() => remove(r)} aria-label={`Delete ${r.email}`}>Delete</button></td>
             </tr>
           ))}</tbody>
         </table></div>

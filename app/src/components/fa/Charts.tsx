@@ -34,41 +34,20 @@ function Axis({ x, top, step, height, from = 0, unit = "mm" }: { x: (v: number) 
   );
 }
 
-// ------------------------------------------------------------------ donut (status split)
-export function Donut({ counts, title, hrefFor, selected }: {
-  counts: { critical: number; warning: number; ok: number; unset: number }; title: string; hrefFor?: (s: St) => string; selected?: string | null;
-}) {
+// ------------------------------------------------------------------ status split as one segmented bar
+/** The split of zones by status as one bar; each segment is a link that filters the list below. */
+export function StatusBar({ counts, hrefFor, selected }: { counts: { critical: number; warning: number; ok: number; unset: number }; hrefFor?: (s: St) => string; selected?: string | null }) {
   const order: St[] = ["critical", "warning", "ok", "unset"];
   const total = order.reduce((a, s) => a + counts[s], 0);
-  const R = 80, r = 52, C = 100;
-  let ang = -Math.PI / 2;
-  const arcs = order.map((s) => {
-    const n = counts[s];
-    if (!n) return null;
-    const a2 = ang + (n / total) * 2 * Math.PI;
-    const full = n === total;
-    const p = (rad: number, a: number) => `${(C + rad * Math.cos(a)).toFixed(2)} ${(C + rad * Math.sin(a)).toFixed(2)}`;
-    const big = n / total > 0.5 ? 1 : 0;
-    const d = full
-      ? `M${C} ${C - R}A${R} ${R} 0 1 1 ${C} ${C + R}A${R} ${R} 0 1 1 ${C} ${C - R}ZM${C} ${C - r}A${r} ${r} 0 1 0 ${C} ${C + r}A${r} ${r} 0 1 0 ${C} ${C - r}Z`
-      : `M${p(R, ang)}A${R} ${R} 0 ${big} 1 ${p(R, a2)}L${p(r, a2)}A${r} ${r} 0 ${big} 0 ${p(r, ang)}Z`;
-    ang = a2;
-    return <path key={s} d={d} fill={COLOR[s]} fillRule="evenodd" stroke="#fff" strokeWidth="2" opacity={selected && selected !== s ? 0.35 : 1}><title>{`${STATUS_WORD[s]}: ${n}`}</title></path>;
-  });
+  if (!total) return null;
   return (
-    <div className="fa-donut">
-      <svg viewBox="0 0 200 200" width="160" height="160" role="img" aria-label={`${title}: ${order.map((s) => `${counts[s]} ${STATUS_WORD[s]}`).join(", ")}`}>
-        {total ? arcs : <circle cx={C} cy={C} r={R} fill="#f2f4f7" />}
-        <text x={C} y={C + 2} textAnchor="middle" fontSize="30" fontWeight="700" fill={INK}>{total}</text>
-        <text x={C} y={C + 20} textAnchor="middle" fontSize="12" fill={MUTED}>zones</text>
-      </svg>
-      <div className="fa-donut-leg">
-        <b>{title}</b>
-        {order.filter((s) => counts[s] > 0 || s !== "unset").map((s) => {
-          const row = (<><i style={{ background: COLOR[s] }} />{STATUS_WORD[s]} <b>{counts[s]}</b> <span>({total ? Math.round((counts[s] / total) * 100) : 0}%)</span></>);
-          return hrefFor ? <Link key={s} href={hrefFor(s)} className={`fa-leg-row${selected === s ? " sel" : ""}`}>{row}</Link> : <div key={s} className="fa-leg-row">{row}</div>;
-        })}
-      </div>
+    <div className="fa-segbar" role="group" aria-label={`Zones by status: ${order.map((s) => `${counts[s]} ${STATUS_WORD[s]}`).join(", ")}`}>
+      {order.filter((s) => counts[s] > 0).map((s) => {
+        const inner = (<><b>{counts[s]}</b><span>{STATUS_WORD[s]}</span><em>{Math.round((counts[s] / total) * 100)}%</em></>);
+        const cls = `fa-seg ${s}${selected === s ? " sel" : ""}`;
+        const style = { flexGrow: counts[s] };
+        return hrefFor ? <Link key={s} href={hrefFor(s)} className={cls} style={style}>{inner}</Link> : <div key={s} className={cls} style={style}>{inner}</div>;
+      })}
     </div>
   );
 }
@@ -160,5 +139,57 @@ export function DumbbellLegend({ aLabel, bLabel }: { aLabel: string; bLabel: str
       <span><i style={{ background: COLOR.critical, width: 18 }} />Thinner</span>
       <span><i style={{ background: COLOR.ok, width: 18 }} />Thicker</span>
     </div>
+  );
+}
+
+// ------------------------------------------------------------------ lines over time
+export type Pt = { t: number; v: number };
+export type Series = { label: string; color: string; points: Pt[]; dash?: string };
+const dshort = (t: number) => new Date(t).toLocaleDateString("en-IN", { day: "2-digit", month: "short", timeZone: "Asia/Kolkata" });
+
+/** Lines over a real time axis, with optional horizontal limit lines labelled in the right gutter. */
+export function LineChart({ series, lines = [], title, height = 280 }: { series: Series[]; lines?: { v: number; color: string; label: string }[]; title: string; height?: number }) {
+  const L = 48, R = 96, T = 14, B = 34;
+  const all = series.flatMap((s) => s.points);
+  if (!all.length) return null;
+  const t0 = Math.min(...all.map((p) => p.t)), t1 = Math.max(...all.map((p) => p.t)) || t0 + 1;
+  const { top, step } = scale(Math.max(...all.map((p) => p.v), ...lines.map((l) => l.v), 100));
+  const x = (t: number) => (t1 === t0 ? (L + W - R) / 2 : L + ((t - t0) / (t1 - t0)) * (W - L - R));
+  const y = (v: number) => T + (1 - v / top) * (height - T - B);
+  const grid: number[] = []; for (let v = 0; v <= top + 0.001; v += step) grid.push(v);
+  const ticks = [...new Set(all.map((p) => p.t))].sort((a, b) => a - b);
+  const every = Math.max(1, Math.ceil(ticks.length / 7));
+  return (
+    <svg className="fa-chart" viewBox={`0 0 ${W} ${height}`} role="img" aria-label={title}>
+      {grid.map((g) => (<g key={g}><line x1={L} x2={W - R} y1={y(g)} y2={y(g)} stroke={GRID} /><text x={L - 8} y={y(g) + 4} textAnchor="end" fontSize="12" fill={MUTED}>{g}</text></g>))}
+      {lines.map((l) => (<g key={l.label}><line x1={L} x2={W - R} y1={y(l.v)} y2={y(l.v)} stroke={l.color} strokeWidth="1.5" strokeDasharray="5 4" /><text x={W - R + 8} y={y(l.v) + 4} fontSize="12" fill={l.color}>{l.label}</text></g>))}
+      {ticks.map((t, i) => (i % every === 0 || i === ticks.length - 1) && <text key={t} x={x(t)} y={height - 12} textAnchor="middle" fontSize="12" fill={MUTED}>{dshort(t)}</text>)}
+      {series.map((s) => (
+        <g key={s.label}>
+          <path d={s.points.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(1)} ${y(p.v).toFixed(1)}`).join("")} fill="none" stroke={s.color} strokeWidth="2.5" strokeLinejoin="round" strokeDasharray={s.dash} />
+          {s.points.map((p) => <circle key={p.t} cx={x(p.t)} cy={y(p.v)} r="4" fill="#fff" stroke={s.color} strokeWidth="2"><title>{`${s.label}, ${dshort(p.t)}: ${p.v} mm`}</title></circle>)}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/** Small trend line for a card: the series over time with the zone's own limit lines, last point filled. */
+export function Spark({ points, warn, crit, color }: { points: Pt[]; warn: number | null; crit: number | null; color: string }) {
+  const Wd = 180, Hd = 52, p = 6;
+  if (points.length < 1) return null;
+  const vs = [...points.map((q) => q.v), ...(warn != null ? [warn] : []), ...(crit != null ? [crit] : [])];
+  const lo = Math.min(...vs) * 0.92, hi = Math.max(...vs) * 1.05 || 1;
+  const t0 = points[0].t, t1 = points[points.length - 1].t;
+  const x = (t: number) => (t1 === t0 ? Wd / 2 : p + ((t - t0) / (t1 - t0)) * (Wd - 2 * p));
+  const y = (v: number) => Hd - p - ((v - lo) / (hi - lo || 1)) * (Hd - 2 * p);
+  const last = points[points.length - 1];
+  return (
+    <svg viewBox={`0 0 ${Wd} ${Hd}`} width="100%" height={Hd} preserveAspectRatio="none" aria-hidden="true">
+      {warn != null && <line x1="0" x2={Wd} y1={y(warn)} y2={y(warn)} stroke={COLOR.warning} strokeWidth="1" strokeDasharray="3 3" />}
+      {crit != null && <line x1="0" x2={Wd} y1={y(crit)} y2={y(crit)} stroke={COLOR.critical} strokeWidth="1" strokeDasharray="3 3" />}
+      <path d={points.map((q, i) => `${i ? "L" : "M"}${x(q.t).toFixed(1)} ${y(q.v).toFixed(1)}`).join("")} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+      <circle cx={x(last.t)} cy={y(last.v)} r="3.5" fill={color} />
+    </svg>
   );
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Donut, ZoneRange, ZoneRangeLegend } from "@/components/fa/Charts";
+import { StatusBar, ZoneRange, ZoneRangeLegend } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
 import { activeLimits, fmtDateTime, loadScan, previousScan } from "@/lib/fa/data";
 import { counts, delta, evaluate, type Status } from "@/lib/fa/evaluate";
@@ -10,6 +10,7 @@ import { sectionOrder } from "@/lib/fa/zones";
 export const dynamic = "force-dynamic";
 
 const sign = (n: number) => (n > 0 ? `+${n}` : String(n));
+const clean = (v: string | null) => (v ?? "").replace(/[\[\]]/g, "").replace(/\s*m\s*$/, "").trim();
 
 /** One scan: every zone with its status against the converter's current limits, the change since the previous scan, and what to do. */
 export default async function ScanPage({ params }: { params: Promise<{ id: string }> }) {
@@ -39,29 +40,30 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
 
   return (
     <FaShell ctx={ctx} title={`Heat ${scan.heat} · measurement ${scan.meas_no}`} sub={`${conv?.name ?? "Converter"} · ${fmtDateTime(scan.scanned_at)}`}
-      actions={<><Link className="fa-btn" href="/furnace">Back</Link>{prev && <Link className="fa-btn" href={`/furnace/compare?c=${scan.converter_id}&a=${prev.scan.id}&b=${scan.id}`}>Compare with heat {prev.scan.heat}</Link>}<a className="fa-btn primary" href={`/api/furnace/scans/${scan.id}/pdf`}>Open vendor PDF</a></>}>
+      actions={<>{prev && <Link className="fa-btn" href={`/furnace/compare?c=${scan.converter_id}&a=${prev.scan.id}&b=${scan.id}`}>Compare with heat {prev.scan.heat}</Link>}<a className="fa-btn" href={`/api/furnace/scans/${scan.id}/pdf`} target="_blank" rel="noreferrer">Open vendor PDF</a></>}>
       <div className="fa-card">
-        <div className="fa-twocol">
-          <Donut counts={k} title={`Status of the ${rows.length} zones`} />
-          <div className="fa-kpis" style={{ margin: 0, alignContent: "center" }}>
-            <div className="fa-kpi"><div className="l">Lowest minimum</div><div className="v">{lowest.r.min_mm} mm</div><div className="s">{lowest.r.zone}</div></div>
-            <div className="fa-kpi"><div className="l">Mean of averages</div><div className="v">{meanAvg} mm</div><div className={`s ${prevMean == null ? "" : meanAvg - prevMean < 0 ? "fa-down" : meanAvg - prevMean > 0 ? "fa-up" : ""}`}>{prevMean == null ? "first scan" : `${meanAvg - prevMean > 0 ? "+" : ""}${meanAvg - prevMean} mm since heat ${prev!.scan.heat}`}</div></div>
-          </div>
+        <StatusBar counts={k} />
+        <div className="fa-kpis" style={{ marginBottom: 0 }}>
+          <div className="fa-kpi"><div className="l">Lowest minimum</div><div className="v">{lowest.r.min_mm} mm</div><div className="s">{lowest.r.zone}</div></div>
+          <div className="fa-kpi"><div className="l">Mean of averages</div><div className="v">{meanAvg} mm</div><div className={`s ${prevMean == null ? "" : meanAvg - prevMean < 0 ? "fa-down" : meanAvg - prevMean > 0 ? "fa-up" : ""}`}>{prevMean == null ? "first scan" : `${meanAvg - prevMean > 0 ? "+" : ""}${meanAvg - prevMean} mm since heat ${prev!.scan.heat}`}</div></div>
+          <div className="fa-kpi"><div className="l">Zones needing attention</div><div className="v">{k.critical + k.warning} of {rows.length}</div><div className="s">{k.critical} critical, {k.warning} warning</div></div>
         </div>
-        <h3 className="fa-section">Every zone against its limits</h3>
+        <dl className="fa-facts" style={{ marginBottom: 0 }}>
+          <div><dt>Limits applied</dt><dd>{lim.version ? `Version ${lim.version.version}${lim.version.note ? `, ${lim.version.note}` : ""}` : "None set"}</dd></div>
+          <div><dt>Saved with</dt><dd>{saved.data ? `Version ${(saved.data as { version: number }).version}` : "No limits yet"}</dd></div>
+          <div><dt>Changes against</dt><dd>{prev ? `Heat ${prev.scan.heat} (measurement ${prev.scan.meas_no})` : "First scan"}</dd></div>
+          {scan.steel_level_m != null && <div><dt>Steel level</dt><dd>{scan.steel_level_m} m{scan.steel_tonnes != null ? ` @ ${scan.steel_tonnes} t` : ""}</dd></div>}
+          {scan.bath_level_m != null && <div><dt>Bath level</dt><dd>{scan.bath_level_m} m</dd></div>}
+        </dl>
+      </div>
+      <div className="fa-card">
+        <h3>Every zone against its limits</h3>
         <ZoneRangeLegend />
         <ZoneRange items={rows.map((x) => ({ zone: x.r.zone, section: x.r.section, min: x.r.min_mm, avg: x.r.avg_mm, status: x.ev.status, warn: x.ev.min.limit?.warn_below ?? null, crit: x.ev.min.limit?.critical_below ?? null }))} />
       </div>
-      <p className="fa-note">
-        {lim.version ? <>Judged with the current limits, version {lim.version.version}{lim.version.note ? ` (${lim.version.note})` : ""}. </> : <>No limits are set for this converter, so zones have no status. </>}
-        {saved.data ? <>When saved it was judged with version {(saved.data as { version: number }).version}. </> : <>It was saved before any limits existed. </>}
-        {prev ? <>Changes are against heat {prev.scan.heat} (measurement {prev.scan.meas_no}). </> : <>This is the first scan, so there is nothing to compare with. </>}
-        {scan.steel_level_m != null && <>Steel level {scan.steel_level_m} m{scan.steel_tonnes != null ? ` @ ${scan.steel_tonnes} t` : ""}. </>}
-        {scan.bath_level_m != null && <>Bath level {scan.bath_level_m} m.</>}
-      </p>
       <div className="fa-card">
-        <div className="fa-tablewrap"><table className="fa-tbl">
-          <thead><tr><th>Zone</th><th className="n">Average</th><th className="n">Minimum</th><th>Status</th><th className="n">Δ avg</th><th className="n">Δ min</th><th>Limits (min)</th><th>Recommendation</th></tr></thead>
+        <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Every zone of this scan"><table className="fa-tbl">
+          <thead><tr><th>Zone</th><th className="n">Average (mm)</th><th className="n">Minimum (mm)</th><th>Status</th><th className="n">Δ avg</th><th className="n">Δ min</th><th>Limits on min (mm)</th><th>Recommendation</th></tr></thead>
           <tbody>{sections.map((sec) => (
             <SectionRows key={sec} sec={sec} rows={rows.filter((x) => x.r.section === sec)} />
           ))}</tbody>
@@ -81,12 +83,12 @@ function SectionRows({ sec, rows }: { sec: string; rows: { r: { zone: string; av
         const st: Status = ev.status;
         return (
           <tr key={r.zone} className={st}>
-            <td><b>{r.zone}</b><small>{[r.angle, r.depth].filter(Boolean).join(" · ")}</small></td>
-            <td className="n">{r.avg_mm} mm</td><td className="n">{r.min_mm} mm</td>
+            <td><b>{r.zone}</b><small>{clean(r.angle) ? `${clean(r.angle)}° · ${clean(r.depth)} m` : ""}</small></td>
+            <td className="n">{r.avg_mm}</td><td className="n">{r.min_mm}</td>
             <td><StatusBadge status={st} /></td>
             <td className={`n ${d && d.avg < 0 ? "fa-down" : d && d.avg > 0 ? "fa-up" : ""}`}>{d ? sign(d.avg) : "–"}</td>
             <td className={`n ${d && d.min < 0 ? "fa-down" : d && d.min > 0 ? "fa-up" : ""}`}>{d ? sign(d.min) : "–"}{d?.rose && <span className="fa-flag">Repair?</span>}</td>
-            <td><small>{lm ? `${lm.warn_below ?? "–"} / ${lm.critical_below ?? "–"} mm` : "–"}</small></td>
+            <td><small>{lm ? `W ${lm.warn_below ?? "–"} · C ${lm.critical_below ?? "–"}` : "–"}</small></td>
             <td>{ev.recommendations.map((t, i) => <div key={i}>{t}</div>)}</td>
           </tr>
         );

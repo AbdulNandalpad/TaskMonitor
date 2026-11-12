@@ -9,9 +9,9 @@ export async function POST(req: Request) {
   const b = await req.json().catch(() => null);
   if (!b || typeof b.converter_id !== "string" || !Array.isArray(b.rows) || b.rows.length > 500) return NextResponse.json({ error: "Bad request" }, { status: 400 });
   const rows = b.rows.map((r: Record<string, unknown>) => ({
-    zone: String(r.zone ?? "*"), metric: r.metric === "avg" ? "avg" : "min",
+    zone: String(r.zone ?? "*").slice(0, 80), metric: r.metric === "avg" ? "avg" : "min",
     warn_below: r.warn_below ?? null, critical_below: r.critical_below ?? null,
-    rec_warning: r.rec_warning ?? null, rec_critical: r.rec_critical ?? null,
+    rec_warning: r.rec_warning == null ? null : String(r.rec_warning).slice(0, 500), rec_critical: r.rec_critical == null ? null : String(r.rec_critical).slice(0, 500),
   }));
   for (const r of rows) {
     const w = r.warn_below == null || r.warn_below === "" ? null : Number(r.warn_below), c = r.critical_below == null || r.critical_below === "" ? null : Number(r.critical_below);

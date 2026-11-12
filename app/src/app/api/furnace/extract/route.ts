@@ -27,16 +27,17 @@ export async function POST(req: Request) {
 
   try {
     const draft = await extractReport(buf);
+    let duplicateId: string | null = null;
     // warn early when this measurement is already saved
     const { data: conv } = await supabase.from("fa_converter").select("id").eq("code", draft.converter_code).maybeSingle();
     if (conv) {
       const { data: camp } = await supabase.from("fa_campaign").select("id").eq("converter_id", conv.id).eq("no", draft.campaign_no).maybeSingle();
       if (camp) {
         const { data: dup } = await supabase.from("fa_scan").select("id").eq("campaign_id", camp.id).eq("meas_no", draft.meas_no).maybeSingle();
-        if (dup) draft.blockers.unshift(`Measurement ${draft.meas_no} of campaign ${draft.campaign_no} is already saved.`);
+        if (dup) { draft.blockers.unshift(`Measurement ${draft.meas_no} of campaign ${draft.campaign_no} is already saved.`); duplicateId = dup.id as string; }
       }
     }
-    return NextResponse.json({ draft, token: signDraft(key, draft), pdf_key: key, pdf_bytes: buf.length });
+    return NextResponse.json({ draft, token: signDraft(key, draft), pdf_key: key, pdf_bytes: buf.length, duplicate_id: duplicateId });
   } catch (e) {
     if (e instanceof AiUnavailable) return NextResponse.json({ error: "Reading reports needs the AI service, which is not set up." }, { status: 503 });
     const detail = (e as Error).message.slice(0, 200);

@@ -12,7 +12,7 @@ export function AppChooser({ user, apps, admin }: { user: string; apps: AppInfo[
   return (
     <main className="launch">
       <header className="launch-hd">
-        <span className="launch-brand"><LogoMark size={30} /><b>JSW Apps</b></span>
+        <span className="launch-brand"><LogoMark size={30} /><b>Apps</b></span>
         <span className="launch-user">{user}</span>
         <form action="/api/auth/logout" method="post"><button className="iconbtn" type="submit" aria-label="Sign out" title="Sign out"><SignOut /></button></form>
       </header>
@@ -31,7 +31,7 @@ export function AppChooser({ user, apps, admin }: { user: string; apps: AppInfo[
             </Link>
           ))}
         </div>
-        {admin && <p className="note"><Link href="/admin/access">Manage who can open which app</Link></p>}
+        {admin && <p style={{ marginTop: 24 }}><Link className="btn" href="/admin/access">Manage who can open which app</Link></p>}
       </section>
     </main>
   );

@@ -83,20 +83,40 @@ export async function statusCounts(supabase: SupabaseClient, scans: Pick<ScanRow
 export const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 export const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" });
 
+export type ReadingFlat = { scan_id: string; zone: string; section: string; avg_mm: number; min_mm: number };
+
+/** Every reading of the given scans, in small batches (a response is capped at 1000 rows). */
+export async function readingsOf(supabase: SupabaseClient, scanIds: string[]): Promise<ReadingFlat[]> {
+  const out: ReadingFlat[] = [];
+  for (let i = 0; i < scanIds.length; i += 20) {
+    const data = ok(await supabase.from("fa_reading").select("scan_id, zone, section, avg_mm, min_mm").in("scan_id", scanIds.slice(i, i + 20)), "readings") ?? [];
+    for (const r of data) out.push({ scan_id: r.scan_id as string, zone: r.zone as string, section: r.section as string, avg_mm: Number(r.avg_mm), min_mm: Number(r.min_mm) });
+  }
+  return out;
+}
+
 /** Zone by scan grid: the minimum thickness and the status of every zone in every scan, judged with the given limits. */
-export async function zoneMatrix(supabase: SupabaseClient, scans: Pick<ScanRow, "id">[], limits: Limit[]) {
+export function buildMatrix(rows: ReadingFlat[], limits: Limit[]) {
   const cells = new Map<string, { min: number; status: Status }>();
   const zones = new Map<string, string>();
-  for (let i = 0; i < scans.length; i += 20) {
-    const ids = scans.slice(i, i + 20).map((s) => s.id);
-    const data = ok(await supabase.from("fa_reading").select("scan_id, zone, section, avg_mm, min_mm").in("scan_id", ids), "readings") ?? [];
-    for (const r of data) {
-      const min = Number(r.min_mm);
-      zones.set(r.zone as string, r.section as string);
-      cells.set(`${r.scan_id}|${r.zone}`, { min, status: evaluate({ zone: r.zone as string, avg_mm: Number(r.avg_mm), min_mm: min }, limits).status });
-    }
+  for (const r of rows) {
+    zones.set(r.zone, r.section);
+    cells.set(`${r.scan_id}|${r.zone}`, { min: r.min_mm, status: evaluate({ zone: r.zone, avg_mm: r.avg_mm, min_mm: r.min_mm }, limits).status });
   }
   const list = [...zones].map(([zone, section]) => ({ zone, section }))
     .sort((a, b) => sectionOrder(a.section) - sectionOrder(b.section) || a.zone.localeCompare(b.zone, undefined, { numeric: true }));
   return { zones: list, cells };
+}
+
+/** One scan summarised: lowest minimum (with its zone) and the mean of the zone averages. */
+export function summarise(rows: ReadingFlat[]) {
+  if (!rows.length) return null;
+  const low = rows.reduce((m, r) => (r.min_mm < m.min_mm ? r : m), rows[0]);
+  return { lowMin: low.min_mm, lowZone: low.zone, meanAvg: rows.reduce((a, r) => a + r.avg_mm, 0) / rows.length };
+}
+
+/** Role holders for the settings screen. Returns null until migration 0009 has been applied. */
+export async function rolesList(supabase: SupabaseClient): Promise<{ login: string; display_name: string; role: string }[] | null> {
+  const r = await supabase.rpc("fa_roles_list");
+  return r.error ? null : ((r.data ?? []) as { login: string; display_name: string; role: string }[]);
 }

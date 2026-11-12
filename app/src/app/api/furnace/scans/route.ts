@@ -71,11 +71,11 @@ export async function POST(req: Request) {
       // the link in the email must not come from the request: use the configured address, else the production domain Vercel gives
       const origin = process.env.APP_URL?.replace(/\/$/, "") ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : new URL(req.url).origin);
       const m = buildMail({ converter: c2?.name ?? conv?.name ?? `Converter ${code}`, heat, measNo: meas, scannedAt: fmtDateTime(when), link: `${origin}/furnace/scans/${id}`, severity, findings });
-      for (const r of recipients) {
+      await Promise.all(recipients.map(async (r) => {
         const out = await sendMail(r.email, m);
         await supabase.rpc("fa_notification_log", { p_scan: id, p_email: r.email, p_outcome: out.outcome, p_detail: out.detail });
         if (out.outcome === "sent") mail.sent++; else if (out.outcome === "failed") mail.failed++; else mail.skipped++;
-      }
+      }));
     }
   }
   return NextResponse.json({ id, severity, counts: counts(statuses), limitVersion: lim.version?.version ?? null, mail });

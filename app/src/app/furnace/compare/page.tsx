@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { COLOR, Dumbbell, DumbbellLegend } from "@/components/fa/Charts";
+import { AutoForm } from "@/components/fa/AutoForm";
 import { FaPrint } from "@/components/fa/FaPrint";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
 import { activeLimits, fmtDate, fmtDateTime, listConverters, loadScan, scansForPicker } from "@/lib/fa/data";
@@ -26,12 +27,11 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
   const scans = await scansForPicker(supabase, conv.id);
   const opt = (s: (typeof scans)[number]) => `Heat ${s.heat} · measurement ${s.meas_no} · ${fmtDate(s.scanned_at)}`;
   const selector = (aId: string, bId: string) => (
-    <form className="fa-sel" method="get">
+    <AutoForm className="fa-sel fa-toolbar">
       {converters.length > 1 && <label>Converter<select name="c" defaultValue={conv.id}>{converters.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
       <label>Earlier scan<select name="a" defaultValue={aId}>{scans.map((s) => <option key={s.id} value={s.id}>{opt(s)}</option>)}</select></label>
       <label>Later scan<select name="b" defaultValue={bId}>{scans.map((s) => <option key={s.id} value={s.id}>{opt(s)}</option>)}</select></label>
-      <button className="fa-btn primary" type="submit">Compare</button>
-    </form>
+    </AutoForm>
   );
   if (scans.length < 2) return <FaShell ctx={ctx} title="Compare"><div className="fa-card fa-empty"><b>Two scans are needed</b>This converter has {scans.length}. Upload another report to compare.</div></FaShell>;
 
@@ -106,7 +106,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
 
       <section className="fa-card">
         <h2>Zone summary (mean of area averages)</h2>
-        <div className="fa-tablewrap"><table className="fa-tbl">
+        <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Table"><table className="fa-tbl">
           <thead><tr><th>Zone</th><th className="n">Areas</th><th className="n">Mean avg {A.scan.heat}</th><th className="n">Mean avg {B.scan.heat}</th><th className="n">Delta</th><th className="n">Lowest min {A.scan.heat}</th><th className="n">Lowest min {B.scan.heat}</th></tr></thead>
           <tbody>{groups.map((g) => {
             const rs = rows.filter((r) => r.group === g), a = mean(rs.map((r) => r.aAvg)), b = mean(rs.map((r) => r.bAvg));
@@ -117,7 +117,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
 
       <section className="fa-card">
         <h2>Detailed comparison, all readings</h2>
-        <div className="fa-tablewrap"><table className="fa-tbl">
+        <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Table"><table className="fa-tbl">
           <thead><tr><th>Zone</th><th className="n">Angle (deg)</th><th className="n">Depth (m)</th><th className="n">Avg {A.scan.heat}</th><th className="n">Avg {B.scan.heat}</th><th className="n">Delta</th><th className="n">Delta %</th><th className="n">Min {A.scan.heat}</th><th className="n">Min {B.scan.heat}</th><th className="n">Min delta</th><th>Status {B.scan.heat}</th><th>Average (bars)</th></tr></thead>
           <tbody>{groups.map((g) => (
             <GroupRows key={g} g={g} rows={rows.filter((r) => r.group === g)} maxAvg={maxAvg} />
