@@ -1136,7 +1136,7 @@ a.fa-seg:hover{filter:brightness(.97)}
 .fa-top .iconbtn{color:var(--fa-ink-3);flex:none}
 .fa-top .iconbtn:hover{background:#f3efe9;color:var(--fa-ink)}
 
-.fa-main{max-width:1240px;width:100%;box-sizing:border-box;margin:0 0 0 104px;padding:40px 48px 72px}
+.fa-main{max-width:1240px;width:auto;box-sizing:border-box;margin:0 0 0 104px;padding:40px 48px 72px}
 .fa-head{margin-bottom:32px;align-items:flex-end}
 .fa-head h1{font-size:36px;line-height:1.15;font-weight:600;letter-spacing:-.03em}
 .fa-sub{font-size:15px;margin-top:6px;color:var(--fa-ink-3)}
