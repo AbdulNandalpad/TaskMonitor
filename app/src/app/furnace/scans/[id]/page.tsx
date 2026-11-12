@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Donut, ZoneBars, ZoneBarsLegend } from "@/components/fa/Charts";
+import { Donut, ZoneRange, ZoneRangeLegend } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
 import { activeLimits, fmtDateTime, loadScan, previousScan } from "@/lib/fa/data";
 import { counts, delta, evaluate, type Status } from "@/lib/fa/evaluate";
@@ -32,6 +32,10 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
     .sort((a, b) => sectionOrder(a.r.section) - sectionOrder(b.r.section) || a.r.zone.localeCompare(b.r.zone, undefined, { numeric: true }));
   const k = counts(rows.map((x) => x.ev.status));
   const sections = [...new Set(rows.map((x) => x.r.section))];
+  const lowest = rows.reduce((m, x) => (x.r.min_mm < m.r.min_mm ? x : m), rows[0]);
+  const meanOf = (xs: { avg_mm: number }[]) => (xs.length ? Math.round(xs.reduce((t, r) => t + r.avg_mm, 0) / xs.length) : 0);
+  const meanAvg = meanOf(readings);
+  const prevMean = prev && prev.readings.length ? meanOf(prev.readings) : null;
 
   return (
     <FaShell ctx={ctx} title={`Heat ${scan.heat} · measurement ${scan.meas_no}`} sub={`${conv?.name ?? "Converter"} · ${fmtDateTime(scan.scanned_at)}`}
@@ -39,16 +43,14 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
       <div className="fa-card">
         <div className="fa-twocol">
           <Donut counts={k} title={`Status of the ${rows.length} zones`} />
-          <div className="fa-grid" style={{ alignContent: "center", margin: 0 }}>
-            <div className="fa-stat critical"><b>{k.critical}</b><span>Critical zones</span></div>
-            <div className="fa-stat warning"><b>{k.warning}</b><span>Warning zones</span></div>
-            <div className="fa-stat ok"><b>{k.ok}</b><span>OK zones</span></div>
-            {k.unset > 0 && <div className="fa-stat unset"><b>{k.unset}</b><span>No limit</span></div>}
+          <div className="fa-kpis" style={{ margin: 0, alignContent: "center" }}>
+            <div className="fa-kpi"><div className="l">Lowest minimum</div><div className="v">{lowest.r.min_mm} mm</div><div className="s">{lowest.r.zone}</div></div>
+            <div className="fa-kpi"><div className="l">Mean of averages</div><div className="v">{meanAvg} mm</div><div className={`s ${prevMean == null ? "" : meanAvg - prevMean < 0 ? "fa-down" : meanAvg - prevMean > 0 ? "fa-up" : ""}`}>{prevMean == null ? "first scan" : `${meanAvg - prevMean > 0 ? "+" : ""}${meanAvg - prevMean} mm since heat ${prev!.scan.heat}`}</div></div>
           </div>
         </div>
-        <h3 style={{ marginTop: 18 }}>Minimum thickness by zone</h3>
-        <ZoneBarsLegend />
-        <ZoneBars items={rows.map((x) => ({ zone: x.r.zone, min: x.r.min_mm, avg: x.r.avg_mm, status: x.ev.status, warn: x.ev.min.limit?.warn_below ?? null, crit: x.ev.min.limit?.critical_below ?? null }))} />
+        <h3 className="fa-section">Every zone against its limits</h3>
+        <ZoneRangeLegend />
+        <ZoneRange items={rows.map((x) => ({ zone: x.r.zone, section: x.r.section, min: x.r.min_mm, avg: x.r.avg_mm, status: x.ev.status, warn: x.ev.min.limit?.warn_below ?? null, crit: x.ev.min.limit?.critical_below ?? null }))} />
       </div>
       <p className="fa-note">
         {lim.version ? <>Judged with the current limits, version {lim.version.version}{lim.version.note ? ` (${lim.version.note})` : ""}. </> : <>No limits are set for this converter, so zones have no status. </>}

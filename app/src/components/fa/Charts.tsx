@@ -1,25 +1,46 @@
-/* Furnace Analysis charts: plain SVG, rendered on the server, no chart library. */
+/* Furnace Analysis charts: plain SVG, rendered on the server, no chart library.
+   One frame for all of them: 880 units wide, 12 px text, neutral grid, zone names horizontal, values printed. */
 import Link from "next/link";
 
 export const COLOR = { critical: "#d92d20", warning: "#dc6803", ok: "#079455", unset: "#98a2b3", a: "#475467", b: "#c2410c" } as const;
-const INK = "#101828", MUTED = "#667085", GRID = "#eef0f3";
+const INK = "#101828", MUTED = "#667085", GRID = "#eef0f3", CRIT_BG = "#fee4e2", WARN_BG = "#fef0c7";
 type St = "critical" | "warning" | "ok" | "unset";
+const STATUS_WORD: Record<St, string> = { critical: "Critical", warning: "Warning", ok: "OK", unset: "No limit" };
 
-/** Short label for a zone on a chart axis: "Tapside Area-1" > "Tap 1", "Left Trunion-3" > "LT 3", "ChargePad-1A" > "CP 1A". */
-export function shortZone(z: string) {
-  return z.replace(/^Tapside Area-/, "Tap ").replace(/^Left Trunion-/, "LT ").replace(/^Right Trunion-/, "RT ").replace(/^ChargePad-/, "CP ")
-    .replace("SL-NON Drive", "SL non-drv").replace("SL-Drive", "SL drive");
+const W = 880, LBL = 150, RIGHT = 150, X0 = LBL, X1 = W - RIGHT, ROW = 22, HEAD = 26, TOP = 22, AXIS = 28;
+
+/** Round the top of a scale up to a tidy number and give a tidy tick step. */
+const scale = (max: number) => { const step = max > 1500 ? 500 : max > 600 ? 200 : 100; return { top: Math.ceil((max * 1.04) / step) * step, step }; };
+
+/** Rows grouped under section headings: y position of every row and the total height. */
+function layout<T extends { section: string }>(items: T[]) {
+  let y = TOP;
+  const out: ({ kind: "head"; y: number; text: string } | { kind: "row"; y: number; item: T })[] = [];
+  let last = "";
+  for (const it of items) {
+    if (it.section !== last) { out.push({ kind: "head", y, text: it.section }); y += HEAD; last = it.section; }
+    out.push({ kind: "row", y, item: it }); y += ROW;
+  }
+  return { out, height: y + AXIS };
 }
 
-const nice = (max: number) => { const step = max > 1500 ? 500 : max > 600 ? 200 : 100; return { top: Math.ceil((max * 1.05) / step) * step, step }; };
+function Axis({ x, top, step, height, from = 0, unit = "mm" }: { x: (v: number) => number; top: number; step: number; height: number; from?: number; unit?: string }) {
+  const ticks: number[] = []; for (let v = from; v <= top + 0.001; v += step) ticks.push(v);
+  return (
+    <g>
+      {ticks.map((v) => (<g key={v}><line x1={x(v)} x2={x(v)} y1={TOP - 4} y2={height - AXIS + 2} stroke={GRID} /><text x={x(v)} y={height - AXIS + 16} textAnchor="middle" fontSize="12" fill={MUTED}>{v}</text></g>))}
+      <text x={X1} y={height - 4} textAnchor="end" fontSize="12" fill={MUTED}>thickness ({unit})</text>
+    </g>
+  );
+}
 
-// ------------------------------------------------------------------ donut
+// ------------------------------------------------------------------ donut (status split)
 export function Donut({ counts, title, hrefFor, selected }: {
   counts: { critical: number; warning: number; ok: number; unset: number }; title: string; hrefFor?: (s: St) => string; selected?: string | null;
 }) {
   const order: St[] = ["critical", "warning", "ok", "unset"];
   const total = order.reduce((a, s) => a + counts[s], 0);
-  const R = 80, r = 50, C = 100;
+  const R = 80, r = 52, C = 100;
   let ang = -Math.PI / 2;
   const arcs = order.map((s) => {
     const n = counts[s];
@@ -27,25 +48,24 @@ export function Donut({ counts, title, hrefFor, selected }: {
     const a2 = ang + (n / total) * 2 * Math.PI;
     const full = n === total;
     const p = (rad: number, a: number) => `${(C + rad * Math.cos(a)).toFixed(2)} ${(C + rad * Math.sin(a)).toFixed(2)}`;
+    const big = n / total > 0.5 ? 1 : 0;
     const d = full
       ? `M${C} ${C - R}A${R} ${R} 0 1 1 ${C} ${C + R}A${R} ${R} 0 1 1 ${C} ${C - R}ZM${C} ${C - r}A${r} ${r} 0 1 0 ${C} ${C + r}A${r} ${r} 0 1 0 ${C} ${C - r}Z`
-      : `M${p(R, ang)}A${R} ${R} 0 ${n / total > 0.5 ? 1 : 0} 1 ${p(R, a2)}L${p(r, a2)}A${r} ${r} 0 ${n / total > 0.5 ? 1 : 0} 0 ${p(r, ang)}Z`;
+      : `M${p(R, ang)}A${R} ${R} 0 ${big} 1 ${p(R, a2)}L${p(r, a2)}A${r} ${r} 0 ${big} 0 ${p(r, ang)}Z`;
     ang = a2;
-    const path = <path d={d} fill={COLOR[s]} fillRule="evenodd" stroke="#fff" strokeWidth="2" opacity={selected && selected !== s ? 0.35 : 1}><title>{`${s}: ${n}`}</title></path>;
-    return <g key={s}>{hrefFor ? <a href={hrefFor(s)}>{path}</a> : path}</g>;
+    return <path key={s} d={d} fill={COLOR[s]} fillRule="evenodd" stroke="#fff" strokeWidth="2" opacity={selected && selected !== s ? 0.35 : 1}><title>{`${STATUS_WORD[s]}: ${n}`}</title></path>;
   });
-  const label: Record<St, string> = { critical: "Critical", warning: "Warning", ok: "OK", unset: "No limit" };
   return (
     <div className="fa-donut">
-      <svg viewBox="0 0 200 200" width="170" height="170" role="img" aria-label={`${title}: ${order.map((s) => `${counts[s]} ${label[s]}`).join(", ")}`}>
+      <svg viewBox="0 0 200 200" width="160" height="160" role="img" aria-label={`${title}: ${order.map((s) => `${counts[s]} ${STATUS_WORD[s]}`).join(", ")}`}>
         {total ? arcs : <circle cx={C} cy={C} r={R} fill="#f2f4f7" />}
         <text x={C} y={C + 2} textAnchor="middle" fontSize="30" fontWeight="700" fill={INK}>{total}</text>
-        <text x={C} y={C + 20} textAnchor="middle" fontSize="11" fill={MUTED}>zones</text>
+        <text x={C} y={C + 20} textAnchor="middle" fontSize="12" fill={MUTED}>zones</text>
       </svg>
       <div className="fa-donut-leg">
         <b>{title}</b>
         {order.filter((s) => counts[s] > 0 || s !== "unset").map((s) => {
-          const row = (<><i style={{ background: COLOR[s] }} />{label[s]} <b>{counts[s]}</b> <span>({total ? Math.round((counts[s] / total) * 100) : 0}%)</span></>);
+          const row = (<><i style={{ background: COLOR[s] }} />{STATUS_WORD[s]} <b>{counts[s]}</b> <span>({total ? Math.round((counts[s] / total) * 100) : 0}%)</span></>);
           return hrefFor ? <Link key={s} href={hrefFor(s)} className={`fa-leg-row${selected === s ? " sel" : ""}`}>{row}</Link> : <div key={s} className="fa-leg-row">{row}</div>;
         })}
       </div>
@@ -53,118 +73,92 @@ export function Donut({ counts, title, hrefFor, selected }: {
   );
 }
 
-// ------------------------------------------------------------------ minimum thickness per zone
-export type ZoneBar = { zone: string; min: number; avg: number; status: St; warn: number | null; crit: number | null };
+// ------------------------------------------------------------------ every zone against its limits
+export type RangeRow = { zone: string; section: string; min: number; avg: number; status: St; warn: number | null; crit: number | null };
 
-/** One bar per zone: its minimum thickness, coloured by status. A dark tick marks the average; amber and red ticks mark that zone's limits. */
-export function ZoneBars({ items }: { items: ZoneBar[] }) {
-  const W = 880, H = 330, L = 50, Rm = 12, T = 14, B = 62;
-  const { top, step } = nice(Math.max(...items.flatMap((i) => [i.min, i.avg, i.warn ?? 0, i.crit ?? 0]), 100));
-  const y = (v: number) => T + (1 - v / top) * (H - T - B);
-  const slot = (W - L - Rm) / Math.max(items.length, 1), bw = Math.min(26, slot * 0.62);
-  const grid = Array.from({ length: Math.floor(top / step) + 1 }, (_, i) => i * step);
+/**
+ * One row per zone, grouped by section. A pale red band shows the critical range and a pale amber band the warning range
+ * (that zone's own limits). A filled dot is the minimum, coloured by status; a hollow dot is the average; both values are printed.
+ */
+export function ZoneRange({ items }: { items: RangeRow[] }) {
+  const { out, height } = layout(items);
+  const { top, step } = scale(Math.max(...items.flatMap((i) => [i.avg, i.min, i.warn ?? 0]), 100));
+  const x = (v: number) => X0 + (v / top) * (X1 - X0);
   return (
-    <svg className="fa-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Minimum thickness per zone">
-      {grid.map((g) => (<g key={g}><line x1={L} x2={W - Rm} y1={y(g)} y2={y(g)} stroke={GRID} /><text x={L - 6} y={y(g) + 4} textAnchor="end" fontSize="10.5" fill={MUTED}>{g}</text></g>))}
-      {items.map((it, i) => {
-        const cx = L + slot * i + slot / 2;
+    <svg className="fa-chart" viewBox={`0 0 ${W} ${height}`} role="img" aria-label="Minimum and average thickness of every zone against its limits">
+      <Axis x={x} top={top} step={step} height={height} />
+      <text x={X1 + 16} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>min · avg (mm)</text>
+      {out.map((o) => {
+        if (o.kind === "head") return <text key={`h${o.y}`} x={0} y={o.y + 17} fontSize="12" fontWeight="600" fill={MUTED} style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{o.text}</text>;
+        const r = o.item, cy = o.y + ROW / 2;
         return (
-          <g key={it.zone}>
-            <rect x={cx - bw / 2} y={y(it.min)} width={bw} height={Math.max(1, y(0) - y(it.min))} rx="3" fill={COLOR[it.status]}><title>{`${it.zone}: minimum ${it.min} mm, average ${it.avg} mm`}</title></rect>
-            <line x1={cx - bw / 2 - 3} x2={cx + bw / 2 + 3} y1={y(it.avg)} y2={y(it.avg)} stroke={INK} strokeWidth="2.2" />
-            {it.warn != null && <line x1={cx - bw / 2 - 3} x2={cx + bw / 2 + 3} y1={y(it.warn)} y2={y(it.warn)} stroke={COLOR.warning} strokeWidth="2" strokeDasharray="3 2" />}
-            {it.crit != null && <line x1={cx - bw / 2 - 3} x2={cx + bw / 2 + 3} y1={y(it.crit)} y2={y(it.crit)} stroke={COLOR.critical} strokeWidth="2" strokeDasharray="3 2" />}
-            <text x={cx} y={H - B + 14} textAnchor="end" fontSize="10.5" fill={MUTED} transform={`rotate(-50 ${cx} ${H - B + 14})`}>{shortZone(it.zone)}</text>
+          <g key={r.zone}>
+            {r.crit != null && <rect x={x(0)} y={cy - 7} width={Math.max(0, x(r.crit) - x(0))} height="14" rx="2" fill={CRIT_BG} />}
+            {r.warn != null && <rect x={x(r.crit ?? 0)} y={cy - 7} width={Math.max(0, x(r.warn) - x(r.crit ?? 0))} height="14" rx="2" fill={WARN_BG} />}
+            <line x1={x(Math.min(r.min, r.avg))} x2={x(Math.max(r.min, r.avg))} y1={cy} y2={cy} stroke="#98a2b3" strokeWidth="1.5" />
+            <circle cx={x(r.avg)} cy={cy} r="4.5" fill="#fff" stroke={MUTED} strokeWidth="1.8"><title>{`${r.zone}: average ${r.avg} mm`}</title></circle>
+            <circle cx={x(r.min)} cy={cy} r="5.5" fill={COLOR[r.status]}><title>{`${r.zone}: minimum ${r.min} mm, ${STATUS_WORD[r.status]}`}</title></circle>
+            <text x={X0 - 12} y={cy + 4} textAnchor="end" fontSize="12" fill={INK}>{r.zone}</text>
+            <text x={X1 + 16} y={cy + 4} fontSize="12" fill={INK}><tspan fontWeight="600" fill={r.status === "critical" ? "#b42318" : r.status === "warning" ? "#b54708" : INK}>{r.min}</tspan><tspan fill={MUTED}> · {r.avg}</tspan></text>
           </g>
         );
       })}
-      <text x={12} y={(H - B) / 2} transform={`rotate(-90 12 ${(H - B) / 2})`} textAnchor="middle" fontSize="11" fill={MUTED}>thickness (mm)</text>
     </svg>
   );
 }
 
-export function ZoneBarsLegend() {
+export function ZoneRangeLegend() {
   return (
     <div className="fa-legend">
-      <span><i style={{ background: COLOR.ok }} />OK</span><span><i style={{ background: COLOR.warning }} />Warning</span><span><i style={{ background: COLOR.critical }} />Critical</span><span><i style={{ background: COLOR.unset }} />No limit</span>
-      <span><i style={{ background: INK }} />Average</span><span><i style={{ background: COLOR.warning }} />Warning level</span><span><i style={{ background: COLOR.critical }} />Critical level</span>
+      <span><i style={{ background: COLOR.ok, borderRadius: "50%" }} />Minimum, OK</span>
+      <span><i style={{ background: COLOR.warning, borderRadius: "50%" }} />Minimum, Warning</span>
+      <span><i style={{ background: COLOR.critical, borderRadius: "50%" }} />Minimum, Critical</span>
+      <span><i style={{ background: "#fff", border: `2px solid ${MUTED}`, borderRadius: "50%", boxSizing: "border-box" }} />Average</span>
+      <span><i style={{ background: WARN_BG, width: 18 }} />Warning range</span>
+      <span><i style={{ background: CRIT_BG, width: 18 }} />Critical range</span>
     </div>
   );
 }
 
-// ------------------------------------------------------------------ status by scan
-export function ScanStatusBars({ scans }: { scans: { label: string; heat: string; critical: number; warning: number; ok: number; unset: number }[] }) {
-  const W = 760, H = 250, L = 40, Rm = 12, T = 12, B = 48;
-  const totals = scans.map((s) => s.critical + s.warning + s.ok + s.unset);
-  const top = Math.max(4, ...totals);
-  const y = (v: number) => T + (1 - v / top) * (H - T - B);
-  const slot = (W - L - Rm) / Math.max(scans.length, 1), bw = Math.min(54, slot * 0.6);
-  const order: St[] = ["critical", "warning", "ok", "unset"];
-  return (
-    <svg className="fa-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Zones by status for each scan">
-      {[0, Math.round(top / 2), top].map((g) => (<g key={g}><line x1={L} x2={W - Rm} y1={y(g)} y2={y(g)} stroke={GRID} /><text x={L - 6} y={y(g) + 4} textAnchor="end" fontSize="10.5" fill={MUTED}>{g}</text></g>))}
-      {scans.map((s, i) => {
-        const cx = L + slot * i + slot / 2;
-        let acc = 0;
-        return (
-          <g key={i}>
-            {order.map((k) => { const n = s[k]; if (!n) return null; const y1 = y(acc + n), h = y(acc) - y(acc + n); acc += n; return <rect key={k} x={cx - bw / 2} y={y1} width={bw} height={h} fill={COLOR[k]}><title>{`${s.label} · heat ${s.heat} · ${k}: ${n}`}</title></rect>; })}
-            <text x={cx} y={H - B + 16} textAnchor="middle" fontSize="10.5" fill={MUTED}>{s.label}</text>
-            <text x={cx} y={H - B + 30} textAnchor="middle" fontSize="10" fill={MUTED}>heat {s.heat}</text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
 // ------------------------------------------------------------------ heat against heat
-export function GroupedBars({ rows, aLabel, bLabel, unit = "mm" }: { rows: { zone: string; a: number; b: number }[]; aLabel: string; bLabel: string; unit?: string }) {
-  const W = 880, H = 330, L = 50, Rm = 12, T = 14, B = 62;
-  const { top, step } = nice(Math.max(...rows.flatMap((r) => [r.a, r.b]), 100));
-  const y = (v: number) => T + (1 - v / top) * (H - T - B);
-  const slot = (W - L - Rm) / Math.max(rows.length, 1), bw = Math.min(14, slot * 0.36);
-  const grid = Array.from({ length: Math.floor(top / step) + 1 }, (_, i) => i * step);
+export type DumbbellRow = { zone: string; section: string; a: number; b: number };
+
+/** One row per zone: earlier value (slate dot) to later value (brand dot), the line red when thinner and green when thicker, the change printed. */
+export function Dumbbell({ rows, aLabel, bLabel, title }: { rows: DumbbellRow[]; aLabel: string; bLabel: string; title: string }) {
+  const { out, height } = layout(rows);
+  const lo = Math.min(...rows.flatMap((r) => [r.a, r.b])), hi = Math.max(...rows.flatMap((r) => [r.a, r.b]));
+  const { top, step } = scale(hi);
+  const from = Math.max(0, Math.floor((lo * 0.92) / step) * step);
+  const x = (v: number) => X0 + ((v - from) / (top - from)) * (X1 - X0);
   return (
-    <svg className="fa-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${aLabel} against ${bLabel}`}>
-      {grid.map((g) => (<g key={g}><line x1={L} x2={W - Rm} y1={y(g)} y2={y(g)} stroke={GRID} /><text x={L - 6} y={y(g) + 4} textAnchor="end" fontSize="10.5" fill={MUTED}>{g}</text></g>))}
-      {rows.map((r, i) => {
-        const cx = L + slot * i + slot / 2;
+    <svg className="fa-chart" viewBox={`0 0 ${W} ${height}`} role="img" aria-label={`${title}: ${aLabel} against ${bLabel}`}>
+      <Axis x={x} top={top} step={step} height={height} from={from} />
+      <text x={X1 + 16} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>change (mm)</text>
+      {out.map((o) => {
+        if (o.kind === "head") return <text key={`h${o.y}`} x={0} y={o.y + 17} fontSize="12" fontWeight="600" fill={MUTED} style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{o.text}</text>;
+        const r = o.item, cy = o.y + ROW / 2, d = r.b - r.a;
+        const line = d < 0 ? COLOR.critical : d > 0 ? COLOR.ok : "#98a2b3";
         return (
           <g key={r.zone}>
-            <rect x={cx - bw - 1} y={y(r.a)} width={bw} height={Math.max(1, y(0) - y(r.a))} rx="2" fill={COLOR.a}><title>{`${r.zone} · ${aLabel}: ${r.a} ${unit}`}</title></rect>
-            <rect x={cx + 1} y={y(r.b)} width={bw} height={Math.max(1, y(0) - y(r.b))} rx="2" fill={COLOR.b}><title>{`${r.zone} · ${bLabel}: ${r.b} ${unit}`}</title></rect>
-            <text x={cx} y={H - B + 14} textAnchor="end" fontSize="10.5" fill={MUTED} transform={`rotate(-50 ${cx} ${H - B + 14})`}>{shortZone(r.zone)}</text>
+            <line x1={x(r.a)} x2={x(r.b)} y1={cy} y2={cy} stroke={line} strokeWidth="3" strokeLinecap="round" />
+            <circle cx={x(r.a)} cy={cy} r="5" fill={COLOR.a}><title>{`${r.zone} · ${aLabel}: ${r.a} mm`}</title></circle>
+            <circle cx={x(r.b)} cy={cy} r="5" fill={COLOR.b}><title>{`${r.zone} · ${bLabel}: ${r.b} mm`}</title></circle>
+            <text x={X0 - 12} y={cy + 4} textAnchor="end" fontSize="12" fill={INK}>{r.zone}</text>
+            <text x={X1 + 16} y={cy + 4} fontSize="12" fontWeight="600" fill={d < 0 ? "#b42318" : d > 0 ? "#067647" : MUTED}>{d > 0 ? `+${d}` : d}</text>
           </g>
         );
       })}
-      <text x={12} y={(H - B) / 2} transform={`rotate(-90 12 ${(H - B) / 2})`} textAnchor="middle" fontSize="11" fill={MUTED}>thickness ({unit})</text>
     </svg>
   );
 }
 
-/** Change per zone, centred on zero: up (green) is thicker, down (red) is thinner. */
-export function DeltaBars({ rows, title }: { rows: { zone: string; d: number }[]; title: string }) {
-  const W = 880, H = 300, L = 50, Rm = 12, T = 14, B = 62;
-  const m = Math.max(50, ...rows.map((r) => Math.abs(r.d)));
-  const { top, step } = nice(m);
-  const y = (v: number) => T + (1 - (v + top) / (2 * top)) * (H - T - B);
-  const slot = (W - L - Rm) / Math.max(rows.length, 1), bw = Math.min(22, slot * 0.6);
-  const grid: number[] = []; for (let g = -top; g <= top; g += step) grid.push(g);
+export function DumbbellLegend({ aLabel, bLabel }: { aLabel: string; bLabel: string }) {
   return (
-    <svg className="fa-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label={title}>
-      {grid.map((g) => (<g key={g}><line x1={L} x2={W - Rm} y1={y(g)} y2={y(g)} stroke={g === 0 ? "#98a2b3" : GRID} /><text x={L - 6} y={y(g) + 4} textAnchor="end" fontSize="10.5" fill={MUTED}>{g > 0 ? `+${g}` : g}</text></g>))}
-      {rows.map((r, i) => {
-        const cx = L + slot * i + slot / 2;
-        const y0 = y(0), y1 = y(r.d);
-        return (
-          <g key={r.zone}>
-            <rect x={cx - bw / 2} y={Math.min(y0, y1)} width={bw} height={Math.max(1, Math.abs(y1 - y0))} rx="2" fill={r.d >= 0 ? COLOR.ok : COLOR.critical}><title>{`${r.zone}: ${r.d > 0 ? "+" : ""}${r.d} mm`}</title></rect>
-            <text x={cx} y={H - B + 14} textAnchor="end" fontSize="10.5" fill={MUTED} transform={`rotate(-50 ${cx} ${H - B + 14})`}>{shortZone(r.zone)}</text>
-          </g>
-        );
-      })}
-      <text x={12} y={(H - B) / 2} transform={`rotate(-90 12 ${(H - B) / 2})`} textAnchor="middle" fontSize="11" fill={MUTED}>change (mm)</text>
-    </svg>
+    <div className="fa-legend">
+      <span><i style={{ background: COLOR.a, borderRadius: "50%" }} />{aLabel}</span>
+      <span><i style={{ background: COLOR.b, borderRadius: "50%" }} />{bLabel}</span>
+      <span><i style={{ background: COLOR.critical, width: 18 }} />Thinner</span>
+      <span><i style={{ background: COLOR.ok, width: 18 }} />Thicker</span>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { evaluate, type Limit, type Status } from "./evaluate";
+import { sectionOrder } from "./zones";
 
 export type Converter = { id: string; code: string; name: string; plant: string; active: boolean };
 export type ScanRow = {
@@ -81,3 +82,21 @@ export async function statusCounts(supabase: SupabaseClient, scans: Pick<ScanRow
 
 export const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Kolkata" });
 export const fmtDateTime = (iso: string) => new Date(iso).toLocaleString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Kolkata" });
+
+/** Zone by scan grid: the minimum thickness and the status of every zone in every scan, judged with the given limits. */
+export async function zoneMatrix(supabase: SupabaseClient, scans: Pick<ScanRow, "id">[], limits: Limit[]) {
+  const cells = new Map<string, { min: number; status: Status }>();
+  const zones = new Map<string, string>();
+  for (let i = 0; i < scans.length; i += 20) {
+    const ids = scans.slice(i, i + 20).map((s) => s.id);
+    const data = ok(await supabase.from("fa_reading").select("scan_id, zone, section, avg_mm, min_mm").in("scan_id", ids), "readings") ?? [];
+    for (const r of data) {
+      const min = Number(r.min_mm);
+      zones.set(r.zone as string, r.section as string);
+      cells.set(`${r.scan_id}|${r.zone}`, { min, status: evaluate({ zone: r.zone as string, avg_mm: Number(r.avg_mm), min_mm: min }, limits).status });
+    }
+  }
+  const list = [...zones].map(([zone, section]) => ({ zone, section }))
+    .sort((a, b) => sectionOrder(a.section) - sectionOrder(b.section) || a.zone.localeCompare(b.zone, undefined, { numeric: true }));
+  return { zones: list, cells };
+}

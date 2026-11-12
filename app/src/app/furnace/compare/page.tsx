@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { DeltaBars, Donut, GroupedBars, COLOR } from "@/components/fa/Charts";
+import { COLOR, Dumbbell, DumbbellLegend } from "@/components/fa/Charts";
 import { FaPrint } from "@/components/fa/FaPrint";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
 import { activeLimits, fmtDate, fmtDateTime, listConverters, loadScan, scansForPicker } from "@/lib/fa/data";
@@ -86,24 +86,22 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       </div>
 
       <section className="fa-card">
-        <h2>Status of the zones</h2>
+        <h2>Status changes</h2>
         <p className="fa-note">Judged with the converter&apos;s current limits{lim.version ? ` (version ${lim.version.version})` : " (none set, so zones show no status)"}.</p>
-        <div className="fa-twocol">
-          <Donut counts={cA} title={`${label(A)} (earlier)`} />
-          <Donut counts={cB} title={`${label(B)} (later)`} />
-        </div>
+        <StatusChanges rows={rows.map((r) => ({ zone: r.zone, a: r.evA.status, b: r.evB.status }))} aLabel={label(A)} bLabel={label(B)} cA={cA} cB={cB} />
       </section>
 
       <section className="fa-card">
         <h2>Average thickness by zone</h2>
-        <div className="fa-legend"><span><i style={{ background: COLOR.a }} />{label(A)}</span><span><i style={{ background: COLOR.b }} />{label(B)}</span></div>
-        <GroupedBars rows={sameOrder.map((r) => ({ zone: r.zone, a: r.aAvg, b: r.bAvg }))} aLabel={label(A)} bLabel={label(B)} />
+        <DumbbellLegend aLabel={label(A)} bLabel={label(B)} />
+        <Dumbbell title="Average thickness by zone" aLabel={label(A)} bLabel={label(B)} rows={sameOrder.map((r) => ({ zone: r.zone, section: r.group, a: r.aAvg, b: r.bAvg }))} />
       </section>
 
       <section className="fa-card">
-        <h2>Change in minimum thickness, {label(B)} minus {label(A)}</h2>
-        <p className="fa-note">Up (green) is thicker, down (red) is thinner. A large rise in a minimum is usually a repair, not wear.</p>
-        <DeltaBars rows={sameOrder.map((r) => ({ zone: r.zone, d: r.dMin }))} title="Change in minimum thickness per zone" />
+        <h2>Minimum thickness by zone</h2>
+        <p className="fa-note">A large rise in a minimum is usually a repair, not wear.</p>
+        <DumbbellLegend aLabel={label(A)} bLabel={label(B)} />
+        <Dumbbell title="Minimum thickness by zone" aLabel={label(A)} bLabel={label(B)} rows={sameOrder.map((r) => ({ zone: r.zone, section: r.group, a: r.aMin, b: r.bMin }))} />
       </section>
 
       <section className="fa-card">
@@ -128,6 +126,24 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
         <p className="fa-note" style={{ marginBottom: 0 }}>Delta is {label(B)} minus {label(A)} in mm; positive (green) means thicker, negative (red) thinner. Shaded minimums are below the warning (amber) or critical (red) level of the current limits.</p>
       </section>
     </FaShell>
+  );
+}
+
+const RANK: Record<string, number> = { unset: 0, ok: 1, warning: 2, critical: 3 };
+
+/** How many zones got worse or better in status between the two heats, and which. */
+function StatusChanges({ rows, aLabel, bLabel, cA, cB }: { rows: { zone: string; a: string; b: string }[]; aLabel: string; bLabel: string; cA: { critical: number; warning: number; ok: number; unset: number }; cB: { critical: number; warning: number; ok: number; unset: number } }) {
+  const worse = rows.filter((r) => RANK[r.b] > RANK[r.a] && r.a !== "unset"), better = rows.filter((r) => RANK[r.b] < RANK[r.a] && r.b !== "unset");
+  const fmt = (c: typeof cA) => `${c.critical} critical, ${c.warning} warning, ${c.ok} OK${c.unset ? `, ${c.unset} no limit` : ""}`;
+  return (
+    <>
+      <div className="fa-kpis" style={{ margin: 0 }}>
+        <div className="fa-kpi"><div className="l">{aLabel}</div><div className="s">{fmt(cA)}</div></div>
+        <div className="fa-kpi"><div className="l">{bLabel}</div><div className="s">{fmt(cB)}</div></div>
+        <div className="fa-kpi"><div className="l">Worse</div><div className="v fa-down">{worse.length}</div><div className="s">{worse.length ? worse.map((r) => `${r.zone} (${r.a} to ${r.b})`).join(", ") : "no zone got worse"}</div></div>
+        <div className="fa-kpi"><div className="l">Better</div><div className="v fa-up">{better.length}</div><div className="s">{better.length ? better.map((r) => `${r.zone} (${r.a} to ${r.b})`).join(", ") : "no zone got better"}</div></div>
+      </div>
+    </>
   );
 }
 

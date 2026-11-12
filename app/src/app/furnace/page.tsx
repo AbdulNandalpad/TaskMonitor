@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Donut, ScanStatusBars, ZoneBars, ZoneBarsLegend } from "@/components/fa/Charts";
+import { Donut, ZoneRange, ZoneRangeLegend } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
-import { activeLimits, fmtDate, fmtDateTime, latestScansByConverter, listConverters, loadScan, statusCounts } from "@/lib/fa/data";
+import { activeLimits, fmtDate, fmtDateTime, latestScansByConverter, listConverters, loadScan, statusCounts, zoneMatrix } from "@/lib/fa/data";
 import { evaluate, type Status } from "@/lib/fa/evaluate";
 import { requireFa } from "@/lib/fa/guard";
 import { sectionOrder } from "@/lib/fa/zones";
@@ -9,8 +9,9 @@ import { sectionOrder } from "@/lib/fa/zones";
 export const dynamic = "force-dynamic";
 
 const FILTERS = ["critical", "warning", "ok", "unset"] as const;
+const MCLS: Record<Status, string> = { critical: "m-crit", warning: "m-warn", ok: "m-ok", unset: "m-unset" };
 
-/** Dashboard: per converter, the latest scan as charts (status split, minimum thickness per zone, status of every recent scan) and the zones that need attention. */
+/** Dashboard: per converter, what needs attention first, then the status split, every zone against its limits, and how each zone moved scan by scan. */
 export default async function FurnaceHome({ searchParams }: { searchParams: Promise<{ s?: string }> }) {
   const sp = await searchParams;
   const filter = (FILTERS as readonly string[]).includes(sp.s ?? "") ? (sp.s as Status) : null;
@@ -35,9 +36,11 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
         return { zone: r.zone, section: r.section, avg: r.avg_mm, min: r.min_mm, status: e.status, recs: e.recommendations, warn: e.min.limit?.warn_below ?? null, crit: e.min.limit?.critical_below ?? null };
       }).sort((a, b) => sectionOrder(a.section) - sectionOrder(b.section) || a.zone.localeCompare(b.zone, undefined, { numeric: true }));
     }
-    const shown = (filter ? zones.filter((z) => z.status === filter) : zones.filter((z) => z.status === "critical" || z.status === "warning"))
-      .sort((a, b) => (a.status === b.status ? a.min - b.min : a.status === "critical" ? -1 : a.status === "warning" && b.status !== "critical" ? -1 : 1));
-    return { c, mine, latest, lim, zones, shown: filter ? shown : shown.slice(0, 10) };
+    const rank = (s: Status) => (s === "critical" ? 0 : s === "warning" ? 1 : 2);
+    const shown = (filter ? zones.filter((z) => z.status === filter) : zones.filter((z) => z.status === "critical" || z.status === "warning")).sort((a, b) => rank(a.status) - rank(b.status) || a.min - b.min);
+    const history = [...mine].reverse().slice(-10); // oldest first
+    const matrix = history.length > 1 ? await zoneMatrix(supabase, history, lim.rows) : null;
+    return { c, mine, latest, lim, zones, shown: filter ? shown : shown.slice(0, 10), history, matrix };
   }));
 
   return (
@@ -49,9 +52,11 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
           {ctx.canEdit ? <>Upload the first vendor report PDF to start. <br /><Link className="fa-btn primary" style={{ marginTop: 12 }} href="/furnace/upload">Upload report</Link></> : "Nothing has been uploaded yet. An analyst will add the first report."}
         </div>
       )}
-      {cards.map(({ c, mine, latest, lim, zones, shown }) => {
+      {cards.map(({ c, mine, latest, lim, zones, shown, history, matrix }) => {
         const k = latest ? counts.get(latest.id) : null;
-        const history = [...mine].reverse().slice(-12).map((s) => ({ label: fmtDate(s.scanned_at).replace(/ 20\d\d$/, ""), heat: s.heat, ...(counts.get(s.id) ?? { critical: 0, warning: 0, ok: 0, unset: 0 }) }));
+        const low = zones.length ? zones.reduce((m, z) => (z.min < m.min ? z : m), zones[0]) : null;
+        const meanAvg = zones.length ? Math.round(zones.reduce((a, z) => a + z.avg, 0) / zones.length) : null;
+        const days = latest ? Math.max(0, Math.floor((Date.now() - Date.parse(latest.scanned_at)) / 86400000)) : null;
         return (
           <section key={c.id} className="fa-card">
             <h2>{c.name}</h2>
@@ -60,58 +65,82 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
               <div className="fa-banner">No limits are set for this converter yet, so zones show “No limit” instead of OK, Warning or Critical.{" "}
                 {ctx.isAdmin ? <Link href={`/furnace/settings?c=${c.id}`}>Set the limits</Link> : "Ask an administrator to set them."}</div>
             )}
-            {k && (
-              <>
-                <div className="fa-twocol">
-                  <Donut counts={k} title={`Status of the ${zones.length} zones, heat ${latest!.heat}`} hrefFor={(s) => (filter === s ? "/furnace" : `/furnace?s=${s}`)} selected={filter} />
-                  <div className="fa-grid" style={{ alignContent: "center", margin: 0 }}>
-                    <div className="fa-stat critical"><b>{k.critical}</b><span>Critical zones</span></div>
-                    <div className="fa-stat warning"><b>{k.warning}</b><span>Warning zones</span></div>
-                    <div className="fa-stat ok"><b>{k.ok}</b><span>OK zones</span></div>
-                    {k.unset > 0 && <div className="fa-stat unset"><b>{k.unset}</b><span>No limit</span></div>}
-                  </div>
+            {k && low && (
+              <div className="fa-twocol">
+                <Donut counts={k} title={`Status of the ${zones.length} zones, heat ${latest!.heat}`} hrefFor={(s) => (filter === s ? "/furnace" : `/furnace?s=${s}`)} selected={filter} />
+                <div className="fa-kpis" style={{ margin: 0, alignContent: "center" }}>
+                  <div className="fa-kpi"><div className="l">Lowest minimum</div><div className="v">{low.min} mm</div><div className="s">{low.zone}</div></div>
+                  <div className="fa-kpi"><div className="l">Mean of averages</div><div className="v">{meanAvg} mm</div><div className="s">{zones.length} zones</div></div>
+                  <div className="fa-kpi"><div className="l">Last scan</div><div className="v">{days === 0 ? "Today" : `${days} day${days === 1 ? "" : "s"} ago`}</div><div className="s">{fmtDate(latest!.scanned_at)}</div></div>
                 </div>
-
-                <h3 style={{ marginTop: 20 }}>Minimum thickness by zone</h3>
-                <ZoneBarsLegend />
-                <ZoneBars items={zones.map((z) => ({ zone: z.zone, min: z.min, avg: z.avg, status: z.status, warn: z.warn, crit: z.crit }))} />
-
-                {history.length > 1 && (
-                  <>
-                    <h3 style={{ marginTop: 20 }}>Zones by status, scan by scan</h3>
-                    <ScanStatusBars scans={history} />
-                  </>
-                )}
-              </>
+              </div>
             )}
+
             {(shown.length > 0 || filter) && (
-              <>
-                <h3 style={{ marginTop: 20 }}>{filter ? `Zones that are ${{ critical: "critical", warning: "warning", ok: "OK", unset: "without a limit" }[filter]}` : "Needs attention"}{filter && <> · <Link href="/furnace">show attention list</Link></>}</h3>
-                {shown.length === 0 ? <p className="fa-note">None.</p> : (
-                  <div className="fa-tablewrap"><table className="fa-tbl">
-                    <thead><tr><th>Zone</th><th className="n">Average</th><th className="n">Minimum</th><th>Status</th><th>Recommendation</th></tr></thead>
+              <div className="fa-section">
+                <h3>{filter ? `Zones that are ${{ critical: "critical", warning: "warning", ok: "OK", unset: "without a limit" }[filter]}` : "Needs attention"}{filter && <> · <Link href="/furnace">show the attention list</Link></>}</h3>
+                {shown.length === 0 ? <p className="fa-note">No zones in this status.</p> : (
+                  <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Zones that need attention"><table className="fa-tbl">
+                    <thead><tr><th>Zone</th><th className="n">Average (mm)</th><th className="n">Minimum (mm)</th><th>Status</th><th>Recommendation</th></tr></thead>
                     <tbody>{shown.map((a) => (
-                      <tr key={a.zone} className={a.status}><td><b>{a.zone}</b><small>{a.section}</small></td><td className="n">{a.avg} mm</td><td className="n">{a.min} mm</td>
+                      <tr key={a.zone} className={a.status}><td><b>{a.zone}</b><small>{a.section}</small></td><td className="n">{a.avg}</td><td className="n">{a.min}</td>
                         <td><StatusBadge status={a.status} /></td><td>{a.recs.length ? a.recs.map((t, i) => <div key={i}>{t}</div>) : <small>{a.status === "ok" || a.status === "unset" ? "" : "No recommendation set"}</small>}</td></tr>
                     ))}</tbody>
                   </table></div>
                 )}
-              </>
+              </div>
             )}
+
+            {zones.length > 0 && (
+              <div className="fa-section">
+                <h3>Every zone against its limits</h3>
+                <ZoneRangeLegend />
+                <ZoneRange items={zones.map((z) => ({ zone: z.zone, section: z.section, min: z.min, avg: z.avg, status: z.status, warn: z.warn, crit: z.crit }))} />
+              </div>
+            )}
+
+            {matrix && (
+              <div className="fa-section">
+                <h3>Minimum thickness by zone, scan by scan</h3>
+                <p className="fa-note">Each cell is the minimum thickness (mm) of that zone in that scan, coloured by its status against the current limits.</p>
+                <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Minimum thickness of every zone in each recent scan">
+                  <table className="fa-tbl fa-matrix">
+                    <thead><tr><th scope="col">Zone</th>{history.map((s) => <th key={s.id} scope="col" className="n"><Link href={`/furnace/scans/${s.id}`}>{fmtDate(s.scanned_at).replace(/ 20\d\d$/, "")}</Link><small>heat {s.heat}</small></th>)}</tr></thead>
+                    <tbody>{matrix.zones.map((z, i) => (
+                      <MatrixRows key={z.zone} z={z} first={i === 0 || matrix.zones[i - 1].section !== z.section} cols={history.length}>
+                        {history.map((s) => { const cell = matrix.cells.get(`${s.id}|${z.zone}`); return <td key={s.id} className={`n ${cell ? MCLS[cell.status] : ""}`}>{cell ? cell.min : "–"}</td>; })}
+                      </MatrixRows>
+                    ))}</tbody>
+                  </table>
+                </div>
+                <div className="fa-legend"><span><i className="m-crit" />Critical</span><span><i className="m-warn" />Warning</span><span><i className="m-ok" />OK</span><span><i className="m-unset" />No limit</span></div>
+              </div>
+            )}
+
             {mine.length > 0 && (
-              <>
-                <h3 style={{ marginTop: 18 }}>Recent scans</h3>
-                <div className="fa-tablewrap"><table className="fa-tbl">
-                  <thead><tr><th>Date</th><th>Heat</th><th className="n">Meas.</th><th className="n">Critical</th><th className="n">Warning</th><th className="n">OK</th><th></th></tr></thead>
+              <div className="fa-section">
+                <h3>Recent scans</h3>
+                <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Recent scans"><table className="fa-tbl">
+                  <thead><tr><th>Date</th><th>Heat</th><th className="n">Meas.</th><th className="n">Critical</th><th className="n">Warning</th><th className="n">OK</th><th><span className="sr-only">Open</span></th></tr></thead>
                   <tbody>{mine.slice(0, 8).map((s) => { const x = counts.get(s.id); return (
                     <tr key={s.id}><td>{fmtDateTime(s.scanned_at)}</td><td>{s.heat}</td><td className="n">{s.meas_no}</td><td className="n">{x?.critical ?? 0}</td><td className="n">{x?.warning ?? 0}</td><td className="n">{x?.ok ?? 0}</td>
-                      <td><Link className="fa-btn sm" href={`/furnace/scans/${s.id}`}>Open</Link></td></tr>); })}</tbody>
+                      <td className="n"><Link href={`/furnace/scans/${s.id}`}>Open →</Link></td></tr>); })}</tbody>
                 </table></div>
-              </>
+              </div>
             )}
           </section>
         );
       })}
     </FaShell>
+  );
+}
+
+/** A zone row of the grid, with its section heading above the first zone of each section. */
+function MatrixRows({ z, first, cols, children }: { z: { zone: string; section: string }; first: boolean; cols: number; children: React.ReactNode }) {
+  return (
+    <>
+      {first && <tr className="fa-sec"><th scope="colgroup" colSpan={cols + 1}>{z.section}</th></tr>}
+      <tr><th scope="row">{z.zone}</th>{children}</tr>
+    </>
   );
 }
