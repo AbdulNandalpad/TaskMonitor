@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Donut, ZoneBars, ZoneBarsLegend } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
 import { activeLimits, fmtDateTime, loadScan, previousScan } from "@/lib/fa/data";
 import { counts, delta, evaluate, type Status } from "@/lib/fa/evaluate";
@@ -34,12 +35,20 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
 
   return (
     <FaShell ctx={ctx} title={`Heat ${scan.heat} · measurement ${scan.meas_no}`} sub={`${conv?.name ?? "Converter"} · ${fmtDateTime(scan.scanned_at)}`}
-      actions={<><Link className="fa-btn" href="/furnace">Back</Link><a className="fa-btn primary" href={`/api/furnace/scans/${scan.id}/pdf`}>Open vendor PDF</a></>}>
-      <div className="fa-grid">
-        <div className="fa-stat critical"><b>{k.critical}</b><span>Critical zones</span></div>
-        <div className="fa-stat warning"><b>{k.warning}</b><span>Warning zones</span></div>
-        <div className="fa-stat ok"><b>{k.ok}</b><span>OK zones</span></div>
-        {k.unset > 0 && <div className="fa-stat unset"><b>{k.unset}</b><span>No limit</span></div>}
+      actions={<><Link className="fa-btn" href="/furnace">Back</Link>{prev && <Link className="fa-btn" href={`/furnace/compare?c=${scan.converter_id}&a=${prev.scan.id}&b=${scan.id}`}>Compare with heat {prev.scan.heat}</Link>}<a className="fa-btn primary" href={`/api/furnace/scans/${scan.id}/pdf`}>Open vendor PDF</a></>}>
+      <div className="fa-card">
+        <div className="fa-twocol">
+          <Donut counts={k} title={`Status of the ${rows.length} zones`} />
+          <div className="fa-grid" style={{ alignContent: "center", margin: 0 }}>
+            <div className="fa-stat critical"><b>{k.critical}</b><span>Critical zones</span></div>
+            <div className="fa-stat warning"><b>{k.warning}</b><span>Warning zones</span></div>
+            <div className="fa-stat ok"><b>{k.ok}</b><span>OK zones</span></div>
+            {k.unset > 0 && <div className="fa-stat unset"><b>{k.unset}</b><span>No limit</span></div>}
+          </div>
+        </div>
+        <h3 style={{ marginTop: 18 }}>Minimum thickness by zone</h3>
+        <ZoneBarsLegend />
+        <ZoneBars items={rows.map((x) => ({ zone: x.r.zone, min: x.r.min_mm, avg: x.r.avg_mm, status: x.ev.status, warn: x.ev.min.limit?.warn_below ?? null, crit: x.ev.min.limit?.critical_below ?? null }))} />
       </div>
       <p className="fa-note">
         {lim.version ? <>Judged with the current limits, version {lim.version.version}{lim.version.note ? ` (${lim.version.note})` : ""}. </> : <>No limits are set for this converter, so zones have no status. </>}

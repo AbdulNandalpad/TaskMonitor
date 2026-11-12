@@ -20,3 +20,15 @@ export const sectionOrder = (s: string) => {
   const i = (SECTIONS as readonly string[]).indexOf(s);
   return i < 0 ? 99 : i;
 };
+
+/** Finer grouping used by the heat comparison (the report summary table): Charge Pad and its A side are separate. */
+export function compareGroup(zone: string): string {
+  const z = zone.toLowerCase();
+  if (z.startsWith("tapside")) return "Tapside";
+  if (z.startsWith("left trun")) return "Left Trunnion";
+  if (z.startsWith("right trun")) return "Right Trunnion";
+  if (z.startsWith("chargepad")) return /\d+a$/i.test(zone.trim()) ? "Charge Pad (A)" : "Charge Pad";
+  if (z.startsWith("sl")) return "Slag Line";
+  return "Other";
+}
+export const COMPARE_GROUP_ORDER = ["Tapside", "Left Trunnion", "Right Trunnion", "Charge Pad", "Charge Pad (A)", "Slag Line", "Other"];

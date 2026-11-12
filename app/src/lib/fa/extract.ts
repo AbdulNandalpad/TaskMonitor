@@ -7,7 +7,10 @@ export type Draft = {
   plant: string; converter_code: string; converter_name: string; campaign_no: number; heat: string; meas_no: number;
   scanned_at: string; steel_level_m: number | null; steel_tonnes: number | null; bath_level_m: number | null;
   zones: { zone: string; section: string; avg_mm: number; min_mm: number; angle: string; depth: string }[];
+  /** things to look at, but saving is allowed */
   warnings: string[];
+  /** things that make the read unusable; the readings are read-only, so the answer is to read the report again */
+  blockers: string[];
 };
 
 const TOOL = {
@@ -75,11 +78,12 @@ export function toDraft(i: {
   zones: { zone: string; avg_mm: number; min_mm: number; angle?: string; depth?: string }[];
 }): Draft {
   const warnings: string[] = [];
+  const blockers: string[] = [];
   const tm = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(String(i.time ?? "").trim());
   const t = tm ? `${tm[1].padStart(2, "0")}:${tm[2]}:${tm[3] ?? "00"}` : "00:00:00";
   // the scanner prints local plant time (India)
   const scanned_at = /^\d{4}-\d{2}-\d{2}$/.test(i.date) ? `${i.date}T${t}+05:30` : "";
-  if (!scanned_at) warnings.push("The report date could not be read. Enter it before saving.");
+  if (!scanned_at) blockers.push("The report date could not be read.");
   const seen = new Set<string>();
   const zones = (i.zones ?? []).flatMap((z) => {
     const name = String(z.zone ?? "").trim();
@@ -87,17 +91,19 @@ export function toDraft(i: {
     if (!name || !Number.isFinite(avg) || !Number.isFinite(min)) { warnings.push(`A row could not be read: "${name || "(no name)"}".`); return []; }
     if (seen.has(name)) { warnings.push(`${name} appears twice; the second row was dropped.`); return []; }
     seen.add(name);
-    if (min > avg) warnings.push(`${name}: the minimum (${min}) is above the average (${avg}). Check the numbers.`);
+    if (min > avg) blockers.push(`${name}: the minimum (${min}) is above the average (${avg}), so a number was misread.`);
     const section = sectionOf(name);
     if (section === "Other") warnings.push(`${name} is not a known zone name.`);
     return [{ zone: name, section, avg_mm: avg, min_mm: min, angle: String(z.angle ?? ""), depth: String(z.depth ?? "") }];
   });
   if (zones.length !== EXPECTED_ZONES) warnings.push(`${zones.length} zones were read; the vendor report normally has ${EXPECTED_ZONES}. Check for a missing row.`);
   const code = String(i.converter ?? "").trim();
+  if (!zones.length) blockers.push("No zone readings were found in the report.");
+  if (!code || !String(i.heat ?? "").trim() || !Number.isInteger(Number(i.campaign)) || !Number.isInteger(Number(i.meas_no))) blockers.push("The converter, campaign, heat or measurement number could not be read.");
   return {
     plant: String(i.plant ?? "").trim(), converter_code: code, converter_name: code ? `${String(i.plant ?? "").trim()} Converter ${code}`.trim() : "",
     campaign_no: Number(i.campaign), heat: String(i.heat ?? "").trim(), meas_no: Number(i.meas_no), scanned_at,
     steel_level_m: i.steel_level_m ?? null, steel_tonnes: i.steel_tonnes ?? null, bath_level_m: i.bath_level_m ?? null,
-    zones, warnings,
+    zones, warnings, blockers,
   };
 }

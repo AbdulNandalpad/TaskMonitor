@@ -10,6 +10,7 @@ export function FaShell({ ctx, title, sub, actions, children }: { ctx: FaCtx; ti
   const items = [
     { href: "/furnace", label: "Dashboard" },
     ...(ctx.canEdit ? [{ href: "/furnace/upload", label: "Upload report" }] : []),
+    { href: "/furnace/compare", label: "Compare" },
     { href: "/furnace/trends", label: "Trends" },
     ...(ctx.isAdmin ? [{ href: "/furnace/settings", label: "Settings" }] : []),
   ];

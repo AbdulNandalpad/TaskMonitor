@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { AiUnavailable } from "@/lib/ai/config";
 import { extractReport } from "@/lib/fa/extract";
+import { signDraft } from "@/lib/fa/token";
 import { faApi } from "@/lib/fa/guard";
 
 export const maxDuration = 120;
@@ -32,10 +33,10 @@ export async function POST(req: Request) {
       const { data: camp } = await supabase.from("fa_campaign").select("id").eq("converter_id", conv.id).eq("no", draft.campaign_no).maybeSingle();
       if (camp) {
         const { data: dup } = await supabase.from("fa_scan").select("id").eq("campaign_id", camp.id).eq("meas_no", draft.meas_no).maybeSingle();
-        if (dup) draft.warnings.unshift(`Measurement ${draft.meas_no} of campaign ${draft.campaign_no} is already saved. Saving again will be refused.`);
+        if (dup) draft.blockers.unshift(`Measurement ${draft.meas_no} of campaign ${draft.campaign_no} is already saved.`);
       }
     }
-    return NextResponse.json({ draft, pdf_key: key, pdf_bytes: buf.length });
+    return NextResponse.json({ draft, token: signDraft(key, draft), pdf_key: key, pdf_bytes: buf.length });
   } catch (e) {
     if (e instanceof AiUnavailable) return NextResponse.json({ error: "Reading reports needs the AI service, which is not set up." }, { status: 503 });
     const detail = (e as Error).message.slice(0, 200);

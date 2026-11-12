@@ -3,6 +3,7 @@ import { activeLimits, fmtDateTime } from "@/lib/fa/data";
 import { buildMail, sendMail, type MailFinding } from "@/lib/fa/email";
 import { counts, evaluate, worst, type Status } from "@/lib/fa/evaluate";
 import { faApi } from "@/lib/fa/guard";
+import { verifyDraft } from "@/lib/fa/token";
 import { dbError } from "@/lib/fa/http";
 import { sectionOf } from "@/lib/fa/zones";
 
@@ -18,6 +19,9 @@ export async function POST(req: Request) {
   const d = b?.draft;
   const key = typeof b?.pdf_key === "string" ? b.pdf_key : "";
   if (!d || !/^uploads\/[A-Za-z0-9_-]+\.pdf$/.test(key)) return NextResponse.json({ error: "Bad request" }, { status: 400 });
+  // the readings are read-only: only what the server itself read from this PDF is accepted
+  if (!verifyDraft(key, d, b?.token)) return NextResponse.json({ error: "The readings were changed after the report was read. Read the report again." }, { status: 400 });
+  if (Array.isArray(d.blockers) && d.blockers.length) return NextResponse.json({ error: d.blockers[0] }, { status: 400 });
 
   const code = String(d.converter_code ?? "").trim(), heat = String(d.heat ?? "").trim();
   const campaign = Number(d.campaign_no), meas = Number(d.meas_no);
@@ -32,6 +36,8 @@ export async function POST(req: Request) {
     return zone && Number.isFinite(avg) && Number.isFinite(min) && avg >= 0 && min >= 0 ? [{ zone, avg_mm: avg, min_mm: min, angle: String(z.angle ?? ""), depth: String(z.depth ?? "") }] : [];
   });
   if (!clean.length) return NextResponse.json({ error: "No zone readings to save" }, { status: 400 });
+  const odd = clean.find((z) => z.min_mm > z.avg_mm);
+  if (odd) return NextResponse.json({ error: `${odd.zone}: the minimum is above the average, so a number was misread. Read the report again.` }, { status: 400 });
 
   const { data: conv } = await supabase.from("fa_converter").select("id, name").eq("code", code).maybeSingle();
   const lim = conv ? await activeLimits(supabase, conv.id) : { version: null, rows: [] };

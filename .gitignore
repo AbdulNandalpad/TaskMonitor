@@ -14,3 +14,6 @@ app/.next-build/
 .claude/
 .next-dev3/
 app/.next-dev3/
+
+# customer sample reports (large, not for git)
+samples/
