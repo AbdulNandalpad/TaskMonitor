@@ -1266,3 +1266,16 @@ a.fa-seg:hover{background:#fff;filter:none}
 @media(max-width:700px){.fa-kpi .l{min-height:2.7em}}
 .fa-main>.fa-kpis{margin-bottom:32px}
 .fa-mini.critical,.fa-mini.warning,.fa-mini.ok,.fa-mini.unset{border-left-color:var(--fa-line)}
+
+/* phone: the attention list is one compact row per zone; plain tables keep dates on one line */
+@media(max-width:700px){
+  .fa-attn tr{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;padding:14px 12px 14px 16px}
+  .fa-attn td{padding:0;width:auto}
+  .fa-attn td:nth-child(1){grid-column:1;grid-row:1}
+  .fa-attn td:nth-child(4){grid-column:2;grid-row:1;justify-self:end}
+  .fa-attn td:nth-child(2){grid-column:1;grid-row:2}
+  .fa-attn td:nth-child(3){grid-column:2;grid-row:2;justify-self:end}
+  .fa-attn td:nth-child(5){grid-column:1/-1;grid-row:3;font-size:13px;color:var(--fa-ink-2);padding-top:4px}
+  .fa-attn td[data-label]{display:flex;justify-content:flex-start;gap:6px;font-size:13.5px}
+  .fa-tbl:not(.fa-stack) th,.fa-tbl:not(.fa-stack) td{white-space:nowrap}
+}

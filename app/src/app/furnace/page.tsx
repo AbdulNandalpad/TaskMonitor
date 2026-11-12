@@ -116,7 +116,7 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
               {filter && <Link className="fa-btn sm" href={home}>Show attention list</Link>}
             </div>
             {shown.length === 0 ? <p className="fa-note">{filter ? "No zones in this status." : "No zone needs attention."}</p> : (
-              <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Zones that need attention"><table className="fa-tbl fa-stack">
+              <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Zones that need attention"><table className="fa-tbl fa-stack fa-attn">
                 <thead><tr><th>Zone</th><th className="n">Min (mm)</th><th className="n">Avg (mm)</th><th>Status</th><th>Recommendation</th></tr></thead>
                 <tbody>{shown.map((a) => (
                   <tr key={a.zone} className={a.status}><td className="nw"><b>{a.zone}</b><small>{a.section}</small></td><td className="n" data-label="Minimum (mm)">{a.min}</td><td className="n" data-label="Average (mm)">{a.avg}</td>
