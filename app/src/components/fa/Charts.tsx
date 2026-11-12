@@ -7,7 +7,7 @@ const INK = "#101828", MUTED = "#667085", GRID = "#eef0f3", CRIT_BG = "#fee4e2",
 type St = "critical" | "warning" | "ok" | "unset";
 const STATUS_WORD: Record<St, string> = { critical: "Critical", warning: "Warning", ok: "OK", unset: "No limit" };
 
-const W = 880, LBL = 150, RIGHT = 150, X0 = LBL, X1 = W - RIGHT, ROW = 22, HEAD = 26, TOP = 22, AXIS = 28;
+const W = 880, LBL = 150, RIGHT = 150, X0 = LBL, X1 = W - RIGHT, ROW = 22, HEAD = 26, TOP = 22, AXIS = 42;
 
 /** Round the top of a scale up to a tidy number and give a tidy tick step. */
 const scale = (max: number) => { const step = max > 1500 ? 500 : max > 600 ? 200 : 100; return { top: Math.ceil((max * 1.04) / step) * step, step }; };
