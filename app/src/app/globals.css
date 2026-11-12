@@ -1103,3 +1103,4 @@ a.fa-seg:hover{filter:brightness(.97)}
   .fa-matrix tbody th{position:sticky;left:0;background:var(--fa-surface);z-index:1;box-shadow:1px 0 0 var(--fa-line)}
   .fa-matrix thead th:first-child{position:sticky;left:0;z-index:2;background:var(--fa-row)}
 }
+@media(max-width:700px){.fa-who{display:none}.fa-top-in>a.iconbtn{margin-left:auto}}
