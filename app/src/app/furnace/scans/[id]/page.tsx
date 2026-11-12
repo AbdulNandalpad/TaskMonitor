@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 const sign = (n: number) => (n > 0 ? `+${n}` : String(n));
 
-/** One scan: every zone with its status against the limits the scan was saved with, the change since the previous scan, and what to do. */
+/** One scan: every zone with its status against the converter's current limits, the change since the previous scan, and what to do. */
 export default async function ScanPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ctx = await requireFa();
@@ -73,7 +73,7 @@ export default async function ScanPage({ params }: { params: Promise<{ id: strin
 function SectionRows({ sec, rows }: { sec: string; rows: { r: { zone: string; avg_mm: number; min_mm: number; angle: string | null; depth: string | null }; ev: ReturnType<typeof evaluate>; d: ReturnType<typeof delta> }[] }) {
   return (
     <>
-      <tr className="sec"><td colSpan={8}>{sec}</td></tr>
+      <tr className="fa-sec"><td colSpan={8}>{sec}</td></tr>
       {rows.map(({ r, ev, d }) => {
         const lm = ev.min.limit;
         const st: Status = ev.status;

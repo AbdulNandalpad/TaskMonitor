@@ -86,14 +86,17 @@ export function LimitsEditor({ converterId, initial, zones, sections }: { conver
 
   async function save() {
     setBusy(true); setMsg(null);
+    // a mistyped number must stop the save, not turn into "no limit"
+    const bad = rows.find((r) => [r.warn, r.crit].some((v) => v.trim() !== "" && !Number.isFinite(Number(v.replace(",", ".")))));
+    if (bad) { setBusy(false); return setMsg({ ok: false, text: `"${bad.zone || "*"}": the limits must be plain numbers (for example 400), not "${[bad.warn, bad.crit].find((v) => v.trim() !== "" && !Number.isFinite(Number(v.replace(",", "."))))}".` }); }
     const payload = rows.filter((r) => r.warn.trim() !== "" || r.crit.trim() !== "").map((r) => ({
-      zone: r.zone.trim() || "*", metric: r.metric, warn_below: r.warn.trim() === "" ? null : Number(r.warn), critical_below: r.crit.trim() === "" ? null : Number(r.crit),
+      zone: r.zone.trim() || "*", metric: r.metric, warn_below: r.warn.trim() === "" ? null : Number(r.warn.replace(",", ".")), critical_below: r.crit.trim() === "" ? null : Number(r.crit.replace(",", ".")),
       rec_warning: r.recW.trim() || null, rec_critical: r.recC.trim() || null,
     }));
     if (!payload.length) { setBusy(false); return setMsg({ ok: false, text: "Give at least one warning or critical level." }); }
     const r = await send("/api/furnace/limits", "POST", { converter_id: converterId, note, rows: payload });
     setBusy(false);
-    setMsg(r.ok ? { ok: true, text: "Saved as a new version. Scans uploaded from now on are judged with it." } : { ok: false, text: r.error! });
+    setMsg(r.ok ? { ok: true, text: "Saved as a new version. All scans are now judged with it." } : { ok: false, text: r.error! });
     if (r.ok) { setNote(""); router.refresh(); }
   }
 

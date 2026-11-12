@@ -1,5 +1,5 @@
 import { FaShell } from "@/components/fa/FaShell";
-import { activeLimits, fmtDate, listConverters } from "@/lib/fa/data";
+import { activeLimits, fmtDate, listConverters, scansForPicker } from "@/lib/fa/data";
 import { pickLimit } from "@/lib/fa/evaluate";
 import { requireFa } from "@/lib/fa/guard";
 import { sectionOrder } from "@/lib/fa/zones";
@@ -19,17 +19,17 @@ function Chart({ pts, warn, crit }: { pts: Pt[]; warn: number | null; crit: numb
   const every = Math.max(1, Math.ceil(pts.length / 8));
   return (
     <svg className="fa-chart" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Thickness over successive scans">
-      {grid.map((g) => (<g key={g}><line x1={L} x2={W - R} y1={y(g)} y2={y(g)} stroke="#ffedd5" /><text x={L - 8} y={y(g) + 4} textAnchor="end" fontSize="11" fill="#9ca3af">{g}</text></g>))}
-      {warn != null && <g><line x1={L} x2={W - R} y1={y(warn)} y2={y(warn)} stroke="#d97706" strokeDasharray="5 4" /><text x={W - R} y={y(warn) - 4} textAnchor="end" fontSize="11" fill="#b45309">warning {warn}</text></g>}
-      {crit != null && <g><line x1={L} x2={W - R} y1={y(crit)} y2={y(crit)} stroke="#dc2626" strokeDasharray="5 4" /><text x={W - R} y={y(crit) - 4} textAnchor="end" fontSize="11" fill="#b91c1c">critical {crit}</text></g>}
-      <path d={line("avg")} fill="none" stroke="#ea580c" strokeWidth="2.5" />
-      <path d={line("min")} fill="none" stroke="#7c2d12" strokeWidth="2.5" />
+      {grid.map((g) => (<g key={g}><line x1={L} x2={W - R} y1={y(g)} y2={y(g)} stroke="#eef0f3" /><text x={L - 8} y={y(g) + 4} textAnchor="end" fontSize="11" fill="#667085">{g}</text></g>))}
+      {warn != null && <g><line x1={L} x2={W - R} y1={y(warn)} y2={y(warn)} stroke="#dc6803" strokeDasharray="5 4" /><text x={W - R} y={y(warn) - 4} textAnchor="end" fontSize="11" fill="#b54708">warning {warn}</text></g>}
+      {crit != null && <g><line x1={L} x2={W - R} y1={y(crit)} y2={y(crit)} stroke="#d92d20" strokeDasharray="5 4" /><text x={W - R} y={y(crit) - 4} textAnchor="end" fontSize="11" fill="#b42318">critical {crit}</text></g>}
+      <path d={line("avg")} fill="none" stroke="#667085" strokeWidth="2.5" />
+      <path d={line("min")} fill="none" stroke="#c2410c" strokeWidth="2.5" />
       {pts.map((p, i) => (<g key={i}>
-        <circle cx={x(i)} cy={y(p.avg)} r="3.5" fill="#ea580c"><title>{`${p.label} · heat ${p.heat} · average ${p.avg} mm`}</title></circle>
-        <circle cx={x(i)} cy={y(p.min)} r="3.5" fill="#7c2d12"><title>{`${p.label} · heat ${p.heat} · minimum ${p.min} mm`}</title></circle>
-        {i % every === 0 && <text x={x(i)} y={H - 22} textAnchor="middle" fontSize="10.5" fill="#6b7280">{p.label}</text>}
+        <circle cx={x(i)} cy={y(p.avg)} r="3.5" fill="#667085"><title>{`${p.label} · heat ${p.heat} · average ${p.avg} mm`}</title></circle>
+        <circle cx={x(i)} cy={y(p.min)} r="3.5" fill="#c2410c"><title>{`${p.label} · heat ${p.heat} · minimum ${p.min} mm`}</title></circle>
+        {i % every === 0 && <text x={x(i)} y={H - 22} textAnchor="middle" fontSize="10.5" fill="#667085">{p.label}</text>}
       </g>))}
-      <text x={14} y={H / 2} transform={`rotate(-90 14 ${H / 2})`} textAnchor="middle" fontSize="11" fill="#9ca3af">thickness (mm)</text>
+      <text x={14} y={H / 2} transform={`rotate(-90 14 ${H / 2})`} textAnchor="middle" fontSize="11" fill="#667085">thickness (mm)</text>
     </svg>
   );
 }
@@ -43,8 +43,7 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
   if (!converters.length) return <FaShell ctx={ctx} title="Trends"><div className="fa-card fa-empty"><b>No scans yet</b>Trends appear once reports are uploaded.</div></FaShell>;
   const conv = converters.find((c) => c.id === sp.c) ?? converters[0];
 
-  const { data: scans } = await supabase.from("fa_scan").select("id, heat, meas_no, scanned_at").eq("converter_id", conv.id).order("scanned_at", { ascending: true }).limit(500);
-  const list = scans ?? [];
+  const list = await scansForPicker(supabase, conv.id, 500);
   const latestId = list[list.length - 1]?.id as string | undefined;
   const { data: zr } = latestId ? await supabase.from("fa_reading").select("zone, section").eq("scan_id", latestId) : { data: [] };
   const zones = (zr ?? []).sort((a, b) => sectionOrder(a.section as string) - sectionOrder(b.section as string) || (a.zone as string).localeCompare(b.zone as string, undefined, { numeric: true })).map((r) => r.zone as string);
@@ -69,7 +68,7 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
       {pts.length === 0 ? <div className="fa-card fa-empty"><b>No readings for this zone</b></div> : (
         <div className="fa-card">
           <h2>{zone}</h2>
-          <div className="fa-legend"><span><i style={{ background: "#ea580c" }} />Average</span><span><i style={{ background: "#7c2d12" }} />Minimum</span>{lm && <span>Dashed lines: limits on the minimum</span>}</div>
+          <div className="fa-legend"><span><i style={{ background: "#667085" }} />Average</span><span><i style={{ background: "#c2410c" }} />Minimum</span>{lm && <span>Dashed lines: limits on the minimum</span>}</div>
           <Chart pts={pts} warn={lm?.warn_below ?? null} crit={lm?.critical_below ?? null} />
           <div className="fa-tablewrap" style={{ marginTop: 12 }}><table className="fa-tbl">
             <thead><tr><th>Date</th><th>Heat</th><th className="n">Average</th><th className="n">Minimum</th><th className="n">Δ min</th></tr></thead>

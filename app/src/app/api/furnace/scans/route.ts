@@ -68,7 +68,8 @@ export async function POST(req: Request) {
       const findings: MailFinding[] = evald.filter((z) => z.ev.status === "critical" || z.ev.status === "warning")
         .sort((a, bb) => (a.ev.status === bb.ev.status ? a.min_mm - bb.min_mm : a.ev.status === "critical" ? -1 : 1))
         .map((z) => ({ zone: z.zone, section: z.section, avg_mm: z.avg_mm, min_mm: z.min_mm, status: z.ev.status, evaluated: z.ev }));
-      const origin = req.headers.get("origin") ?? new URL(req.url).origin;
+      // the link in the email must not come from the request: use the configured address, else the production domain Vercel gives
+      const origin = process.env.APP_URL?.replace(/\/$/, "") ?? (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : new URL(req.url).origin);
       const m = buildMail({ converter: c2?.name ?? conv?.name ?? `Converter ${code}`, heat, measNo: meas, scannedAt: fmtDateTime(when), link: `${origin}/furnace/scans/${id}`, severity, findings });
       for (const r of recipients) {
         const out = await sendMail(r.email, m);

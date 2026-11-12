@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Donut, ScanStatusBars, ZoneBars, ZoneBarsLegend } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
-import { activeLimits, fmtDate, fmtDateTime, listConverters, loadScan, recentScans, statusCounts } from "@/lib/fa/data";
+import { activeLimits, fmtDate, fmtDateTime, latestScansByConverter, listConverters, loadScan, statusCounts } from "@/lib/fa/data";
 import { evaluate, type Status } from "@/lib/fa/evaluate";
 import { requireFa } from "@/lib/fa/guard";
 import { sectionOrder } from "@/lib/fa/zones";
@@ -16,7 +16,9 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
   const filter = (FILTERS as readonly string[]).includes(sp.s ?? "") ? (sp.s as Status) : null;
   const ctx = await requireFa();
   const { supabase } = ctx;
-  const [converters, scans] = await Promise.all([listConverters(supabase), recentScans(supabase, 40)]);
+  const converters = await listConverters(supabase);
+  // the newest scans of each converter, so a converter that has been quiet for a while still shows its latest
+  const scans = (await latestScansByConverter(supabase, converters, 12)).sort((a, b) => b.scanned_at.localeCompare(a.scanned_at));
   // zones are judged with each converter's current limits
   const limByConv = new Map(await Promise.all(converters.map(async (c) => [c.id, await activeLimits(supabase, c.id)] as const)));
   const counts = await statusCounts(supabase, scans, new Map([...limByConv].map(([id, l]) => [id, l.rows])));

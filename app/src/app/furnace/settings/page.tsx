@@ -42,10 +42,10 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           <h2>Limits and recommendations · {conv.name}</h2>
           <p className="fa-note">
             Thickness <b>below</b> the warning level is a Warning and below the critical level is Critical. A row can name one zone (for example “ChargePad-1A”), a section (Tapside, Trunnion, Charge Pad, Slag line) or * for every zone; the most specific row wins.
-            Saving creates a new version; scans already saved keep the version they were judged with.
+            Saving creates a new version and the earlier ones are kept. Every scan, old or new, is judged with the current version.
             {limits.version ? ` Active: version ${limits.version.version}, saved ${fmtDateTime(limits.version.created_at)}${limits.version.note ? ` (${limits.version.note})` : ""}.` : " No limits are set yet."}
           </p>
-          <LimitsEditor converterId={conv.id} initial={limits.rows} zones={zones} sections={[...SECTIONS]} />
+          <LimitsEditor key={`${conv.id}:${limits.version?.id ?? "none"}`} converterId={conv.id} initial={limits.rows} zones={zones} sections={[...SECTIONS]} />
           {history.length > 1 && <p className="fa-note" style={{ marginTop: 14 }}>Earlier versions: {history.filter((h) => !h.active).map((h) => `v${h.version} (${fmtDateTime(h.created_at)}${h.note ? `, ${h.note}` : ""})`).join(" · ")}</p>}
         </section>
       ) : null}
