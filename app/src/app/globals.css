@@ -1280,3 +1280,14 @@ a.fa-seg:hover{background:#fff;filter:none}
   .fa-tbl:not(.fa-stack) th,.fa-tbl:not(.fa-stack) td{white-space:nowrap}
 }
 @media(max-width:700px){.fa-attn td:nth-child(4)::before{display:none}}
+
+/* phone and small tablet: the menu is a floating bar at the bottom, the top of the screen is for content */
+@media(max-width:900px){
+  .fa-nav{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:40;order:unset;flex:none;width:auto;margin:0;padding:6px;background:#fff;border-radius:28px;box-shadow:0 2px 6px rgba(40,30,20,.08),0 12px 32px rgba(40,30,20,.16);flex-direction:row;justify-content:space-between;gap:2px;overflow:visible}
+  .fa-nav a{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:7px 2px 6px;min-height:54px;font-size:10.5px;line-height:1.15;border-radius:22px;white-space:normal;text-align:center}
+  .fa-nav a[aria-current=page]::before{display:none}
+  .fa-top{margin:0;border-radius:0 0 24px 24px;box-shadow:0 1px 0 var(--fa-line)}
+  .fa-top-in{padding:10px 16px}
+  .fa-main{padding-bottom:110px}
+}
+@media print{.fa-nav{display:none!important}}
