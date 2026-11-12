@@ -70,7 +70,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       {selector(first.id, second.id)}
       <div className="fa-twocol" style={{ marginBottom: 18 }}>
         {[A, B].map((x, i) => (
-          <div key={x.scan.id} className="fa-card" style={{ marginBottom: 0, borderTop: `4px solid ${i ? COLOR.b : COLOR.a}` }}>
+          <div key={x.scan.id} className="fa-card" style={{ marginBottom: 0, boxShadow: `inset 0 4px 0 ${i ? COLOR.b : COLOR.a}`, clipPath: "inset(0 round 24px)" }}>
             <h3 style={{ color: i ? COLOR.b : COLOR.a }}>{label(x)} · {i ? "later" : "earlier"}</h3>
             <p className="fa-note" style={{ margin: 0 }}>Measurement {x.scan.meas_no} · {fmtDateTime(x.scan.scanned_at)} · converter {conv.code} · campaign {campNo(x.scan.campaign_id)}{x.scan.steel_level_m != null ? ` · steel level ${x.scan.steel_level_m} m` : ""}{x.scan.bath_level_m != null ? ` · bath level ${x.scan.bath_level_m} m` : ""} · <Link href={`/furnace/scans/${x.scan.id}`}>open scan</Link></p>
           </div>

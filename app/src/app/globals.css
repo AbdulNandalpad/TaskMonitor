@@ -1227,3 +1227,5 @@ a.fa-seg:hover{background:#fff;filter:none}
 
 .fa-card .fa-tablewrap{margin:0 -12px}
 @media(max-width:700px){.fa-card .fa-tablewrap{margin:0}}
+
+@media(min-width:901px){.fa-kpi .v{white-space:nowrap;font-size:clamp(26px,2.7vw,38px)}}
