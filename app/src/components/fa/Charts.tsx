@@ -157,6 +157,56 @@ export function DumbbellLegend({ aLabel, bLabel }: { aLabel: string; bLabel: str
   );
 }
 
+// ------------------------------------------------------------------ change between two heats
+/** One bar per zone, growing from a centre line: left and red when the lining got thinner, right and green when thicker. The change is printed. */
+export function DeltaBars(props: { rows: DumbbellRow[]; aLabel: string; bLabel: string; title: string }) {
+  return <Both>{(compact) => <DeltaSvg {...props} compact={compact} />}</Both>;
+}
+
+function DeltaSvg({ rows, aLabel, bLabel, title, compact }: { rows: DumbbellRow[]; aLabel: string; bLabel: string; title: string; compact: boolean }) {
+  const { w, X0, X1 } = frame(compact);
+  const { out, height } = layout(rows);
+  const maxAbs = Math.max(10, ...rows.map((r) => Math.abs(r.b - r.a)));
+  const step = maxAbs > 150 ? 100 : maxAbs > 60 ? 50 : maxAbs > 25 ? 20 : 10;
+  const lim = Math.ceil(maxAbs / step) * step;
+  const cx = (X0 + X1) / 2, half = (X1 - X0) / 2;
+  const x = (v: number) => cx + (v / lim) * half;
+  const ticks: number[] = []; for (let v = -lim; v <= lim + 0.001; v += step) ticks.push(v);
+  const sign = (d: number) => (d > 0 ? `+${d}` : `${d}`);
+  return (
+    <svg className="fa-chart" viewBox={`0 0 ${w} ${height}`} role="img" aria-label={`${title}: change from ${aLabel} to ${bLabel}`}>
+      {ticks.map((v) => (<g key={v}><line x1={x(v)} x2={x(v)} y1={TOP - 4} y2={height - AXIS + 2} stroke={v === 0 ? "#98a2b3" : GRID} strokeWidth={v === 0 ? 1.5 : 1} /><text x={x(v)} y={height - AXIS + 16} textAnchor="middle" fontSize="12" fill={MUTED}>{v > 0 ? `+${v}` : v}</text></g>))}
+      <text x={x(-lim)} y={TOP - 8} fontSize="12" fontWeight="600" fill="#b42318">{"\u2190 thinner"}</text>
+      <text x={x(lim)} y={TOP - 8} textAnchor="end" fontSize="12" fontWeight="600" fill="#067647">{"thicker \u2192"}</text>
+      <text x={X1} y={height - 4} textAnchor="end" fontSize="12" fill={MUTED}>change in thickness (mm)</text>
+      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>{compact ? "change" : "change (before \u2192 after)"}</text>
+      {out.map((o) => {
+        if (o.kind === "head") return <text key={`h${o.y}`} x={0} y={o.y + 17} fontSize="12" fontWeight="600" fill={MUTED} style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{o.text}</text>;
+        const r = o.item, cy = o.y + ROW / 2, d = r.b - r.a;
+        const col = d < 0 ? COLOR.critical : d > 0 ? COLOR.ok : "#98a2b3";
+        const bw = Math.max(3, Math.abs(x(d) - x(0)));
+        return (
+          <g key={r.zone}>
+            <rect x={d < 0 ? x(d) : x(0)} y={cy - 6} width={bw} height="12" rx="4" fill={col}><title>{`${r.zone}: ${r.a} mm in ${aLabel}, ${r.b} mm in ${bLabel} (${sign(d)} mm)`}</title></rect>
+            <text x={X0 - (compact ? 8 : 12)} y={cy + 4} textAnchor="end" fontSize="12" fill={INK}>{r.zone}</text>
+            <text x={X1 + (compact ? 10 : 16)} y={cy + 4} fontSize="12"><tspan fontWeight="600" fill={d < 0 ? "#b42318" : d > 0 ? "#067647" : MUTED}>{sign(d)}</tspan>{!compact && <tspan fill={MUTED}>{`  ${r.a} \u2192 ${r.b}`}</tspan>}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+export function DeltaLegend() {
+  return (
+    <div className="fa-legend">
+      <span><i style={{ background: COLOR.critical, width: 18, borderRadius: 4 }} />Got thinner</span>
+      <span><i style={{ background: COLOR.ok, width: 18, borderRadius: 4 }} />Got thicker</span>
+      <span>Bar length = change in mm between the two heats</span>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------------ lines over time
 export type Pt = { t: number; v: number };
 export type Series = { label: string; color: string; points: Pt[]; dash?: string };

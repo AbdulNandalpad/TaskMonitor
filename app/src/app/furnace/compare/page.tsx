@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Kpi } from "@/components/fa/Kpi";
-import { COLOR, Dumbbell, DumbbellLegend } from "@/components/fa/Charts";
+import { COLOR, DeltaBars, DeltaLegend } from "@/components/fa/Charts";
 import { AutoForm } from "@/components/fa/AutoForm";
 import { FaPrint } from "@/components/fa/FaPrint";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
@@ -95,16 +95,16 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       <section className="fa-card">
         <h2>Average thickness by zone</h2>
         <p className="fa-takeaway"><b className="fa-down">{dn} of {rows.length} zones</b> got thinner on average. Biggest drop: <b>{small.zone}</b> ({f1(small.dAvg)} mm).</p>
-        <p className="fa-note">Each row is one zone. The two dots are the two heats and the line between them is the change: red means the lining got thinner, green thicker. The number on the right is the change in mm.</p>
-        <DumbbellLegend aLabel={label(A)} bLabel={label(B)} />
-        <Dumbbell title="Average thickness by zone" aLabel={label(A)} bLabel={label(B)} rows={sameOrder.map((r) => ({ zone: r.zone, section: r.group, a: r.aAvg, b: r.bAvg }))} />
+        <p className="fa-note">Each row is one zone and each bar is how much its average thickness changed between the two heats. Bars to the left of the centre line (red) got thinner, bars to the right (green) got thicker. The numbers on the right are the change and the before and after values.</p>
+        <DeltaLegend />
+        <DeltaBars title="Average thickness by zone" aLabel={label(A)} bLabel={label(B)} rows={sameOrder.map((r) => ({ zone: r.zone, section: r.group, a: r.aAvg, b: r.bAvg }))} />
       </section>
 
       <section className="fa-card">
         <h2>Minimum thickness by zone</h2>
         <p className="fa-note">Same reading for the thinnest point of each zone. A large rise in a minimum is usually a repair, not wear.</p>
-        <DumbbellLegend aLabel={label(A)} bLabel={label(B)} />
-        <Dumbbell title="Minimum thickness by zone" aLabel={label(A)} bLabel={label(B)} rows={sameOrder.map((r) => ({ zone: r.zone, section: r.group, a: r.aMin, b: r.bMin }))} />
+        <DeltaLegend />
+        <DeltaBars title="Minimum thickness by zone" aLabel={label(A)} bLabel={label(B)} rows={sameOrder.map((r) => ({ zone: r.zone, section: r.group, a: r.aMin, b: r.bMin }))} />
       </section>
 
       <section className="fa-card">
