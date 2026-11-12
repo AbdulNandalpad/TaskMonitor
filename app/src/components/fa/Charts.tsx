@@ -79,7 +79,7 @@ function ZoneRangeSvg({ items, compact }: { items: RangeRow[]; compact: boolean 
   return (
     <svg className="fa-chart" viewBox={`0 0 ${w} ${height}`} role="img" aria-label="Minimum and average thickness of every zone against its limits">
       <Axis x={x} top={top} step={step} height={height} X1={X1} />
-      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>{compact ? "thin · avg" : "thinnest · average (mm)"}</text>
+      <text x={X1 + (compact ? 10 : 16)} y={TOP - 8} fontSize="12" fontWeight="600" fill={MUTED}>{compact ? "thin · avg" : "thin · avg (mm)"}</text>
       {out.map((o) => {
         if (o.kind === "head") return <text key={`h${o.y}`} x={0} y={o.y + 17} fontSize="12" fontWeight="600" fill={MUTED} style={{ textTransform: "uppercase", letterSpacing: ".04em" }}>{o.text}</text>;
         const r = o.item, cy = o.y + ROW / 2;
