@@ -1229,3 +1229,12 @@ a.fa-seg:hover{background:#fff;filter:none}
 @media(max-width:700px){.fa-card .fa-tablewrap{margin:0}}
 
 @media(min-width:901px){.fa-kpi .v{white-space:nowrap;font-size:clamp(22px,2.2vw,30px)}.fa-hero .fa-kpi .v{font-size:40px}}
+@media(max-width:900px){
+  .fa-brand{flex:1 1 0;min-width:0}
+  .fa-brand .fa-logo{gap:10px!important}
+  .fa-brand .fa-logo svg{width:34px;height:34px}
+  .fa-brand .fa-logo>span:last-child{font-size:19px!important;white-space:nowrap}
+  .fa-foot{flex:none}
+  .fa-kpi .v{font-size:22px}
+  .fa-hero .fa-kpi .v{font-size:28px}
+}
