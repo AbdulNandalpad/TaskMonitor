@@ -7,12 +7,13 @@ import { FaNav } from "./FaNav";
 
 /** The frame of every Furnace Analysis page: logo, navigation, who is signed in, way back to all apps, sign out. */
 export function FaShell({ ctx, title, sub, actions, children }: { ctx: FaCtx; title: string; sub?: string; actions?: React.ReactNode; children: React.ReactNode }) {
+  // in the order the app is used: set it up, upload a report, read the result, compare heats, follow a zone over time
   const items = [
-    { href: "/furnace", label: "Dashboard" },
+    ...(ctx.isAdmin ? [{ href: "/furnace/settings", label: "Settings" }] : []),
     ...(ctx.canEdit ? [{ href: "/furnace/upload", label: "Upload report" }] : []),
+    { href: "/furnace", label: "Dashboard" },
     { href: "/furnace/compare", label: "Compare" },
     { href: "/furnace/trends", label: "Trends" },
-    ...(ctx.isAdmin ? [{ href: "/furnace/settings", label: "Settings" }] : []),
   ];
   return (
     <div className="fa-app">

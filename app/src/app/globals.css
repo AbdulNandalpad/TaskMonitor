@@ -922,3 +922,5 @@ a.fa-leg-row:hover,.fa-leg-row.sel{background:#fff1e6}
 .fa-steps i{width:46px;height:5px;border-radius:3px;background:#fed7aa}
 .fa-steps i.on{background:#ea580c}
 @media (prefers-reduced-motion:reduce){.fa-spin{animation-duration:2.4s}}
+.fa-bar{display:flex;flex-direction:column;gap:2px;min-width:140px}
+.fa-bar i{display:block;height:6px;border-radius:3px}

@@ -41,6 +41,8 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
   const [A, B, lim] = await Promise.all([loadScan(supabase, aId), loadScan(supabase, bId), activeLimits(supabase, conv.id)]);
   if (!A || !B) return <FaShell ctx={ctx} title="Compare">{selector}<div className="fa-card fa-empty"><b>Scan not found</b></div></FaShell>;
 
+  const { data: camps } = await supabase.from("fa_campaign").select("id, no").in("id", [A.scan.campaign_id, B.scan.campaign_id]);
+  const campNo = (id: string) => (camps ?? []).find((c) => c.id === id)?.no ?? "–";
   const aBy = new Map(A.readings.map((r) => [r.zone, r]));
   const rows = B.readings.flatMap((rb) => {
     const ra = aBy.get(rb.zone);
@@ -55,6 +57,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
   const big = rows.reduce((m, r) => (r.dAvg > m.dAvg ? r : m), rows[0]), small = rows.reduce((m, r) => (r.dAvg < m.dAvg ? r : m), rows[0]);
   const mA = mean(rows.map((r) => r.aAvg)), mB = mean(rows.map((r) => r.bAvg));
   const cA = counts(rows.map((r) => r.evA.status)), cB = counts(rows.map((r) => r.evB.status));
+  const maxAvg = Math.max(...rows.flatMap((r) => [r.aAvg, r.bAvg]), 1);
   const groups = COMPARE_GROUP_ORDER.filter((g) => rows.some((r) => r.group === g));
   const label = (x: { scan: { heat: string; meas_no: number } }) => `Heat ${x.scan.heat}`;
 
@@ -65,7 +68,7 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
         {[A, B].map((x, i) => (
           <div key={x.scan.id} className="fa-card" style={{ marginBottom: 0, borderTop: `4px solid ${i ? COLOR.b : COLOR.a}` }}>
             <h3 style={{ color: i ? COLOR.b : COLOR.a }}>{label(x)} · {i ? "later" : "earlier"}</h3>
-            <p className="fa-note" style={{ margin: 0 }}>Measurement {x.scan.meas_no} · {fmtDateTime(x.scan.scanned_at)}{x.scan.steel_level_m != null ? ` · steel level ${x.scan.steel_level_m} m` : ""}{x.scan.bath_level_m != null ? ` · bath level ${x.scan.bath_level_m} m` : ""} · <Link href={`/furnace/scans/${x.scan.id}`}>open scan</Link></p>
+            <p className="fa-note" style={{ margin: 0 }}>Measurement {x.scan.meas_no} · {fmtDateTime(x.scan.scanned_at)} · converter {conv.code} · campaign {campNo(x.scan.campaign_id)}{x.scan.steel_level_m != null ? ` · steel level ${x.scan.steel_level_m} m` : ""}{x.scan.bath_level_m != null ? ` · bath level ${x.scan.bath_level_m} m` : ""} · <Link href={`/furnace/scans/${x.scan.id}`}>open scan</Link></p>
           </div>
         ))}
       </div>
@@ -113,9 +116,9 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
       <section className="fa-card">
         <h2>Detailed comparison, all readings</h2>
         <div className="fa-tablewrap"><table className="fa-tbl">
-          <thead><tr><th>Zone</th><th className="n">Avg {A.scan.heat}</th><th className="n">Avg {B.scan.heat}</th><th className="n">Delta</th><th className="n">Delta %</th><th className="n">Min {A.scan.heat}</th><th className="n">Min {B.scan.heat}</th><th className="n">Min delta</th><th>Status {B.scan.heat}</th></tr></thead>
+          <thead><tr><th>Zone</th><th className="n">Angle (deg)</th><th className="n">Depth (m)</th><th className="n">Avg {A.scan.heat}</th><th className="n">Avg {B.scan.heat}</th><th className="n">Delta</th><th className="n">Delta %</th><th className="n">Min {A.scan.heat}</th><th className="n">Min {B.scan.heat}</th><th className="n">Min delta</th><th>Status {B.scan.heat}</th><th>Average (bars)</th></tr></thead>
           <tbody>{groups.map((g) => (
-            <GroupRows key={g} g={g} rows={rows.filter((r) => r.group === g)} />
+            <GroupRows key={g} g={g} rows={rows.filter((r) => r.group === g)} maxAvg={maxAvg} />
           ))}</tbody>
         </table></div>
         <p className="fa-note" style={{ marginBottom: 0 }}>Delta is {label(B)} minus {label(A)} in mm; positive (green) means thicker, negative (red) thinner. Shaded minimums are below the warning (amber) or critical (red) level of the current limits.</p>
@@ -126,19 +129,23 @@ export default async function ComparePage({ searchParams }: { searchParams: Prom
 
 type Row = { zone: string; angle: string | null; depth: string | null; aAvg: number; bAvg: number; aMin: number; bMin: number; dAvg: number; dMin: number; evA: ReturnType<typeof evaluate>; evB: ReturnType<typeof evaluate> };
 
-function GroupRows({ g, rows }: { g: string; rows: Row[] }) {
+const clean = (v: string | null) => (v ?? "").replace(/[\[\]]/g, "").replace(/\s*m\s*$/, "").trim() || "–";
+
+function GroupRows({ g, rows, maxAvg }: { g: string; rows: Row[]; maxAvg: number }) {
   const mc = (ev: ReturnType<typeof evaluate>) => (ev.min.status === "critical" ? "crit" : ev.min.status === "warning" ? "warn" : "");
   return (
     <>
-      <tr className="sec"><td colSpan={9}>{g}</td></tr>
+      <tr className="sec"><td colSpan={12}>{g}</td></tr>
       {rows.map((r) => (
         <tr key={r.zone}>
-          <td><b>{r.zone}</b><small>{[r.angle, r.depth].filter(Boolean).join(" · ")}</small></td>
+          <td><b>{r.zone}</b></td>
+          <td className="n">{clean(r.angle)}</td><td className="n">{clean(r.depth)}</td>
           <td className="n">{r.aAvg}</td><td className="n">{r.bAvg}</td>
           <td className={`n ${cls(r.dAvg)}`}>{sg(r.dAvg)}</td><td className={`n ${cls(r.dAvg)}`}>{f1((r.dAvg / r.aAvg) * 100)}%</td>
           <td className={`n ${mc(r.evA)}`}>{r.aMin}</td><td className={`n ${mc(r.evB)}`}>{r.bMin}</td>
           <td className={`n ${cls(r.dMin)}`}>{sg(r.dMin)}</td>
           <td><StatusBadge status={r.evB.status} /></td>
+          <td><div className="fa-bar"><i style={{ width: `${(r.aAvg / maxAvg) * 100}%`, background: COLOR.a }} /><i style={{ width: `${(r.bAvg / maxAvg) * 100}%`, background: COLOR.b }} /></div></td>
         </tr>
       ))}
     </>
