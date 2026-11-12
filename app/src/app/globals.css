@@ -1264,3 +1264,5 @@ a.fa-seg:hover{background:#fff;filter:none}
 .fa-file{border-radius:20px}
 .fa-busy{border-radius:16px}
 @media(max-width:700px){.fa-kpi .l{min-height:2.7em}}
+.fa-main>.fa-kpis{margin-bottom:32px}
+.fa-mini.critical,.fa-mini.warning,.fa-mini.ok,.fa-mini.unset{border-left-color:var(--fa-line)}
