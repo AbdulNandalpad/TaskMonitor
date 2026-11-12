@@ -80,7 +80,7 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
         </nav>
       )}
 
-      <section className="fa-card">
+      <section className="fa-card fa-hero">
         <div className="fa-cardhead">
           <div>
             <h2>{conv.name}</h2>

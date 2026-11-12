@@ -44,13 +44,17 @@ export function StatusBar({ counts, hrefFor, selected }: { counts: { critical: n
   const total = order.reduce((a, s) => a + counts[s], 0);
   if (!total) return null;
   return (
-    <div className="fa-segbar" role="group" aria-label={`Zones by status: ${order.map((s) => `${counts[s]} ${STATUS_WORD[s]}`).join(", ")}`}>
-      {order.filter((s) => counts[s] > 0).map((s) => {
-        const inner = (<><b>{counts[s]}</b><span>{STATUS_WORD[s]}</span><em>{Math.round((counts[s] / total) * 100)}%</em></>);
-        const cls = `fa-seg ${s}${selected === s ? " sel" : ""}`;
-        const style = { flexGrow: counts[s] };
-        return hrefFor ? <Link key={s} href={hrefFor(s)} className={cls} style={style}>{inner}</Link> : <div key={s} className={cls} style={style}>{inner}</div>;
-      })}
+    <div className="fa-statuswrap">
+      <div className="fa-meter" aria-hidden="true">
+        {order.filter((s) => counts[s] > 0).map((s) => <i key={s} className={s} style={{ flexGrow: counts[s] }} />)}
+      </div>
+      <div className="fa-segbar" role="group" aria-label={`Zones by status: ${order.map((s) => `${counts[s]} ${STATUS_WORD[s]}`).join(", ")}`}>
+        {order.filter((s) => counts[s] > 0).map((s) => {
+          const inner = (<><span className="fa-seg-l"><i aria-hidden="true" />{STATUS_WORD[s]}</span><b>{counts[s]}</b><em>{Math.round((counts[s] / total) * 100)}% of zones</em></>);
+          const cls = `fa-seg ${s}${selected === s ? " sel" : ""}`;
+          return hrefFor ? <Link key={s} href={hrefFor(s)} className={cls}>{inner}</Link> : <div key={s} className={cls}>{inner}</div>;
+        })}
+      </div>
     </div>
   );
 }

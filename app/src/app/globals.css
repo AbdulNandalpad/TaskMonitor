@@ -1104,3 +1104,123 @@ a.fa-seg:hover{filter:brightness(.97)}
   .fa-matrix thead th:first-child{position:sticky;left:0;z-index:2;background:var(--fa-row)}
 }
 @media(max-width:700px){.fa-who{display:none}.fa-top-in>a.iconbtn{margin-left:auto}}
+
+/* ---- Furnace Analysis: premium pass. Floating icon rail, warm canvas, Poppins headings, large soft cards, quiet status colour ---- */
+.fa-app{
+  --fa-bg:#f7f5f2; --fa-surface:#fff; --fa-line:#ece8e2; --fa-line-strong:#d9d3ca; --fa-row:#faf8f5;
+  --fa-ink:#1b1714; --fa-ink-2:#4a443d; --fa-ink-3:#6b645b;
+  --fa-head:"Poppins","Inter",system-ui,sans-serif;
+  --fa-soft:0 1px 2px rgba(40,30,20,.04),0 8px 24px rgba(40,30,20,.06);
+  --sh-1:none; --r-lg:24px; --r-md:12px;
+  display:block; min-height:100dvh;
+}
+.fa-app h1,.fa-app h2,.fa-app h3{font-family:var(--fa-head)}
+
+/* the rail: one floating white pill, icon over label */
+.fa-top{position:fixed;left:20px;top:20px;bottom:20px;width:84px;z-index:30;background:#fff;border-radius:42px;box-shadow:var(--fa-soft);border:0;height:auto;display:flex}
+.fa-top-in{display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;max-width:none;margin:0;min-height:0;padding:18px 8px 14px;flex-wrap:nowrap}
+.fa-brand{margin:0 0 14px;display:block}
+.fa-brand .fa-logo>span:last-child{display:none}
+.fa-nav{display:flex;flex-direction:column;align-items:center;gap:6px;flex:1 1 auto;overflow:visible;width:100%;margin:0;padding:0}
+.fa-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;width:64px;padding:9px 0 7px;border-radius:18px;font-weight:500;font-size:10.5px;line-height:1.15;color:var(--fa-ink-3);position:relative;text-align:center}
+.fa-nav a svg{color:var(--fa-ink-3)}
+.fa-nav a:hover{background:#f3efe9;color:var(--fa-ink)}
+.fa-nav a:hover svg{color:var(--fa-ink)}
+.fa-nav a[aria-current=page]{background:var(--fa-brand-tint-2);color:var(--fa-brand-hover);font-weight:600}
+.fa-nav a[aria-current=page] svg{color:var(--fa-brand)}
+.fa-nav a[aria-current=page]::before{display:none}
+.fa-foot{display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:12px;border-top:1px solid var(--fa-line);width:100%}
+.fa-who{flex:none}
+.fa-who-txt{display:none}
+.fa-avatar{width:36px;height:36px;background:linear-gradient(135deg,#fdba74,#f97316);color:#fff}
+.fa-top .iconbtn{color:var(--fa-ink-3);flex:none}
+.fa-top .iconbtn:hover{background:#f3efe9;color:var(--fa-ink)}
+
+.fa-main{max-width:1240px;width:100%;box-sizing:border-box;margin:0 0 0 104px;padding:40px 48px 72px}
+.fa-head{margin-bottom:32px;align-items:flex-end}
+.fa-head h1{font-size:36px;line-height:1.15;font-weight:600;letter-spacing:-.03em}
+.fa-sub{font-size:15px;margin-top:6px;color:var(--fa-ink-3)}
+
+/* cards */
+.fa-card{border-radius:24px;padding:28px;box-shadow:none;border:1px solid var(--fa-line);background:#fff}
+.fa-card h2{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.fa-card h3{font-size:19px;font-weight:600;letter-spacing:-.015em}
+.fa-note{font-size:13.5px}
+.fa-btn{border-radius:999px;box-shadow:none;font-weight:600;font-size:14px;padding:0 20px;min-height:40px;background:#fff}
+.fa-btn.sm{min-height:34px;padding:0 16px}
+.fa-btn.primary{background:var(--fa-brand);border-color:var(--fa-brand);box-shadow:0 4px 12px rgba(194,65,12,.28)}
+
+/* hero card: soft pastel mesh behind the converter, its status and its key numbers */
+.fa-hero{border:0;background:
+  radial-gradient(60% 90% at 8% 0%,rgba(253,186,116,.55),transparent 60%),
+  radial-gradient(55% 80% at 95% 10%,rgba(196,181,253,.5),transparent 60%),
+  radial-gradient(60% 70% at 60% 100%,rgba(186,230,253,.55),transparent 65%),
+  #fdf8f3;padding:32px}
+.fa-hero .fa-note{color:var(--fa-ink-2)}
+.fa-hero .fa-btn{background:rgba(255,255,255,.85);border-color:transparent}
+.fa-statuswrap{margin:24px 0 8px}
+.fa-meter{display:flex;gap:3px;height:10px;margin-bottom:16px}
+.fa-meter i{display:block;border-radius:5px;min-width:8px}
+.fa-meter i.critical{background:var(--fa-crit)}.fa-meter i.warning{background:#f79009}.fa-meter i.ok{background:var(--fa-ok)}.fa-meter i.unset{background:var(--fa-unset)}
+.fa-segbar{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:0}
+.fa-seg{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:16px 18px;min-width:0;border-radius:18px;border:0;background:rgba(255,255,255,.88);color:var(--fa-ink)}
+.fa-seg.critical,.fa-seg.warning,.fa-seg.ok,.fa-seg.unset{background:rgba(255,255,255,.88);color:var(--fa-ink);border-color:transparent}
+.fa-seg-l{display:inline-flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;color:var(--fa-ink-2)}
+.fa-seg-l i{width:9px;height:9px;border-radius:50%;background:var(--fa-unset)}
+.fa-seg.critical .fa-seg-l i{background:var(--fa-crit)}.fa-seg.warning .fa-seg-l i{background:#f79009}.fa-seg.ok .fa-seg-l i{background:var(--fa-ok)}
+.fa-seg b{font-family:var(--fa-head);font-size:38px;line-height:1.1;font-weight:600;letter-spacing:-.03em}
+.fa-seg.critical b{color:var(--fa-crit-ink)}
+.fa-seg em{margin:0;font-size:12.5px;color:var(--fa-ink-3);opacity:1}
+a.fa-seg:hover{background:#fff;filter:none}
+.fa-seg.sel{outline:2px solid var(--fa-brand);outline-offset:-2px}
+
+/* key numbers: large, no boxes */
+.fa-kpis{gap:24px;margin:28px 0 0;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.fa-kpi{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none}
+.fa-kpi .l{font-size:14.5px;font-weight:500;color:var(--fa-ink);order:2}
+.fa-kpi{display:flex;flex-direction:column}
+.fa-kpi .v{font-family:var(--fa-head);font-size:40px;font-weight:600;letter-spacing:-.035em;margin:0 0 2px;line-height:1.1;order:1}
+.fa-kpi .s{font-size:13px;order:3;color:var(--fa-ink-3)}
+
+/* tables and badges */
+.fa-tbl th{background:transparent;text-transform:uppercase;font-size:11.5px;letter-spacing:.06em;font-weight:600;padding:10px 12px}
+.fa-tbl td{padding:14px 12px;border-bottom:1px solid #f1ede7}
+.fa-tbl tbody tr:hover td{background:var(--fa-row)}
+.fa-tbl tr.critical td:first-child,.fa-tbl tr.warning td:first-child{box-shadow:none}
+.fa-st{border-radius:999px;padding:4px 12px 4px 10px;font-weight:600;gap:6px}
+.fa-st i{font-size:0;width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block}
+.fa-chip,.fa-flag{border-radius:999px}
+.fa-tabs a{font-weight:500}
+.fa-tabs a[aria-current=page]{font-weight:600}
+.fa-toolbar{box-shadow:none;border-radius:20px}
+.fa-drop{border-radius:24px}
+.fa-banner{border-radius:16px}
+.fa-twocol,.fa-wide-left{gap:24px}
+
+/* narrower than a laptop: the rail becomes a white bar across the top */
+@media(max-width:900px){
+  .fa-top{position:static;margin:12px 12px 0;width:auto;border-radius:24px;display:block}
+  .fa-top-in{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px;padding:10px 12px 6px}
+  .fa-brand{margin:0;order:1;flex:1 1 auto}
+  .fa-brand .fa-logo>span:last-child{display:inline}
+  .fa-foot{order:2;border:0;padding:0;width:auto;flex-direction:row;gap:2px}
+  .fa-nav{order:3;flex:0 0 100%;flex-direction:row;align-items:stretch;gap:4px;overflow-x:auto;scrollbar-width:none;padding:2px 0 4px;margin:0;width:auto}
+  .fa-nav a{flex-direction:row;width:auto;gap:8px;padding:0 14px;min-height:42px;font-size:14px;border-radius:999px;white-space:nowrap}
+  .fa-who{display:none}
+  .fa-main{margin:0;padding:20px 16px 48px}
+  .fa-head{margin-bottom:20px}
+  .fa-head h1{font-size:28px}
+  .fa-hero{padding:20px}
+  .fa-seg b{font-size:30px}
+  .fa-kpi .v{font-size:30px}
+  .fa-segbar{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+}
+@media(max-width:700px){
+  .fa-top-in>a.iconbtn,.fa-top-in>form{order:unset}
+  .fa-card{border-radius:20px;padding:18px}
+  .fa-hero{padding:20px}
+  .fa-kpis{gap:16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .fa-kpi .v{font-size:26px}
+  .fa-seg{flex:0 1 auto}
+}
+@media print{.fa-top{display:none!important}.fa-app{display:block}.fa-main{padding:0;margin:0}}
