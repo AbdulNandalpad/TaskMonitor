@@ -148,21 +148,22 @@ export type Series = { label: string; color: string; points: Pt[]; dash?: string
 const dshort = (t: number) => new Date(t).toLocaleDateString("en-IN", { day: "2-digit", month: "short", timeZone: "Asia/Kolkata" });
 
 /** Lines over a real time axis, with optional horizontal limit lines labelled in the right gutter. */
-export function LineChart({ series, lines = [], title, height = 280 }: { series: Series[]; lines?: { v: number; color: string; label: string }[]; title: string; height?: number }) {
+export function LineChart({ series, lines = [], title, height = 280, width = W }: { series: Series[]; lines?: { v: number; color: string; label: string }[]; title: string; height?: number; width?: number }) {
+  const Wd = width;
   const L = 48, R = 96, T = 14, B = 34;
   const all = series.flatMap((s) => s.points);
   if (!all.length) return null;
   const t0 = Math.min(...all.map((p) => p.t)), t1 = Math.max(...all.map((p) => p.t)) || t0 + 1;
   const { top, step } = scale(Math.max(...all.map((p) => p.v), ...lines.map((l) => l.v), 100));
-  const x = (t: number) => (t1 === t0 ? (L + W - R) / 2 : L + ((t - t0) / (t1 - t0)) * (W - L - R));
+  const x = (t: number) => (t1 === t0 ? (L + Wd - R) / 2 : L + ((t - t0) / (t1 - t0)) * (Wd - L - R));
   const y = (v: number) => T + (1 - v / top) * (height - T - B);
   const grid: number[] = []; for (let v = 0; v <= top + 0.001; v += step) grid.push(v);
   const ticks = [...new Set(all.map((p) => p.t))].sort((a, b) => a - b);
   const every = Math.max(1, Math.ceil(ticks.length / 7));
   return (
-    <svg className="fa-chart" viewBox={`0 0 ${W} ${height}`} role="img" aria-label={title}>
-      {grid.map((g) => (<g key={g}><line x1={L} x2={W - R} y1={y(g)} y2={y(g)} stroke={GRID} /><text x={L - 8} y={y(g) + 4} textAnchor="end" fontSize="12" fill={MUTED}>{g}</text></g>))}
-      {lines.map((l) => (<g key={l.label}><line x1={L} x2={W - R} y1={y(l.v)} y2={y(l.v)} stroke={l.color} strokeWidth="1.5" strokeDasharray="5 4" /><text x={W - R + 8} y={y(l.v) + 4} fontSize="12" fill={l.color}>{l.label}</text></g>))}
+    <svg className="fa-chart" viewBox={`0 0 ${Wd} ${height}`} role="img" aria-label={title}>
+      {grid.map((g) => (<g key={g}><line x1={L} x2={Wd - R} y1={y(g)} y2={y(g)} stroke={GRID} /><text x={L - 8} y={y(g) + 4} textAnchor="end" fontSize="12" fill={MUTED}>{g}</text></g>))}
+      {lines.map((l) => (<g key={l.label}><line x1={L} x2={Wd - R} y1={y(l.v)} y2={y(l.v)} stroke={l.color} strokeWidth="1.5" strokeDasharray="5 4" /><text x={Wd - R + 8} y={y(l.v) + 4} fontSize="12" fill={l.color}>{l.label}</text></g>))}
       {ticks.map((t, i) => (i % every === 0 || i === ticks.length - 1) && <text key={t} x={x(t)} y={height - 12} textAnchor="middle" fontSize="12" fill={MUTED}>{dshort(t)}</text>)}
       {series.map((s) => (
         <g key={s.label}>

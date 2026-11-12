@@ -981,7 +981,7 @@ a.fa-leg-row:hover,.fa-leg-row.sel{background:var(--fa-brand-tint)}
 @media print{.fa-top,.fa-actions,.fa-sel,.no-print{display:none!important}.fa-app{background:#fff}.fa-card{box-shadow:none;break-inside:avoid}.fa-tablewrap{overflow:visible}.fa-print-only{display:block}}
 .fa-limits{min-width:960px}
 .fa-limits th:nth-child(1),.fa-limits td:nth-child(1){min-width:170px}
-.fa-limits th:nth-child(2),.fa-limits td:nth-child(2){min-width:120px}
+.fa-limits th:nth-child(2),.fa-limits td:nth-child(2){min-width:150px}
 .fa-limits th:nth-child(3),.fa-limits td:nth-child(3),.fa-limits th:nth-child(4),.fa-limits td:nth-child(4){min-width:110px}
 .fa-limits th:nth-child(5),.fa-limits td:nth-child(5),.fa-limits th:nth-child(6),.fa-limits td:nth-child(6){min-width:220px}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
@@ -1020,7 +1020,7 @@ a.fa-leg-row:hover,.fa-leg-row.sel{background:var(--fa-brand-tint)}
 .fa-seg.unset{background:var(--fa-unset-bg);border-color:var(--fa-unset);color:var(--fa-unset-ink)}
 a.fa-seg:hover{filter:brightness(.97)}
 .fa-seg.sel{outline:2px solid var(--fa-ink);outline-offset:1px}
-.fa-wide-left{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);margin-bottom:var(--s5);align-items:start}
+.fa-wide-left{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);margin-bottom:var(--s5);align-items:start}
 @media(max-width:960px){.fa-wide-left{grid-template-columns:1fr}}
 .fa-toolbar{background:var(--fa-surface);border:1px solid var(--fa-line);border-radius:var(--r-lg);padding:var(--s4);box-shadow:var(--sh-1)}
 .fa-chip{display:inline-block;padding:2px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;background:var(--fa-unset-bg);color:var(--fa-unset-ink);white-space:nowrap}
@@ -1049,3 +1049,4 @@ a.fa-seg:hover{filter:brightness(.97)}
 .fa-dup{display:flex;flex-direction:column;gap:var(--s3);font-size:14px;color:var(--fa-ink-2)}
 .fa-readings summary{cursor:pointer;font-weight:600;font-size:14px;margin:var(--s2) 0}
 .fa-section{margin-top:var(--s5)}
+.fa-tbl td.nw{white-space:nowrap}

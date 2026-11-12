@@ -118,7 +118,7 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
               <div className="fa-tablewrap" tabIndex={0} role="region" aria-label="Zones that need attention"><table className="fa-tbl">
                 <thead><tr><th>Zone</th><th className="n">Min (mm)</th><th className="n">Avg (mm)</th><th>Status</th><th>Recommendation</th></tr></thead>
                 <tbody>{shown.map((a) => (
-                  <tr key={a.zone} className={a.status}><td><b>{a.zone}</b><small>{a.section}</small></td><td className="n">{a.min}</td><td className="n">{a.avg}</td>
+                  <tr key={a.zone} className={a.status}><td className="nw"><b>{a.zone}</b><small>{a.section}</small></td><td className="n">{a.min}</td><td className="n">{a.avg}</td>
                     <td><StatusBadge status={a.status} /></td><td>{a.recs.length ? a.recs.map((t, i) => <div key={i}>{t}</div>) : <small>{a.status === "critical" || a.status === "warning" ? "No recommendation set" : ""}</small>}</td></tr>
                 ))}</tbody>
               </table></div>
@@ -132,7 +132,7 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
             {trendLow.length > 1 ? (
               <>
                 <div className="fa-legend"><span><i style={{ background: COLOR.b }} />Lowest minimum</span><span><i style={{ background: COLOR.a }} />Mean of averages</span></div>
-                <LineChart title="Lowest minimum and mean of averages over the last scans" height={250}
+                <LineChart title="Lowest minimum and mean of averages over the last scans" height={300} width={520}
                   series={[{ label: "Mean of averages", color: COLOR.a, points: trendAvg }, { label: "Lowest minimum", color: COLOR.b, points: trendLow }]} />
               </>
             ) : <p className="fa-note">A trend needs at least two scans.</p>}
