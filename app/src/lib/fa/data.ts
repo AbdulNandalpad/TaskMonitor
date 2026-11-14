@@ -19,7 +19,7 @@ function ok<T>(r: { data: T | null; error: { message: string } | null }, what: s
 }
 
 export async function listConverters(supabase: SupabaseClient): Promise<Converter[]> {
-  return (ok(await supabase.from("fa_converter").select("id, code, name, plant, active").order("code"), "converters") ?? []) as Converter[];
+  return (ok(await supabase.from("fa_converter").select("id, code, name, plant, active").order("code").limit(1), "converters") ?? []) as Converter[];
 }
 
 export async function limitsOfVersion(supabase: SupabaseClient, versionId: string | null): Promise<Limit[]> {

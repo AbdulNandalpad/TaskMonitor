@@ -11,7 +11,6 @@ const TABS = [
   { id: "limits", label: "Limits and recommendations" },
   { id: "recipients", label: "Email recipients" },
   { id: "people", label: "Who can upload" },
-  { id: "converters", label: "Converters" },
 ] as const;
 type Tab = (typeof TABS)[number]["id"];
 
@@ -22,13 +21,13 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   const { supabase } = ctx;
   const converters = await listConverters(supabase);
   const conv = converters.find((c) => c.id === sp.c) ?? converters[0];
-  const tab: Tab = (TABS.some((t) => t.id === sp.tab) ? sp.tab : conv ? "limits" : "converters") as Tab;
+  const tab: Tab = (TABS.some((t) => t.id === sp.tab) ? sp.tab : "limits") as Tab;
   const hrefTab = (t: Tab) => `/furnace/settings?tab=${t}${conv ? `&c=${conv.id}` : ""}`;
 
   let body: React.ReactNode = null;
   if (tab === "limits") {
     if (!conv) {
-      body = <div className="fa-card fa-empty"><b>No converter yet</b>A converter is created from the first report, or add one under Converters to set its limits first.</div>;
+      body = <div className="fa-card fa-empty"><b>No converter yet</b>A converter is created from the first report.</div>;
     } else {
       const limits = await activeLimits(supabase, conv.id);
       const { data: h } = await supabase.from("fa_limit_version").select("id, version, note, created_at, active").eq("converter_id", conv.id).order("version", { ascending: false }).limit(10);

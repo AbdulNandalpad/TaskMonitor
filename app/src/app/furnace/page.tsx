@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FaPrint } from "@/components/fa/FaPrint";
 import { Kpi } from "@/components/fa/Kpi";
 import { LineChart, StatusBar, ZoneRange, ZoneRangeLegend, COLOR } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
@@ -29,6 +30,7 @@ export default async function FurnaceHome({ searchParams }: { searchParams: Prom
   const actions = (
     <>
       {conv && <Link className="fa-btn" href={`/furnace/compare?c=${conv.id}`}>Compare heats</Link>}
+      {conv && <FaPrint label="Export to PDF" />}
       {ctx.canEdit && <Link className="fa-btn primary" href="/furnace/upload">Upload report</Link>}
     </>
   );

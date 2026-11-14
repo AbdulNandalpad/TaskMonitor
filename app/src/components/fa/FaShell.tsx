@@ -19,7 +19,7 @@ export function FaShell({ ctx, title, sub, actions, children }: { ctx: FaCtx; ti
     <div className="fa-app">
       <header className="fa-top">
         <div className="fa-top-in">
-          <Link href="/furnace" className="fa-brand" aria-label="Furnace Analysis home"><FaLogo size={42} /></Link>
+          <Link href="/furnace" className="fa-brand" aria-label="CONV_ANSIS home"><FaLogo size={42} /></Link>
           <FaNav items={items} />
           <div className="fa-foot">
             <span className="fa-who" title={ctx.name}><span className="fa-avatar">{initials(ctx.name)}</span><span className="fa-who-txt"><b>{ctx.name}</b><small>{ctx.isAdmin ? "Administrator" : ctx.canEdit ? "Analyst" : "Viewer"}</small></span></span>

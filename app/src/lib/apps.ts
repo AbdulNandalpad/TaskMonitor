@@ -15,7 +15,12 @@ export async function myApps(supabase: SupabaseClient): Promise<AppInfo[]> {
   const { data, error } = await supabase.rpc("my_apps");
   // Before migration 0007 is applied the function does not exist: behave as the single-app product it was (Task Monitor only)
   if (error && /my_apps/.test(error.message) && ["PGRST202", "42883"].includes(error.code)) return [LEGACY_TASK_MONITOR];
-  return (data ?? []) as AppInfo[];
+  return ((data ?? []) as AppInfo[]).map(rename);
+}
+
+/** The converter-lining app is called CONV_ANSIS on screen (the database row keeps its key). */
+function rename(a: AppInfo): AppInfo {
+  return a.code === "furnace_analysis" ? { ...a, name: "CONV_ANSIS" } : a;
 }
 
 const LEGACY_TASK_MONITOR: AppInfo = { code: TASK_MONITOR, name: "Task Monitor", description: null, home_path: "/", position: 1 };

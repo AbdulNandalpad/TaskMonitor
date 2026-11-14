@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FaPrint } from "@/components/fa/FaPrint";
 import { AutoForm } from "@/components/fa/AutoForm";
 import { COLOR, LineChart, Spark } from "@/components/fa/Charts";
 import { FaShell, StatusBadge } from "@/components/fa/FaShell";
@@ -45,7 +46,7 @@ export default async function TrendsPage({ searchParams }: { searchParams: Promi
   const q = (zone: string) => `/furnace/trends?${converters[0].id !== conv.id ? `c=${conv.id}&` : ""}z=${encodeURIComponent(zone)}`;
 
   return (
-    <FaShell ctx={ctx} title="Trends" sub={`How every zone of ${conv.name} changed over its last ${scans.length} scans`}>
+    <FaShell ctx={ctx} title="Trends" sub={`How every zone of ${conv.name} changed over its last ${scans.length} scans`} actions={<FaPrint label="Export to PDF" />}>
       {converters.length > 1 && (
         <AutoForm className="fa-sel fa-toolbar">
           <label>Converter<select name="c" defaultValue={conv.id}>{converters.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>

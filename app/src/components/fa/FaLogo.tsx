@@ -36,13 +36,13 @@ export function FaLogoMark({ size = 32, tone = "color", className }: { size?: nu
   );
 }
 
-/** Mark plus the "Furnace Analysis" wordmark. */
+/** Mark plus the "CONV_ANSIS" wordmark. */
 export function FaLogo({ size = 32, onGrad = false }: { size?: number; onGrad?: boolean }) {
   return (
     <span className="fa-logo" style={{ display: "inline-flex", alignItems: "center", gap: Math.round(size * 0.3), color: onGrad ? "#fff" : "#101828" }}>
       <FaLogoMark size={size} tone={onGrad ? "white" : "color"} />
       <span style={{ fontWeight: 700, fontSize: Math.round(size * 0.56), letterSpacing: "-.01em", lineHeight: 1 }}>
-        Furnace <span style={{ color: onGrad ? "#fff" : "#c2410c" }}>Analysis</span>
+        CONV_<span style={{ color: onGrad ? "#fff" : "#c2410c" }}>ANSIS</span>
       </span>
     </span>
   );

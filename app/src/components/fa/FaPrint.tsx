@@ -1,6 +1,6 @@
 "use client";
 
-/** Opens the browser print dialog; "Save as PDF" there gives the PDF. */
-export function FaPrint({ label = "Print / Save as PDF" }: { label?: string }) {
+/** Opens the browser print dialog; choose "Save as PDF" as the destination there. */
+export function FaPrint({ label = "Export to PDF" }: { label?: string }) {
   return <button type="button" className="fa-btn" onClick={() => window.print()}>{label}</button>;
 }

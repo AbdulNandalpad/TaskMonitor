@@ -17,11 +17,11 @@ export function buildMail(opts: { converter: string; heat: string; measNo: numbe
       <td style="padding:8px;border-bottom:1px solid #e2e8f0"><b style="color:${color}">${STATUS_LABEL[f.status]}</b>${recs}</td></tr>`;
   }).join("");
   const html = `<div style="font-family:Arial,sans-serif;color:#0f172a;max-width:640px">
-    <h2 style="margin:0 0 4px">Furnace Analysis: ${esc(sev)}</h2>
+    <h2 style="margin:0 0 4px">CONV_ANSIS: ${esc(sev)}</h2>
     <p style="margin:0 0 12px;color:#475569">${esc(opts.converter)} · heat ${esc(opts.heat)} · measurement ${opts.measNo} · ${esc(opts.scannedAt)}</p>
     <table style="border-collapse:collapse;width:100%;font-size:14px"><thead><tr style="text-align:left;color:#64748b;font-size:12px"><th style="padding:8px">Zone</th><th style="padding:8px">Average</th><th style="padding:8px">Minimum</th><th style="padding:8px">Status</th></tr></thead><tbody>${rows}</tbody></table>
     <p style="margin:16px 0"><a href="${esc(opts.link)}" style="background:#ea580c;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none">Open the report</a></p>
-    <p style="color:#94a3b8;font-size:12px">Zones are judged against the limits kept in Furnace Analysis. This message was sent automatically.</p></div>`;
+    <p style="color:#94a3b8;font-size:12px">Zones are judged against the limits kept in CONV_ANSIS. This message was sent automatically.</p></div>`;
   return { subject, html };
 }
 
@@ -33,7 +33,7 @@ export async function sendMail(to: string, mail: { subject: string; html: string
   try {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: process.env.FA_MAIL_FROM || "Furnace Analysis <onboarding@resend.dev>", to: [to], subject: mail.subject, html: mail.html }),
+      body: JSON.stringify({ from: process.env.FA_MAIL_FROM || "CONV_ANSIS <onboarding@resend.dev>", to: [to], subject: mail.subject, html: mail.html }),
       signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) { const j = await res.json().catch(() => ({})); return { outcome: "failed", detail: `Resend ${res.status}: ${String(j?.message ?? j?.name ?? "").slice(0, 160)}` }; }

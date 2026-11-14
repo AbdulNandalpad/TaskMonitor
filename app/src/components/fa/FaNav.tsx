@@ -22,7 +22,7 @@ export function FaNav({ items }: { items: Item[] }) {
   // on a phone the row scrolls sideways: bring the current page into view
   useEffect(() => { ref.current?.querySelector<HTMLElement>("[aria-current=page]")?.scrollIntoView({ inline: "center", block: "nearest" }); }, [path]);
   return (
-    <nav className="fa-nav" aria-label="Furnace Analysis" ref={ref}>
+    <nav className="fa-nav" aria-label="CONV_ANSIS" ref={ref}>
       {items.map((it) => (
         <Link key={it.href} href={it.href} title={it.label} aria-current={on(it.href) ? "page" : undefined}>
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" {...P}>{ICONS[it.href]}</svg>

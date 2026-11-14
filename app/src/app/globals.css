@@ -1296,3 +1296,16 @@ a.fa-seg:hover{background:#fff;filter:none}
 .fa-takeaway{margin:6px 0 4px;font-size:15px;line-height:1.5;color:var(--fa-ink);max-width:80ch}
 .fa-takeaway b{font-weight:600}
 .fa-legend i{flex:none}
+
+/* ---- Export to PDF (browser print): the page without chrome, colours kept, cards not split across pages ---- */
+@media print{
+  @page{size:A4;margin:12mm}
+  .fa-app *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .fa-top,.fa-actions,.fa-toolbar,.fa-sel,.fa-tabs,.fa-filter,.iconbtn{display:none!important}
+  .fa-app,.fa-main{background:#fff!important;box-shadow:none}
+  .fa-card,.fa-hero,.fa-kpi,.fa-tablewrap,section{break-inside:avoid;page-break-inside:avoid}
+  .fa-card{box-shadow:none!important;border:1px solid #e4e7ec}
+  .fa-tablewrap{overflow:visible!important}
+  .fa-head h1{font-size:22px}
+  .fa-main::after{content:"CONV_ANSIS";display:block;margin-top:10px;font-size:10px;color:#667085;text-align:right}
+}
