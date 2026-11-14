@@ -3,6 +3,7 @@ import { activeLimits, fmtDateTime } from "@/lib/fa/data";
 import { buildMail, sendMail, type MailFinding } from "@/lib/fa/email";
 import { counts, evaluate, worst, type Status } from "@/lib/fa/evaluate";
 import { faApi } from "@/lib/fa/guard";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { verifyDraft } from "@/lib/fa/token";
 import { dbError } from "@/lib/fa/http";
 import { sectionOf } from "@/lib/fa/zones";
@@ -44,14 +45,19 @@ export async function POST(req: Request) {
   const evald = clean.map((z) => ({ ...z, section: sectionOf(z.zone), ev: evaluate({ ...z }, lim.rows) }));
   const num = (v: unknown) => (v === null || v === undefined || v === "" || !Number.isFinite(Number(v)) ? null : Number(v));
 
-  const { data: id, error } = await supabase.rpc("fa_scan_save", {
-    p_scan: {
+  const scanArg = {
       converter_code: code, converter_name: String(d.converter_name ?? ""), plant: String(d.plant ?? ""), campaign_no: campaign, heat, meas_no: meas,
       scanned_at: when, steel_level_m: num(d.steel_level_m), steel_tonnes: num(d.steel_tonnes), bath_level_m: num(d.bath_level_m),
       pdf_key: key, pdf_bytes: num(b.pdf_bytes), limit_version_id: lim.version?.id ?? null,
-    },
-    p_readings: evald.map((z) => ({ zone: z.zone, section: z.section, avg_mm: z.avg_mm, min_mm: z.min_mm, angle: z.angle, depth: z.depth, status: z.ev.status })),
-  });
+  };
+  const readingsArg = evald.map((z) => ({ zone: z.zone, section: z.section, avg_mm: z.avg_mm, min_mm: z.min_mm, angle: z.angle, depth: z.depth, status: z.ev.status }));
+  // saving is done by the server itself (service role) so a signed-in analyst cannot call the save function with readings the server never checked.
+  // Until migration 0010 is applied the old function is used.
+  const admin = createAdminClient();
+  const missing = (e: { code?: string } | null) => !!e && ["PGRST202", "42883"].includes(e.code ?? "");
+  let saved = await admin.rpc("fa_scan_save_srv", { p_user: g.ctx.userId, p_scan: scanArg, p_readings: readingsArg });
+  if (missing(saved.error)) saved = await supabase.rpc("fa_scan_save", { p_scan: scanArg, p_readings: readingsArg });
+  const { data: id, error } = saved;
   if (error) return dbError(error);
 
   const statuses = evald.map((z) => z.ev.status);
@@ -73,7 +79,9 @@ export async function POST(req: Request) {
       const m = buildMail({ converter: c2?.name ?? conv?.name ?? `Converter ${code}`, heat, measNo: meas, scannedAt: fmtDateTime(when), link: `${origin}/furnace/scans/${id}`, severity, findings });
       await Promise.all(recipients.map(async (r) => {
         const out = await sendMail(r.email, m);
-        await supabase.rpc("fa_notification_log", { p_scan: id, p_email: r.email, p_outcome: out.outcome, p_detail: out.detail });
+        const logArgs = { p_scan: id, p_email: r.email, p_outcome: out.outcome, p_detail: out.detail };
+        const lg = await admin.rpc("fa_notification_log_srv", logArgs);
+        if (missing(lg.error)) await supabase.rpc("fa_notification_log", logArgs);
         if (out.outcome === "sent") mail.sent++; else if (out.outcome === "failed") mail.failed++; else mail.skipped++;
       }));
     }

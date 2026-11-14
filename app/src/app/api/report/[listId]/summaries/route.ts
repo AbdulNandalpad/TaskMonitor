@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { tooMany } from "@/lib/ratelimit";
 import { hasAnthropic } from "@/lib/ai/config";
 import { loadDetailed } from "@/lib/report/detailed";
 import { fillSummaries } from "@/lib/report/summaries";
@@ -16,6 +17,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ listId:
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  const limited = tooMany(auth.user.id, "ai-summaries", 30);
+  if (limited) return limited;
   const { data: list } = await supabase.from("task_list").select("id, area_id").eq("id", listId).maybeSingle();
   if (!list) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const { data: m } = await supabase.from("membership").select("role").eq("user_id", auth.user.id).eq("area_id", list.area_id).maybeSingle();

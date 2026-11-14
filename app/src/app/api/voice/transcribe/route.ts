@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { tooMany } from "@/lib/ratelimit";
 import { AiUnavailable } from "@/lib/ai/config";
 import { transcribe } from "@/lib/ai/openai";
 import { transcriptionPrompt } from "@/lib/ai/voice";
@@ -12,6 +13,10 @@ export async function POST(req: Request) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+  const { data: hasTm } = await supabase.rpc("has_app", { p_app: "task_monitor" });
+  if (hasTm !== true) return NextResponse.json({ error: "No access to Task Monitor" }, { status: 403 });
+  const limited = tooMany(auth.user.id, "ai-voice", 20);
+  if (limited) return limited;
 
   const form = await req.formData().catch(() => null);
   const file = form?.get("audio");

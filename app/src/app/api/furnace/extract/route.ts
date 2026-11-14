@@ -3,6 +3,7 @@ import { AiUnavailable } from "@/lib/ai/config";
 import { extractReport } from "@/lib/fa/extract";
 import { signDraft } from "@/lib/fa/token";
 import { faApi } from "@/lib/fa/guard";
+import { tooMany } from "@/lib/ratelimit";
 
 export const maxDuration = 120;
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -15,6 +16,8 @@ export async function POST(req: Request) {
   const g = await faApi({ edit: true });
   if ("res" in g) return g.res;
   const { supabase } = g.ctx;
+  const limited = tooMany(g.ctx.userId, "fa-extract", 12);
+  if (limited) return limited;
   const b = await req.json().catch(() => null);
   const key = typeof b?.key === "string" ? b.key : "";
   if (!/^uploads\/[A-Za-z0-9_-]+\.pdf$/.test(key)) return NextResponse.json({ error: "Bad request" }, { status: 400 });
