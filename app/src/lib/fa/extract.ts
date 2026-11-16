@@ -69,14 +69,23 @@ export async function extractReport(pdf: Buffer): Promise<Draft> {
     ],
     tool: TOOL, maxTokens: 4000, signal: AbortSignal.timeout(90_000),
   });
-  return toDraft(input);
+  return toDraft(input, null);
 }
+
+/** The plant as one tidy name: the vendor prints "JSW SMS4" on one page and "JSWSMS1" on another. */
+export function normPlant(p: string): string {
+  const t = String(p ?? "").trim().replace(/\s+/g, " ");
+  const m = /^JSW\s*(SMS)\s*(\d+)$/i.exec(t);
+  return m ? `JSW SMS${m[2]}` : t;
+}
+/** Short tag of a plant for a converter code: "JSW SMS1" > "SMS1". */
+export const plantTag = (p: string) => normPlant(p).replace(/^JSW\s*/i, "").replace(/\s+/g, "").toUpperCase();
 
 export function toDraft(i: {
   plant: string; converter: string; campaign: number; heat: string; meas_no: number; date: string; time: string;
   steel_level_m?: number | null; steel_tonnes?: number | null; bath_level_m?: number | null;
   zones: { zone: string; avg_mm: number; min_mm: number; angle?: string; depth?: string }[];
-}): Draft {
+}, expectedZones: number | null = EXPECTED_ZONES): Draft {
   const warnings: string[] = [];
   const blockers: string[] = [];
   const tm = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.exec(String(i.time ?? "").trim());
@@ -91,17 +100,18 @@ export function toDraft(i: {
     if (!name || !Number.isFinite(avg) || !Number.isFinite(min)) { warnings.push(`A row could not be read: "${name || "(no name)"}".`); return []; }
     if (seen.has(name)) { warnings.push(`${name} appears twice; the second row was dropped.`); return []; }
     seen.add(name);
+    if (min < 0) warnings.push(`${name}: the minimum is negative (${min} mm); the scan reads the lining as gone there. Check it against the PDF.`);
     if (min > avg) blockers.push(`${name}: the minimum (${min}) is above the average (${avg}), so a number was misread.`);
     const section = sectionOf(name);
     if (section === "Other") warnings.push(`${name} is not a known zone name.`);
     return [{ zone: name, section, avg_mm: avg, min_mm: min, angle: String(z.angle ?? ""), depth: String(z.depth ?? "") }];
   });
-  if (zones.length !== EXPECTED_ZONES) warnings.push(`${zones.length} zones were read; the vendor report normally has ${EXPECTED_ZONES}. Check for a missing row.`);
+  if (expectedZones != null && zones.length !== expectedZones) warnings.push(`${zones.length} zones were read; the vendor report normally has ${expectedZones}. Check for a missing row.`);
   const code = String(i.converter ?? "").trim();
   if (!zones.length) blockers.push("No zone readings were found in the report.");
   if (!code || !String(i.heat ?? "").trim() || !Number.isInteger(Number(i.campaign)) || !Number.isInteger(Number(i.meas_no))) blockers.push("The converter, campaign, heat or measurement number could not be read.");
   return {
-    plant: String(i.plant ?? "").trim(), converter_code: code, converter_name: code ? `${String(i.plant ?? "").trim()} Converter ${code}`.trim() : "",
+    plant: normPlant(i.plant), converter_code: code, converter_name: code ? `${normPlant(i.plant)} Converter ${code}`.trim() : "",
     campaign_no: Number(i.campaign), heat: String(i.heat ?? "").trim(), meas_no: Number(i.meas_no), scanned_at,
     steel_level_m: i.steel_level_m ?? null, steel_tonnes: i.steel_tonnes ?? null, bath_level_m: i.bath_level_m ?? null,
     zones, warnings, blockers,

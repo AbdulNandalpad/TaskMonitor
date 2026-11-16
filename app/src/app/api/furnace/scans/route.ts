@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   type Z = { zone: string; avg_mm: number; min_mm: number; angle: string; depth: string };
   const clean: Z[] = zones.flatMap((z): Z[] => {
     const zone = String(z.zone ?? "").trim(), avg = Number(z.avg_mm), min = Number(z.min_mm);
-    return zone && Number.isFinite(avg) && Number.isFinite(min) && avg >= 0 && min >= 0 ? [{ zone, avg_mm: avg, min_mm: min, angle: String(z.angle ?? ""), depth: String(z.depth ?? "") }] : [];
+    return zone && Number.isFinite(avg) && Number.isFinite(min) ? [{ zone, avg_mm: avg, min_mm: min, angle: String(z.angle ?? ""), depth: String(z.depth ?? "") }] : [];
   });
   if (!clean.length) return NextResponse.json({ error: "No zone readings to save" }, { status: 400 });
   const odd = clean.find((z) => z.min_mm > z.avg_mm);
@@ -53,12 +53,17 @@ export async function POST(req: Request) {
   const readingsArg = evald.map((z) => ({ zone: z.zone, section: z.section, avg_mm: z.avg_mm, min_mm: z.min_mm, angle: z.angle, depth: z.depth, status: z.ev.status }));
   // saving is done by the server itself (service role) so a signed-in analyst cannot call the save function with readings the server never checked.
   // Until migration 0010 is applied the old function is used.
-  const admin = createAdminClient();
+  // the service-role key is a server setting; without it say so plainly instead of failing with an empty answer
+  const admin = process.env.SUPABASE_SERVICE_ROLE_KEY ? createAdminClient() : null;
   const missing = (e: { code?: string } | null) => !!e && ["PGRST202", "42883"].includes(e.code ?? "");
-  let saved = await admin.rpc("fa_scan_save_srv", { p_user: g.ctx.userId, p_scan: scanArg, p_readings: readingsArg });
+  type Saved = { data: unknown; error: { code?: string; message: string } | null };
+  let saved: Saved = admin ? await admin.rpc("fa_scan_save_srv", { p_user: g.ctx.userId, p_scan: scanArg, p_readings: readingsArg }) : { data: null, error: { code: "PGRST202", message: "" } };
   if (missing(saved.error)) saved = await supabase.rpc("fa_scan_save", { p_scan: scanArg, p_readings: readingsArg });
   const { data: id, error } = saved;
-  if (error) return dbError(error);
+  if (error) {
+    if (!admin && error.code === "42501") return NextResponse.json({ error: "Saving needs the server setting SUPABASE_SERVICE_ROLE_KEY, which is not set. Ask the administrator to add it in Vercel (Production) and redeploy." }, { status: 503 });
+    return dbError(error);
+  }
 
   const statuses = evald.map((z) => z.ev.status);
   const severity: Status = worst(...statuses);
@@ -80,7 +85,7 @@ export async function POST(req: Request) {
       await Promise.all(recipients.map(async (r) => {
         const out = await sendMail(r.email, m);
         const logArgs = { p_scan: id, p_email: r.email, p_outcome: out.outcome, p_detail: out.detail };
-        const lg = await admin.rpc("fa_notification_log_srv", logArgs);
+        const lg = admin ? await admin.rpc("fa_notification_log_srv", logArgs) : { error: { code: "PGRST202" } };
         if (missing(lg.error)) await supabase.rpc("fa_notification_log", logArgs);
         if (out.outcome === "sent") mail.sent++; else if (out.outcome === "failed") mail.failed++; else mail.skipped++;
       }));

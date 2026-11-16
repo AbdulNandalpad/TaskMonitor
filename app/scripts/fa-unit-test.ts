@@ -1,6 +1,6 @@
 /* Offline check of the Furnace Analysis logic: judging against limits, reading a report draft, the findings email, the limits spreadsheet. npx tsx scripts/fa-unit-test.ts */
 import { counts, delta, evaluate, judge, parseLimitRows, pickLimit, worst, type Limit } from "../src/lib/fa/evaluate";
-import { toDraft } from "../src/lib/fa/extract";
+import { toDraft, normPlant, plantTag } from "../src/lib/fa/extract";
 import { buildMail } from "../src/lib/fa/email";
 import { sectionOf, compareGroup } from "../src/lib/fa/zones";
 import { signDraft, verifyDraft } from "../src/lib/fa/token";
@@ -40,6 +40,11 @@ ck("draft: duplicate, unreadable, unknown-zone and min>avg rows are reported", d
 ck("draft: wrong zone count is reported", draft.warnings.some((w) => w.includes("2 zones were read")));
 ck("draft: bad date and no zones are blockers", (() => { const x = toDraft({ plant: "P", converter: "1", campaign: 1, heat: "1", meas_no: 1, date: "24/09/2026", time: "x", zones: [] }); return x.blockers.some((b) => b.includes("date")) && x.blockers.some((b) => b.includes("No zone")); })());
 
+ck("plant names are tidied: JSWSMS1 and JSW SMS1 are the same plant", normPlant("JSWSMS1") === "JSW SMS1" && normPlant("JSW  SMS4") === "JSW SMS4" && plantTag("JSWSMS1") === "SMS1");
+ck("taphole zones belong to the tapside section", sectionOf("Taphole Area-1") === "Tapside" && sectionOf("Tapehole Area-3") === "Tapside" && compareGroup("Taphole Area-2") === "Tapside");
+const neg = toDraft({ plant: "JSWSMS1", converter: "2", campaign: 5, heat: "5890", meas_no: 568, date: "2026-11-14", time: "05:41:40", zones: [{ zone: "ChargePad-1", avg_mm: 550, min_mm: -51 }] }, null);
+ck("draft: a negative minimum is kept and reported, not dropped", neg.zones.length === 1 && neg.zones[0].min_mm === -51 && neg.warnings.some((w) => w.includes("negative")) && neg.blockers.length === 0 && neg.plant === "JSW SMS1" && neg.converter_name === "JSW SMS1 Converter 2");
+ck("draft: no zone-count warning when the usual count is not known", !neg.warnings.some((w) => w.includes("zones were read")));
 const m = buildMail({ converter: "JSW SMS4 Converter 1", heat: "2886", measNo: 25, scannedAt: "01 Nov 2026", link: "https://x/furnace/scans/1", severity: "critical", findings: [{ zone: "Right <Trunion>-1", section: "Trunnion", avg_mm: 951, min_mm: 108, status: "critical", evaluated: c }] });
 ck("mail: subject and escaped content", m.subject === "Critical: JSW SMS4 Converter 1, heat 2886 (measurement 25)" && m.html.includes("Right &lt;Trunion&gt;-1") && m.html.includes("Repair now"));
 

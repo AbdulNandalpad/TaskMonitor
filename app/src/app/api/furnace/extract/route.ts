@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { AiUnavailable } from "@/lib/ai/config";
-import { extractReport } from "@/lib/fa/extract";
+import { extractReport, normPlant, plantTag } from "@/lib/fa/extract";
 import { signDraft } from "@/lib/fa/token";
 import { faApi } from "@/lib/fa/guard";
 import { tooMany } from "@/lib/ratelimit";
@@ -31,6 +31,26 @@ export async function POST(req: Request) {
   try {
     const draft = await extractReport(buf);
     let duplicateId: string | null = null;
+    // A converter is a plant plus a number. The bare number is kept as the code while no other plant uses it (that is how the
+    // first converter was stored); when another plant already has that number, the code carries the plant: "SMS1-2".
+    const number = draft.converter_code;
+    if (number) {
+      const composite = `${plantTag(draft.plant)}-${number}`;
+      const { data: taken } = await supabase.from("fa_converter").select("code, plant").in("code", [number, composite]);
+      const same = (taken ?? []).find((r) => normPlant(String(r.plant)) === draft.plant);
+      if (same) draft.converter_code = same.code as string;
+      else if ((taken ?? []).some((r) => r.code === number)) draft.converter_code = composite;
+      draft.converter_name = `${draft.plant} Converter ${number}`.trim();
+      // the usual number of zones is what this converter's last scan had (SMS1 has 20, SMS4 has 22)
+      const { data: cv } = await supabase.from("fa_converter").select("id").eq("code", draft.converter_code).maybeSingle();
+      if (cv) {
+        const { data: last } = await supabase.from("fa_scan").select("id").eq("converter_id", cv.id).order("scanned_at", { ascending: false }).limit(1).maybeSingle();
+        if (last) {
+          const { count } = await supabase.from("fa_reading").select("id", { count: "exact", head: true }).eq("scan_id", last.id);
+          if (count && count !== draft.zones.length) draft.warnings.push(`${draft.zones.length} zones were read; this converter's last report had ${count}. Check for a missing row.`);
+        }
+      }
+    }
     // warn early when this measurement is already saved
     const { data: conv } = await supabase.from("fa_converter").select("id").eq("code", draft.converter_code).maybeSingle();
     if (conv) {
