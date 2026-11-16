@@ -45,6 +45,10 @@ ck("taphole zones belong to the tapside section", sectionOf("Taphole Area-1") ==
 const neg = toDraft({ plant: "JSWSMS1", converter: "2", campaign: 5, heat: "5890", meas_no: 568, date: "2026-11-14", time: "05:41:40", zones: [{ zone: "ChargePad-1", avg_mm: 550, min_mm: -51 }] }, null);
 ck("draft: a negative minimum is kept and reported, not dropped", neg.zones.length === 1 && neg.zones[0].min_mm === -51 && neg.warnings.some((w) => w.includes("negative")) && neg.blockers.length === 0 && neg.plant === "JSW SMS1" && neg.converter_name === "JSW SMS1 Converter 2");
 ck("draft: no zone-count warning when the usual count is not known", !neg.warnings.some((w) => w.includes("zones were read")));
+const calm = [667, 763, 580, 355, 539, 908, 457, 640, 525, 934].map((a, k) => ({ zone: `Z${k}`, avg_mm: a, min_mm: a - 100 }));
+const odd = toDraft({ plant: "JSW SMS1", converter: "2", campaign: 5, heat: "5916", meas_no: 569, date: "2026-11-15", time: "05:18:36", zones: [...calm, { zone: "Left Trunion-3", avg_mm: 2449, min_mm: 2449 }] }, null);
+ck("draft: a zone far above the rest is reported as a probable scan error", odd.warnings.some((w) => w.includes("Left Trunion-3") && w.includes("scan error") && w.includes("same as its average")) && odd.blockers.length === 0);
+ck("draft: ordinary spread is not reported", !toDraft({ plant: "P", converter: "1", campaign: 1, heat: "1", meas_no: 1, date: "2026-11-15", time: "05:18:36", zones: calm }, null).warnings.some((w) => w.includes("scan error")));
 const m = buildMail({ converter: "JSW SMS4 Converter 1", heat: "2886", measNo: 25, scannedAt: "01 Nov 2026", link: "https://x/furnace/scans/1", severity: "critical", findings: [{ zone: "Right <Trunion>-1", section: "Trunnion", avg_mm: 951, min_mm: 108, status: "critical", evaluated: c }] });
 ck("mail: subject and escaped content", m.subject === "Critical: JSW SMS4 Converter 1, heat 2886 (measurement 25)" && m.html.includes("Right &lt;Trunion&gt;-1") && m.html.includes("Repair now"));
 

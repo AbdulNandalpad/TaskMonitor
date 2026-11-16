@@ -13,6 +13,9 @@ export type Draft = {
   blockers: string[];
 };
 
+/** A zone average above this many times the median zone average is reported as a probable scan error. */
+const OUTLIER_FACTOR = 2.2;
+
 const TOOL = {
   name: "record_report",
   description: "Record the header and the zone table of a converter lining scan report.",
@@ -107,6 +110,17 @@ export function toDraft(i: {
     return [{ zone: name, section, avg_mm: avg, min_mm: min, angle: String(z.angle ?? ""), depth: String(z.depth ?? "") }];
   });
   if (expectedZones != null && zones.length !== expectedZones) warnings.push(`${zones.length} zones were read; the vendor report normally has ${expectedZones}. Check for a missing row.`);
+  // a reading far above the rest of the converter is usually a scanner artefact (a hole in the wall, a mis-registered patch)
+  if (zones.length >= 8) {
+    const sorted = zones.map((z) => z.avg_mm).sort((x, y) => x - y), mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    for (const z of zones) {
+      if (median > 0 && z.avg_mm > OUTLIER_FACTOR * median) {
+        const same = z.min_mm === z.avg_mm ? " Its minimum is the same as its average." : "";
+        warnings.push(`${z.zone} reads ${z.avg_mm} mm, about ${(z.avg_mm / median).toFixed(1)} times the typical zone (${Math.round(median)} mm); this is probably a scan error.${same} Check it against the PDF.`);
+      }
+    }
+  }
   const code = String(i.converter ?? "").trim();
   if (!zones.length) blockers.push("No zone readings were found in the report.");
   if (!code || !String(i.heat ?? "").trim() || !Number.isInteger(Number(i.campaign)) || !Number.isInteger(Number(i.meas_no))) blockers.push("The converter, campaign, heat or measurement number could not be read.");
